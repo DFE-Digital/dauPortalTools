@@ -128,9 +128,14 @@ wn_render_summary <- function(region = NULL) {
     }
   )
 
+  # After you fetch summary_data and compute totals:
   total_live <- suppressWarnings(as.integer(summary_data$total_live_records[1]))
   updated_30d <- suppressWarnings(as.integer(summary_data$updated_records[1]))
   qual_issues <- suppressWarnings(as.integer(summary_data$quality_issues[1]))
+
+  fmt <- function(x) {
+    ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
+  }
 
   df <- data.frame(
     Metric = c(
@@ -138,7 +143,7 @@ wn_render_summary <- function(region = NULL) {
       "Records Updated in Last 30 Days",
       "Quality Issues"
     ),
-    Value = c(total_live, updated_30d, qual_issues),
+    Value = c(fmt(total_live), fmt(updated_30d), fmt(qual_issues)),
     stringsAsFactors = FALSE
   )
 
@@ -159,8 +164,7 @@ wn_render_summary <- function(region = NULL) {
       inputId = "summary_table",
       df = df,
       caption = "Key Metrics",
-      caption_size = "l",
-      num_col = 2L
+      caption_size = "l"
     )
   )
 
