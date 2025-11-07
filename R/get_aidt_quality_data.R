@@ -54,9 +54,9 @@ SELECT c.quality_name
         ,[quality_status]
         ,[date_created]
         ,[last_checked]
-     FROM {config$database}.{config$db_schema_01a}.[quality_list] l
-     LEFT JOIN {config$database}.{config$db_schema_01a}.[quality_check] c ON c.quality_check_id = l.error_id
-     LEFT JOIN {config$database}.{config$db_schema_01a}.[app_list] a ON l.app_id = a.app_id
+     FROM {config$database}.{config$schema$db_schema_01a}.[quality_list] l
+     LEFT JOIN {config$database}.{config$schema$db_schema_01a}.[quality_check] c ON c.quality_check_id = l.error_id
+     LEFT JOIN {config$database}.{config$schema$db_schema_01a}.[app_list] a ON l.app_id = a.app_id
      WHERE l.app_id = {app_id}
       AND quality_status = 0
      {record}",

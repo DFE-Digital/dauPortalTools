@@ -79,7 +79,7 @@ school_render_overview <- function(urn) {
     ,[SchoolWebsite] AS school_website
     FROM {config$database}.{config$db_schema_00c}.[Edubase]
     WHERE URN = {urn}
-    AND [DateStamp] = (SELECT MAX(DateStamp) FROM {config$database}.{config$db_schema_00c}.[Edubase])
+    AND [DateStamp] = (SELECT MAX(DateStamp) FROM {config$database}.{config$schema$db_schema_00c}.[Edubase])
     ",
     .con = conn
   )

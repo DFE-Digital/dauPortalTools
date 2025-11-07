@@ -50,7 +50,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
       SELECT TOP 1 [Trust_ID]
       FROM {config$database}.{config$db_schema_00c}.[Chains]
       WHERE [URN] = {urn}
-        AND [DateStamp] = (SELECT MAX([DateStamp]) FROM {config$database}.{config$db_schema_00c}.[Chains])
+        AND [DateStamp] = (SELECT MAX([DateStamp]) FROM {config$database}.{config$schema$db_schema_00c}.[Chains])
     ",
       .con = conn
     )
@@ -92,9 +92,9 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
       [Trust_Region],
       [Number_In_Trust],
       [DateStamp]
-    FROM {config$database}.{config$db_schema_00c}.[Chains]
+    FROM {config$database}.{config$schema$db_schema_00c}.[Chains]
     WHERE [Trust_ID] = {trust_id}
-      AND [DateStamp] = (SELECT MAX([DateStamp]) FROM {config$database}.{config$db_schema_00c}.[Chains])
+      AND [DateStamp] = (SELECT MAX([DateStamp]) FROM {config$database}.{config$schema$db_schema_00c}.[Chains])
   ",
     .con = conn
   )
@@ -133,9 +133,9 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
       [Local_Authority],
       [Region],
       [Date_Joined_Trust]
-    FROM {config$database}.{config$db_schema_00c}.[Chains]
+    FROM {config$database}.{config$schema$db_schema_00c}.[Chains]
     WHERE [Trust_ID] = {trust_id}
-      AND [DateStamp] = (SELECT MAX([DateStamp]) FROM {config$database}.{config$db_schema_00c}.[Chains])
+      AND [DateStamp] = (SELECT MAX([DateStamp]) FROM {config$database}.{config$schema$db_schema_00c}.[Chains])
     ORDER BY [Academy_Name]
   ",
     .con = conn

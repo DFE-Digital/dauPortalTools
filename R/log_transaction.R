@@ -32,14 +32,14 @@ log_transaction <- function(
   config <- yaml::read_yaml("config.yml")
   app_id <- config$app_details$app_id
 
-  conn <- sql_manager("data_insight_team")
+  conn <- sql_manager("dit")
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
   tryCatch(
     {
       query <- glue::glue_sql(
         "
-      INSERT INTO {config$database}.{config$db_schema_00a}.[transaction_table] (
+      INSERT INTO {config$database}.{config$schema$db_schema_00a}.[transaction_table] (
         app_id, action, record_id, record_type, performed_by, performed_on, status, notes, created_on
       ) VALUES (
         {app_id},
