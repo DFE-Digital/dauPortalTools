@@ -93,8 +93,7 @@ wn_render_summary <- function(region = NULL) {
     DBI::SQL("")
   }
 
-  schema_01a <- conf$schemas$db_schema_01a
-  schema_01a <- DBI::SQL(schema_01a)
+  schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
 
   sql_command <- glue::glue_sql(
     "
@@ -161,7 +160,7 @@ wn_render_summary <- function(region = NULL) {
       df = df,
       caption = "Key Metrics",
       caption_size = "l",
-      num_col = "Value"
+      num_col = 2L
     )
   )
 
