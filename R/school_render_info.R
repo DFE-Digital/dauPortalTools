@@ -96,7 +96,6 @@ school_render_overview <- function(urn) {
 
   if (nrow(summary_data) == 0 || is.na(summary_data$urn[1])) {
     return(shinyGovstyle::gov_layout(
-      size = "two-thirds",
       shinyGovstyle::heading_text("School Overview", size = "l"),
       shiny::HTML("<p>No data available for this URN.</p>")
     ))
@@ -129,8 +128,6 @@ school_render_overview <- function(urn) {
       "Reason" = summary_data$reason_closed
     )
   }
-
-  rows[["Ofsted"]] <- c("Status" = "Coming Soon")
 
   if (!is.na(trust_ref_val)) {
     rows[["Trust Details"]] <- c(
@@ -195,12 +192,10 @@ school_render_overview <- function(urn) {
   )
 
   ui <- shinyGovstyle::gov_layout(
-    size = "two-thirds",
     shinyGovstyle::heading_text(
       glue::glue("{summary_data$school_name} ({urn_val})"),
       size = "l"
     ),
-    shinyGovstyle::label_hint("school_overview_hint", "Key school information"),
     shinyGovstyle::govTabs(
       inputId = "school_tabs",
       df = final_df,
