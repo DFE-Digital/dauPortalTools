@@ -80,7 +80,44 @@ wn_render_summary <- function(region = NULL) {
     "Starting wn_render_summary with region: {region}"
   ))
 
+  .req_scalar_string <- function(x, nm) {
+    if (is.null(x) || length(x) != 1L || is.na(x) || !nzchar(x)) {
+      stop(
+        sprintf("Config '%s' must be a length-1, non-empty string.", nm),
+        call. = FALSE
+      )
+    }
+    x
+  }
+
+  .normalise_region <- function(region) {
+    if (
+      is.null(region) ||
+        length(region) == 0L ||
+        is.na(region) ||
+        identical(region, "")
+    ) {
+      NULL
+    } else {
+      as.character(region[1])
+    }
+  }
+
+  region <- .normalise_region(region)
+
   conn <- sql_manager("dit")
+  on.exit(
+    {
+      try(DBI::dbDisconnect(conn), silent = TRUE)
+    },
+    add = TRUE
+  )
+
+  db_name <- .req_scalar_string(conf$database, "conf$database")
+  sch_01a <- .req_scalar_string(
+    conf$schemas$db_schema_01a,
+    "conf$schemas$db_schema_01a"
+  )
 
   school_region <- if (!is.null(region)) {
     glue::glue_sql(" AND school_region = {region}", .con = conn)
@@ -97,22 +134,24 @@ wn_render_summary <- function(region = NULL) {
     "
     SELECT
       (SELECT COUNT(twn_id)
-       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_all_notices]
+       FROM {`db_name`}.{`sch_01a`}.[twn_all_notices]
        WHERE [twn_status_id] <> 7{school_region}) AS total_live_records,
       (SELECT COUNT(t.twn_date_id)
-       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_date_tracking] t
-       LEFT JOIN {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_all_notices] a ON t.twn_id = a.twn_id
+       FROM {`db_name`}.{`sch_01a`}.[twn_date_tracking] t
+       LEFT JOIN {`db_name`}.{`sch_01a`}.[twn_all_notices] a ON t.twn_id = a.twn_id
        WHERE t.updated_on >= DATEADD(DAY, -30, GETDATE()){school_region}) AS updated_records,
       (SELECT COUNT(quality_id)
-       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[quality_list] l
+       FROM {`db_name`}.{`sch_01a`}.[quality_list] l
        WHERE l.app_id > 0 AND l.app_id < 3 AND quality_status = 0{region_filter}) AS quality_issues
     ",
     .con = conn
   )
 
+  had_error <- FALSE
   summary_data <- tryCatch(
     DBI::dbGetQuery(conn, sql_command),
     error = function(e) {
+      had_error <<- TRUE
       dauPortalTools::log_event(glue::glue(
         "Error fetching summary: {e$message}"
       ))
@@ -138,10 +177,35 @@ wn_render_summary <- function(region = NULL) {
     stringsAsFactors = FALSE
   )
 
+  value_all_na <- all(is.na(df$Value))
+  display_df <- df
+  if (value_all_na) {
+    display_df$Value <- rep("—", nrow(df))
+  }
+
   heading <- if (!is.null(region)) {
     glue::glue("Summary for {region}")
   } else {
     "Summary"
+  }
+
+  # --- Build UI
+  gov_args <- list(
+    inputId = "summary_table",
+    df = if (value_all_na) display_df else df,
+    caption = "Key Metrics",
+    caption_size = "l"
+  )
+  if (!value_all_na && is.numeric(df$Value)) {
+    gov_args$num_col <- "Value"
+  }
+
+  error_note <- if (had_error) {
+    shinyGovstyle::inset_text(
+      text = "We couldn't reach the data source just now. Showing placeholders — try refreshing."
+    )
+  } else {
+    NULL
   }
 
   ui <- shinyGovstyle::gov_layout(
@@ -151,13 +215,8 @@ wn_render_summary <- function(region = NULL) {
       "summary_label",
       "Key metrics for Warning Notices"
     ),
-    shinyGovstyle::govTable(
-      inputId = "summary_table",
-      df = df,
-      caption = "Key Metrics",
-      caption_size = "l",
-      num_col = "Value"
-    )
+    error_note,
+    do.call(shinyGovstyle::govTable, gov_args)
   )
 
   end_time <- Sys.time()
