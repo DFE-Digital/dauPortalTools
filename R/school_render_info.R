@@ -193,42 +193,45 @@ school_render_overview <- function(urn) {
   # Split by tab for govTabs
   tab_list <- split(final_df, final_df$tabs)
 
-  gov_tabs_ui <- shinyGovstyle::govTabs(
-    inputId = "summary_table",
-    tabs = lapply(names(tab_list), function(tab_name) {
-      data <- tab_list[[tab_name]]
+  gov_tabs_ui <- do.call(
+    shinyGovstyle::govTabs,
+    c(
+      list(inputId = "summary_table"),
+      lapply(names(tab_list), function(tab_name) {
+        data <- tab_list[[tab_name]]
 
-      # Make links clickable for Important Links
-      if (tab_name == "Important Links") {
-        data$value <- ifelse(
-          grepl("^http", data$value),
-          paste0(
-            "<a href='",
-            data$value,
-            "' target='_blank'>",
-            data$field,
-            "</a>"
-          ),
-          data$value
+        # Make links clickable for Important Links
+        if (tab_name == "Important Links") {
+          data$value <- ifelse(
+            grepl("^http", data$value),
+            paste0(
+              "<a href='",
+              data$value,
+              "' target='_blank'>",
+              data$field,
+              "</a>"
+            ),
+            data$value
+          )
+        }
+
+        shiny::tabPanel(
+          title = tab_name,
+          shiny::HTML(paste0(
+            "<ul>",
+            paste0(
+              "<li><strong>",
+              data$field,
+              ":</strong> ",
+              data$value,
+              "</li>",
+              collapse = ""
+            ),
+            "</ul>"
+          ))
         )
-      }
-
-      shiny::tabPanel(
-        title = tab_name,
-        shiny::HTML(paste0(
-          "<ul>",
-          paste0(
-            "<li><strong>",
-            data$field,
-            ":</strong> ",
-            data$value,
-            "</li>",
-            collapse = ""
-          ),
-          "</ul>"
-        ))
-      )
-    })
+      })
+    )
   )
 
   ui <- shinyGovstyle::gov_layout(
