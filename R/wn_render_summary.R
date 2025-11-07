@@ -153,6 +153,8 @@ wn_render_summary <- function(region = NULL) {
     "Summary"
   }
 
+  print(df)
+
   ui <- shinyGovstyle::gov_layout(
     size = "two-thirds",
     shinyGovstyle::heading_text(heading, size = "l"),
