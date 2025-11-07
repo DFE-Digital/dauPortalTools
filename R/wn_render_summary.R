@@ -93,9 +93,8 @@ wn_render_summary <- function(region = NULL) {
     DBI::SQL("")
   }
 
-  # strip_brackets <- function(x) gsub("^\\[|\\]$", "", x)
-
-  schema_01a <- DBI::dbQuoteIdentifier(conf$schemas$db_schema_01a)
+  schema_01a <- conf$schemas$db_schema_01a
+  schema_01a <- DBI::SQL(schema_01a)
 
   sql_command <- glue::glue_sql(
     "
