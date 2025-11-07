@@ -27,10 +27,10 @@ log_transaction <- function(
   status,
   notes
 ) {
-  # Load configuration from YAML file
+  # Load confuration from YAML file
   library(yaml)
-  config <- yaml::read_yaml("config.yml")
-  app_id <- config$app_details$app_id
+  conf <- yaml::read_yaml("conf.yml")
+  app_id <- conf$app_details$app_id
 
   conn <- sql_manager("dit")
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
@@ -39,7 +39,7 @@ log_transaction <- function(
     {
       query <- glue::glue_sql(
         "
-      INSERT INTO {`config$database`}.{`config$schemas$db_schema_01a`}.[transaction_table] (
+      INSERT INTO {`conf$database`}.{`conf$schemas$db_schema_01a`}.[transaction_table] (
         app_id, action, record_id, record_type, performed_by, performed_on, status, notes, created_on
       ) VALUES (
         {app_id},
@@ -74,7 +74,7 @@ log_transaction <- function(
       # Log event
       dauPortalTools::log_event(
         glue::glue("[{status}] {action} on {record_type} (ID: {record_id})"),
-        config = NULL
+        conf = NULL
       )
 
       invisible(TRUE)
@@ -82,7 +82,7 @@ log_transaction <- function(
     error = function(e) {
       dauPortalTools::log_event(
         glue::glue("Transaction logging failed: {e$message}"),
-        config = NULL
+        conf = NULL
       )
       invisible(FALSE)
     }

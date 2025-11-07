@@ -29,15 +29,15 @@
 
 get_aidt_quality_data <- function(record = NULL) {
   # Log the start of the function
-  log_event("Starting function get_aidt_quality_data", config)
+  log_event("Starting function get_aidt_quality_data", conf)
 
-  # Load configuration from YAML file
+  # Load confuration from YAML file
   library(yaml)
-  config <- yaml::read_yaml("config.yml")
-  app_id <- config$app_details$app_id
+  conf <- yaml::read_yaml("conf.yml")
+  app_id <- conf$app_details$app_id
 
   # Log the received record ID and app ID
-  log_event(glue::glue("Received {record} id for app id: {app_id}."), config)
+  log_event(glue::glue("Received {record} id for app id: {app_id}."), conf)
 
   # Validate and format the record filter if provided
   if (!is.null("record") & is.numeric(record)) {
@@ -55,10 +55,10 @@ get_aidt_quality_data <- function(record = NULL) {
            [quality_status],
            [date_created],
            [last_checked]
-    FROM {`config$database`}.{`config$schema$db_schema_01a`}.[quality_list] l
-    LEFT JOIN {`config$database`}.{`config$schema$db_schema_01a`}.[quality_check] c 
+    FROM {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_list] l
+    LEFT JOIN {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_check] c 
         ON c.quality_check_id = l.error_id
-    LEFT JOIN {`config$database`}.{`config$schema$db_schema_01a`}.[app_list] a 
+    LEFT JOIN {`conf$database`}.{`conf$schema$db_schema_01a`}.[app_list] a 
         ON l.app_id = a.app_id
     WHERE l.app_id = {app_id}
       AND quality_status = 0

@@ -77,9 +77,9 @@ school_render_overview <- function(urn) {
     ,[Trusts (code)] AS trust_ref
     ,[Trusts (name)] AS trust_name
     ,[SchoolWebsite] AS school_website
-    FROM {config$database}.{config$db_schema_00c}.[Edubase]
+    FROM {conf$database}.{conf$db_schema_00c}.[Edubase]
     WHERE URN = {urn}
-    AND [DateStamp] = (SELECT MAX(DateStamp) FROM {config$database}.{config$schema$db_schema_00c}.[Edubase])
+    AND [DateStamp] = (SELECT MAX(DateStamp) FROM {`conf$database`}.{`conf$schemas$db_schema_00c`}.[Edubase])
     ",
     .con = conn
   )

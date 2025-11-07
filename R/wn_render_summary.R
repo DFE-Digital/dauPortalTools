@@ -97,14 +97,14 @@ wn_render_summary <- function(region = NULL) {
     "
     SELECT
       (SELECT COUNT(twn_id)
-       FROM {config$database}.{config$schema$db_schema_00a}.[twn_all_notices]
+       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_all_notices]
        WHERE [twn_status_id] <> 7{school_region}) AS total_live_records,
       (SELECT COUNT(t.twn_date_id)
-       FROM {config$database}.{config$schema$db_schema_00a}.[twn_date_tracking] t
-       LEFT JOIN {config$database}.{config$schema$db_schema_00a}.[twn_all_notices] a ON t.twn_id = a.twn_id
+       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_date_tracking] t
+       LEFT JOIN {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_all_notices] a ON t.twn_id = a.twn_id
        WHERE t.updated_on >= DATEADD(DAY, -30, GETDATE()){school_region}) AS updated_records,
       (SELECT COUNT(quality_id)
-       FROM {config$database}.{config$schema$db_schema_00a}.[quality_list] l
+       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[quality_list] l
        WHERE l.app_id > 0 AND l.app_id < 3 AND quality_status = 0{region_filter}) AS quality_issues
   ",
     .con = conn
