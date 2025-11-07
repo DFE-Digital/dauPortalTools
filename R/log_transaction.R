@@ -39,7 +39,7 @@ log_transaction <- function(
     {
       query <- glue::glue_sql(
         "
-      INSERT INTO {config$database}.{config$schema$db_schema_00a}.[transaction_table] (
+      INSERT INTO {`config$database`}.{`config$schemas$db_schema_01a`}.[transaction_table] (
         app_id, action, record_id, record_type, performed_by, performed_on, status, notes, created_on
       ) VALUES (
         {app_id},
