@@ -84,7 +84,7 @@ school_render_overview <- function(urn) {
     ",
     .con = conn
   )
-
+  print(sql_command)
   summary_data <- tryCatch(
     {
       DBI::dbGetQuery(conn, sql_command)
