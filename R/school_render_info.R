@@ -108,23 +108,29 @@ school_render_overview <- function(urn) {
   rows <- list()
 
   rows[["School Details"]] <- c(
-    URN = urn_val,
-    Name = summary_data$school_name,
-    LA = summary_data$la,
-    Region = summary_data$region,
-    Type = summary_data$school_type,
-    Group = summary_data$school_type_group,
-    Opened = summary_data$open_date
+    "URN" = urn_val,
+    "Name" = summary_data$school_name,
+    "LA" = summary_data$la,
+    "Region" = summary_data$region,
+    "Type" = summary_data$school_type,
+    "Group" = summary_data$school_type_group,
+    "Opened" = format(
+      as.Date(summary_data$open_date, origin = "1970-01-01"),
+      "%d-%m-%Y"
+    )
   )
   if (!is.na(summary_data$close_date)) {
     rows[["School Details"]] <- c(
       rows[["School Details"]],
-      Closed = summary_data$close_date,
-      Reason = summary_data$reason_closed
+      "Closed" = format(
+        as.Date(summary_data$close_date, origin = "1970-01-01"),
+        "%d-%m-%Y"
+      ),
+      "Reason" = summary_data$reason_closed
     )
   }
 
-  rows[["Ofsted"]] <- c(Status = "Coming Soon")
+  rows[["Ofsted"]] <- c("Status" = "Coming Soon")
 
   if (!is.na(trust_ref_val)) {
     rows[["Trust Details"]] <- c(
@@ -134,11 +140,11 @@ school_render_overview <- function(urn) {
   }
 
   rows[["More Details"]] <- c(
-    Phase = summary_data$phase,
-    Religious = summary_data$religious_character,
-    Diocese = summary_data$diocese_name,
-    Gender = summary_data$gender,
-    Pupils = summary_data$pupil_number,
+    "Phase" = summary_data$phase,
+    "Religious" = summary_data$religious_character,
+    "Diocese" = summary_data$diocese_name,
+    "Gender" = summary_data$gender,
+    "Pupils" = prettyNum(summary_data$pupil_number, big.mark = ","),
     "% FSM" = summary_data$perc_fsm
   )
 
@@ -164,37 +170,28 @@ school_render_overview <- function(urn) {
   }
   rows[["Important Links"]] <- links
 
-  tab_panels <- lapply(names(rows), function(tab_name) {
-    data <- rows[[tab_name]]
-
-    if (tab_name == "Important Links") {
-      data <- ifelse(
-        grepl("^http", data),
-        paste0("<a href='", data, "' target='_blank'>", names(data), "</a>"),
-        data
+  final_df <- do.call(
+    rbind,
+    lapply(names(rows), function(tab) {
+      data.frame(
+        tabs = tab,
+        field = names(rows[[tab]]),
+        value = unname(rows[[tab]]),
+        stringsAsFactors = FALSE
       )
-    }
+    })
+  )
 
-    shiny::tabPanel(
-      title = tab_name,
-      shiny::HTML(paste0(
-        "<ul>",
-        paste0(
-          "<li><strong>",
-          names(data),
-          ":</strong> ",
-          data,
-          "</li>",
-          collapse = ""
-        ),
-        "</ul>"
-      ))
-    )
-  })
-
-  gov_tabs_ui <- do.call(
-    shinyGovstyle::govTabs,
-    c(list(inputId = "school_tabs"), tab_panels)
+  final_df$value <- ifelse(
+    grepl("^http", final_df$value),
+    paste0(
+      "<a href='",
+      final_df$value,
+      "' target='_blank'>",
+      final_df$field,
+      "</a>"
+    ),
+    final_df$value
   )
 
   ui <- shinyGovstyle::gov_layout(
@@ -204,9 +201,10 @@ school_render_overview <- function(urn) {
       size = "l"
     ),
     shinyGovstyle::label_hint("school_overview_hint", "Key school information"),
-    do.call(
-      shinyGovstyle::govTabs,
-      c(list(inputId = "school_tabs"), tab_panels)
+    shinyGovstyle::govTabs(
+      inputId = "school_tabs",
+      df = final_df,
+      group_col = "tabs"
     )
   )
 
