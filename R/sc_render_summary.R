@@ -80,7 +80,7 @@ wn_render_summary <- function(region = NULL) {
     "Starting wn_render_summary with region: {region}"
   ))
 
-  conn <- sql_manager("dit")
+  conn <- sql_manager("data_insight_team")
 
   school_region <- if (!is.null(region)) {
     glue::glue_sql(" AND school_region = {region}", .con = conn)
@@ -106,27 +106,25 @@ wn_render_summary <- function(region = NULL) {
       (SELECT COUNT(quality_id)
        FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[quality_list] l
        WHERE l.app_id > 0 AND l.app_id < 3 AND quality_status = 0{region_filter}) AS quality_issues
-    ",
+  ",
     .con = conn
   )
 
   summary_data <- tryCatch(
-    DBI::dbGetQuery(conn, sql_command),
+    {
+      DBI::dbGetQuery(conn, sql_command)
+    },
     error = function(e) {
       dauPortalTools::log_event(glue::glue(
         "Error fetching summary: {e$message}"
       ))
-      data.frame(
-        total_live_records = NA_integer_,
-        updated_records = NA_integer_,
-        quality_issues = NA_integer_
-      )
+      return(data.frame(
+        total_live_records = NA,
+        updated_records = NA,
+        quality_issues = NA
+      ))
     }
   )
-
-  total_live <- suppressWarnings(as.integer(summary_data$total_live_records[1]))
-  updated_30d <- suppressWarnings(as.integer(summary_data$updated_records[1]))
-  qual_issues <- suppressWarnings(as.integer(summary_data$quality_issues[1]))
 
   df <- data.frame(
     Metric = c(
@@ -134,8 +132,11 @@ wn_render_summary <- function(region = NULL) {
       "Records Updated in Last 30 Days",
       "Quality Issues"
     ),
-    Value = c(total_live, updated_30d, qual_issues),
-    stringsAsFactors = FALSE
+    Value = c(
+      format(summary_data$total_live_records, big.mark = ","),
+      format(summary_data$updated_records, big.mark = ","),
+      format(summary_data$quality_issues, big.mark = ",")
+    )
   )
 
   heading <- if (!is.null(region)) {
@@ -156,7 +157,7 @@ wn_render_summary <- function(region = NULL) {
       df = df,
       caption = "Key Metrics",
       caption_size = "l",
-      num_col = "Value"
+      num_col = c(2)
     )
   )
 
@@ -165,5 +166,5 @@ wn_render_summary <- function(region = NULL) {
     "Finished wn_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
   ))
 
-  ui
+  return(ui)
 }
