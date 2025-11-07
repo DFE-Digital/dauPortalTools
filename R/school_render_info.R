@@ -50,12 +50,15 @@
 
 school_render_overview <- function(urn) {
   start_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue("Starting school_render_overview with urn: {urn}"))
+  dauPortalTools::log_event(glue::glue(
+    "Starting school_render_overview with urn: {urn}"
+  ))
 
   conn <- sql_manager("dit")
   db_schema_00c <- DBI::SQL(conf$schemas$db_schema_00c)
 
-  sql_command <- glue::glue_sql("
+  sql_command <- glue::glue_sql(
+    "
     SELECT URN AS urn
           ,[EstablishmentName] AS school_name
           ,[LA (name)] AS la
@@ -77,12 +80,16 @@ school_render_overview <- function(urn) {
     FROM {db_schema_00c}.[Edubase]
     WHERE URN = {urn}
       AND [DateStamp] = (SELECT MAX(DateStamp) FROM {db_schema_00c}.[Edubase])
-  ", .con = conn)
+  ",
+    .con = conn
+  )
 
   summary_data <- tryCatch(
     DBI::dbGetQuery(conn, sql_command),
     error = function(e) {
-      dauPortalTools::log_event(glue::glue("Error fetching summary: {e$message}"))
+      dauPortalTools::log_event(glue::glue(
+        "Error fetching summary: {e$message}"
+      ))
       return(data.frame(urn = NA, school_name = NA))
     }
   )
@@ -110,17 +117,19 @@ school_render_overview <- function(urn) {
     Opened = summary_data$open_date
   )
   if (!is.na(summary_data$close_date)) {
-    rows[["School Details"]] <- c(rows[["School Details"]],
-                                  Closed = summary_data$close_date,
-                                  Reason = summary_data$reason_closed)
+    rows[["School Details"]] <- c(
+      rows[["School Details"]],
+      Closed = summary_data$close_date,
+      Reason = summary_data$reason_closed
+    )
   }
 
   rows[["Ofsted"]] <- c(Status = "Coming Soon")
 
   if (!is.na(trust_ref_val)) {
     rows[["Trust Details"]] <- c(
-      Trust Ref = trust_ref_val,
-      Trust Name = summary_data$trust_name
+      "Trust Ref" = trust_ref_val,
+      "Trust Name" = summary_data$trust_name
     )
   }
 
@@ -134,13 +143,24 @@ school_render_overview <- function(urn) {
   )
 
   links <- c(
-    Website = summary_data$school_website,
-    Ofsted = paste0("http://www.ofsted.gov.uk/inspection-reports/find-inspection-report/provider/ELS/", urn_val),
-    GIAS School = paste0("https://get-information-schools.service.gov.uk/Establishments/Establishment/Details/", urn_val)
+    "Website" = summary_data$school_website,
+    "Ofsted" = paste0(
+      "http://www.ofsted.gov.uk/inspection-reports/find-inspection-report/provider/ELS/",
+      urn_val
+    ),
+    "GIAS School" = paste0(
+      "https://get-information-schools.service.gov.uk/Establishments/Establishment/Details/",
+      urn_val
+    )
   )
   if (!is.na(trust_ref_val)) {
-    links <- c(links,
-               GIAS Trust = paste0("https://get-information-schools.service.gov.uk/Groups/Group/Details/", trust_ref_val))
+    links <- c(
+      links,
+      "GIAS Trust" = paste0(
+        "https://get-information-schools.service.gov.uk/Groups/Group/Details/",
+        trust_ref_val
+      )
+    )
   }
   rows[["Important Links"]] <- links
 
@@ -148,16 +168,25 @@ school_render_overview <- function(urn) {
     data <- rows[[tab_name]]
 
     if (tab_name == "Important Links") {
-      data <- ifelse(grepl("^http", data),
-                     paste0("<a href='", data, "' target='_blank'>", names(data), "</a>"),
-                     data)
+      data <- ifelse(
+        grepl("^http", data),
+        paste0("<a href='", data, "' target='_blank'>", names(data), "</a>"),
+        data
+      )
     }
 
     shinyGovstyle::govTab(
       title = tab_name,
       content = shiny::HTML(paste0(
         "<ul>",
-        paste0("<li><strong>", names(data), ":</strong> ", data, "</li>", collapse = ""),
+        paste0(
+          "<li><strong>",
+          names(data),
+          ":</strong> ",
+          data,
+          "</li>",
+          collapse = ""
+        ),
         "</ul>"
       ))
     )
@@ -165,11 +194,19 @@ school_render_overview <- function(urn) {
 
   ui <- shinyGovstyle::gov_layout(
     size = "two-thirds",
-    shinyGovstyle::heading_text(glue::glue("{summary_data$school_name} ({urn_val})"), size = "l"),
+    shinyGovstyle::heading_text(
+      glue::glue("{summary_data$school_name} ({urn_val})"),
+      size = "l"
+    ),
     shinyGovstyle::label_hint("school_overview_hint", "Key school information"),
-    do.call(shinyGovstyle::govTabs, c(list(inputId = "school_tabs"), tab_panels))
+    do.call(
+      shinyGovstyle::govTabs,
+      c(list(inputId = "school_tabs"), tab_panels)
+    )
   )
 
-  dauPortalTools::log_event(glue::glue("Finished school_render_overview in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)} seconds"))
+  dauPortalTools::log_event(glue::glue(
+    "Finished school_render_overview in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)} seconds"
+  ))
   return(ui)
 }
