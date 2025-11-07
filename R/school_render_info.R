@@ -215,6 +215,7 @@ school_render_overview <- function(urn) {
           )
         }
 
+        # ✅ Return a proper tabPanel object
         shiny::tabPanel(
           title = tab_name,
           shiny::HTML(paste0(
