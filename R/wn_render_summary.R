@@ -112,8 +112,6 @@ wn_render_summary <- function(region = NULL) {
     .con = conn
   )
 
-  print(sql_command)
-
   summary_data <- tryCatch(
     DBI::dbGetQuery(conn, sql_command),
     error = function(e) {
@@ -128,7 +126,6 @@ wn_render_summary <- function(region = NULL) {
     }
   )
 
-  # After you fetch summary_data and compute totals:
   total_live <- suppressWarnings(as.integer(summary_data$total_live_records[1]))
   updated_30d <- suppressWarnings(as.integer(summary_data$updated_records[1]))
   qual_issues <- suppressWarnings(as.integer(summary_data$quality_issues[1]))
@@ -137,51 +134,30 @@ wn_render_summary <- function(region = NULL) {
     ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
   }
 
-  df <- data.frame(
-    Metric = c(
-      "Total Live Records",
-      "Records Updated in Last 30 Days",
-      "Quality Issues"
-    ),
-    Value = c(fmt(total_live), fmt(updated_30d), fmt(qual_issues)),
-    stringsAsFactors = FALSE
-  )
-
-  df$Value <- as.character(df$Value)
-
-  # Fallback if df is empty or invalid
-  if (nrow(df) == 0 || any(is.na(df$Value))) {
-    df <- data.frame(
-      Metric = c(
-        "Total Live Records",
-        "Records Updated in Last 30 Days",
-        "Quality Issues"
-      ),
-      Value = c("—", "—", "—"),
-      stringsAsFactors = FALSE
-    )
-  }
-
   heading <- if (!is.null(region)) {
     glue::glue("Summary for {region}")
   } else {
     "Summary"
   }
 
-  print(df)
-
-  ui <- shinyGovstyle::gov_layout(
+  # ✅ Replace govTable with card layout
+  ui <- gov_layout(
     size = "two-thirds",
-    shinyGovstyle::heading_text(heading, size = "l"),
-    shinyGovstyle::label_hint(
-      "summary_label",
-      "Key metrics for Warning Notices"
-    ),
-    shinyGovstyle::govTable(
-      inputId = "summary_table",
-      df = df,
-      caption = "Key Metrics",
-      caption_size = "l"
+    heading_text(heading, size = "l"),
+    layout_column_wrap(
+      width = 1 / 3,
+      card(
+        card_header("Total Live Records"),
+        tags$h2(fmt(total_live), class = "govuk-heading-m")
+      ),
+      card(
+        card_header("Updates This Month"),
+        tags$h2(fmt(updated_30d), class = "govuk-heading-m")
+      ),
+      card(
+        card_header("Quality Issues"),
+        tags$h2(fmt(qual_issues), class = "govuk-heading-m")
+      )
     )
   )
 
