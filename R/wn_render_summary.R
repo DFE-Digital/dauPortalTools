@@ -137,18 +137,17 @@ wn_render_summary <- function(region = NULL) {
     ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
   }
 
+  df <- data.frame(
+    Metric = c(
+      "Total Live Records",
+      "Records Updated in Last 30 Days",
+      "Quality Issues"
+    ),
+    Value = c(fmt(total_live), fmt(updated_30d), fmt(qual_issues)),
+    stringsAsFactors = FALSE
+  )
+
   df$Value <- as.character(df$Value)
-  if (nrow(df) == 0 || any(is.na(df$Value))) {
-    df <- data.frame(
-      Metric = c(
-        "Total Live Records",
-        "Records Updated in Last 30 Days",
-        "Quality Issues"
-      ),
-      Value = c("—", "—", "—"),
-      stringsAsFactors = FALSE
-    )
-  }
 
   heading <- if (!is.null(region)) {
     glue::glue("Summary for {region}")
