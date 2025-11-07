@@ -95,8 +95,8 @@ wn_render_summary <- function(region = NULL) {
 
   strip_brackets <- function(x) gsub("^\\[|\\]$", "", x)
 
-  db_name <- strip_brackets(db_name)
-  schema_01a <- strip_brackets(schema_01a)
+  db_name <- strip_brackets(conf$db_name)
+  schema_01a <- strip_brackets(conf$schemas$db_schema_01a)
 
   sql_command <- glue::glue_sql(
     "
