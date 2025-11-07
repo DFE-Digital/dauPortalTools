@@ -134,16 +134,7 @@ wn_render_summary <- function(region = NULL) {
     ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
   }
 
-  heading <- if (!is.null(region)) {
-    glue::glue("Summary for {region}")
-  } else {
-    "Summary"
-  }
-
-  # ✅ Replace govTable with card layout
   ui <- gov_layout(
-    size = "two-thirds",
-    heading_text(heading, size = "l"),
     layout_column_wrap(
       width = 1 / 3,
       card(
