@@ -149,6 +149,19 @@ wn_render_summary <- function(region = NULL) {
 
   df$Value <- as.character(df$Value)
 
+  # Fallback if df is empty or invalid
+  if (nrow(df) == 0 || any(is.na(df$Value))) {
+    df <- data.frame(
+      Metric = c(
+        "Total Live Records",
+        "Records Updated in Last 30 Days",
+        "Quality Issues"
+      ),
+      Value = c("—", "—", "—"),
+      stringsAsFactors = FALSE
+    )
+  }
+
   heading <- if (!is.null(region)) {
     glue::glue("Summary for {region}")
   } else {
