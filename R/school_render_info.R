@@ -175,9 +175,9 @@ school_render_overview <- function(urn) {
       )
     }
 
-    shinyGovstyle::govTab(
+    shiny::tabPanel(
       title = tab_name,
-      content = shiny::HTML(paste0(
+      shiny::HTML(paste0(
         "<ul>",
         paste0(
           "<li><strong>",
@@ -191,6 +191,11 @@ school_render_overview <- function(urn) {
       ))
     )
   })
+
+  gov_tabs_ui <- do.call(
+    shinyGovstyle::govTabs,
+    c(list(inputId = "school_tabs"), tab_panels)
+  )
 
   ui <- shinyGovstyle::gov_layout(
     size = "two-thirds",
