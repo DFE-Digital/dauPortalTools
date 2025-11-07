@@ -1,0 +1,5 @@
+^renv$
+^renv\.lock$
+^dauPortalTools\.Rproj$
+^\.Rproj\.user$
+^logs
