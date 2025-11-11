@@ -57,9 +57,9 @@ wn_render_status_type_charts <- function(region = NULL) {
       t.twn_type_id,
       t.twn_type_name
     FROM {schema_01a}.[twn_all_notices] a
-    LEFT JOIN {schema_01a}.[twn_type_conf]   t
+    LEFT JOIN {schema_01a}.[twn_type_config]   t
       ON a.type_of_notice_id = t.twn_type_id
-    LEFT JOIN {schema_01a}.[twn_status_conf] s
+    LEFT JOIN {schema_01a}.[twn_status_config] s
       ON a.twn_status_id     = s.twn_status_id
     WHERE a.twn_status_id <> 7
       {region_where}
