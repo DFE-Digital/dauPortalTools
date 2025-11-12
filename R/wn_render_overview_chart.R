@@ -1,20 +1,40 @@
-#' Render Warning Notice Status/Type Charts + Downloads
+#' Render Warning Notice Status & Type Charts
 #'
-#' Renders two side-by-side Plotly bar charts:
-#' - Left: x = Status, y = count (stacked by school_region if region = NULL)
-#' - Right: x = Type,   y = count (stacked by school_region if region = NULL)
+#' This function generates a GOV.UK-styled UI component for displaying
+#' warning notice data by status and type. It retrieves data from SQL Server,
+#' processes it, and renders interactive Plotly bar charts, download buttons,
+#' and a table of underlying records.
 #'
-#' If `region` is provided, data are filtered to that region and bars are not stacked.
-#' Status ID 7 ("removed") is always excluded.
+#' @param region Character string or `NULL`. Optional filter for school region.
+#'   If `NULL`, charts are stacked by region; if provided, charts are filtered
+#'   for that region only.
 #'
-#' Includes:
-#' - Download buttons for records CSV, status summary CSV, and type summary CSV.
-#' - A table of underlying records with a per-row direct wn link to the portal.
+#' @return A Shiny UI element containing:
+#'   - Heading and descriptive hint
+#'   - Download buttons for records and summaries
+#'   - Two Plotly bar charts (status and type)
+#'   - A table of underlying records (DT or GOV.UK table)
 #'
-#' @param region Character scalar or `NULL`. If provided, filters by `school_region`.
-#'               If `NULL`, shows a stacked view by all `school_region` values.
+#' @details
+#' - Connects to SQL Server using `sql_manager("dit")`.
+#' - Queries `[twn_all_notices]` joined with status and type config tables.
+#' - Excludes records where `twn_status_id = 7`.
+#' - Handles missing values by replacing with "(Unknown)".
 #'
-#' @return A `shiny.tag` UI fragment suitable for use in `renderUI()`.
+#' @dependencies
+#' Requires:
+#' - `DBI`, `glue`, `dplyr`, `plotly`, `htmltools`, `shiny`, `DT`, `shinyGovstyle`
+#' - Custom packages: `dauPortalTools` for logging
+#'
+#' @examples
+#' \dontrun{
+#' # Render charts for all regions
+#' wn_render_status_type_charts()
+#'
+#' # Render charts for a specific region
+#' wn_render_status_type_charts(region = "East Midlands")
+#' }
+#'
 #' @export
 #'
 
@@ -24,14 +44,6 @@ wn_render_status_type_charts <- function(region = NULL) {
     "Starting wn_render_status_type_charts with region: {region}"
   ))
 
-  # Dependencies
-  requireNamespace("DBI")
-  requireNamespace("glue")
-  requireNamespace("dplyr")
-  requireNamespace("plotly")
-  requireNamespace("htmltools")
-  requireNamespace("shiny")
-  requireNamespace("shinyGovstyle")
   have_DT <- requireNamespace("DT", quietly = TRUE)
 
   conn <- sql_manager("dit")
@@ -57,30 +69,22 @@ wn_render_status_type_charts <- function(region = NULL) {
       t.twn_type_id,
       t.twn_type_name
     FROM {schema_01a}.[twn_all_notices] a
-    LEFT JOIN {schema_01a}.[twn_type_config]   t
-      ON a.type_of_notice_id = t.twn_type_id
-    LEFT JOIN {schema_01a}.[twn_status_config] s
-      ON a.twn_status_id     = s.twn_status_id
+    LEFT JOIN {schema_01a}.[twn_type_config] t ON a.type_of_notice_id = t.twn_type_id
+    LEFT JOIN {schema_01a}.[twn_status_config] s ON a.twn_status_id = s.twn_status_id
     WHERE a.twn_status_id <> 7
       {region_where}
   ",
     .con = conn
   )
 
-  df <- tryCatch(
-    {
-      DBI::dbGetQuery(conn, sql_cmd)
-    },
-    error = function(e) {
-      dauPortalTools::log_event(glue::glue(
-        "Error fetching status/type data: {e$message}"
-      ))
-      NULL
-    }
-  )
+  df <- tryCatch(DBI::dbGetQuery(conn, sql_cmd), error = function(e) {
+    dauPortalTools::log_event(glue::glue(
+      "Error fetching status/type data: {e$message}"
+    ))
+    NULL
+  })
 
   if (is.null(df) || !nrow(df)) {
-    dauPortalTools::log_event("No rows returned for status/type charts.")
     heading <- if (is.null(region)) {
       "Warning Notice status & type"
     } else {
@@ -122,7 +126,16 @@ wn_render_status_type_charts <- function(region = NULL) {
     ) |>
     dplyr::arrange(dplyr::desc(updated_on), dplyr::desc(created_on))
 
-  # Aggregations for charts + downloads
+  records_df <- records_df |>
+    dplyr::mutate(
+      link = vapply(
+        link,
+        function(x) as.character(make_shiny_link(x, "Open")),
+        character(1)
+      )
+    )
+
+  # Counts
   if (is.null(region)) {
     status_counts <- df |>
       dplyr::count(twn_status_name, school_region, name = "count")
@@ -137,20 +150,17 @@ wn_render_status_type_charts <- function(region = NULL) {
       dplyr::arrange(dplyr::desc(count))
   }
 
-  # For nicer ordering on x-axis
   status_order <- status_counts |>
     dplyr::group_by(twn_status_name) |>
     dplyr::summarise(total = sum(count), .groups = "drop") |>
     dplyr::arrange(dplyr::desc(total)) |>
     dplyr::pull(twn_status_name)
-
   type_order <- type_counts |>
     dplyr::group_by(twn_type_name) |>
     dplyr::summarise(total = sum(count), .groups = "drop") |>
     dplyr::arrange(dplyr::desc(total)) |>
     dplyr::pull(twn_type_name)
 
-  # GOV.UK palette
   govuk_palette <- c(
     "#1d70b8",
     "#d4351c",
@@ -164,7 +174,7 @@ wn_render_status_type_charts <- function(region = NULL) {
     "#28a197"
   )
 
-  # Build Plotly charts
+  # Charts
   if (is.null(region)) {
     p_status <- plotly::plot_ly(
       status_counts,
@@ -174,9 +184,7 @@ wn_render_status_type_charts <- function(region = NULL) {
       colors = govuk_palette,
       type = "bar",
       hovertemplate = paste(
-        "<b>Status:</b> %{x}<br>",
-        "<b>Region:</b> %{fullData.name}<br>",
-        "<b>Count:</b> %{y:,}<extra></extra>"
+        "<b>Status:</b> %{x}<br><b>Region:</b> %{fullData.name}<br><b>Count:</b> %{y:,}<extra></extra>"
       )
     ) |>
       plotly::layout(
@@ -198,9 +206,7 @@ wn_render_status_type_charts <- function(region = NULL) {
       colors = govuk_palette,
       type = "bar",
       hovertemplate = paste(
-        "<b>Type:</b> %{x}<br>",
-        "<b>Region:</b> %{fullData.name}<br>",
-        "<b>Count:</b> %{y:,}<extra></extra>"
+        "<b>Type:</b> %{x}<br><b>Region:</b> %{fullData.name}<br><b>Count:</b> %{y:,}<extra></extra>"
       )
     ) |>
       plotly::layout(
@@ -215,7 +221,6 @@ wn_render_status_type_charts <- function(region = NULL) {
       )
   } else {
     primary_colour <- "#1d70b8"
-
     p_status <- plotly::plot_ly(
       status_counts,
       x = ~twn_status_name,
@@ -223,11 +228,9 @@ wn_render_status_type_charts <- function(region = NULL) {
       type = "bar",
       marker = list(color = primary_colour),
       hovertemplate = paste(
-        "<b>Status:</b> %{x}<br>",
-        "<b>Region:</b> ",
+        "<b>Status:</b> %{x}<br><b>Region:</b> ",
         htmltools::htmlEscape(region),
-        "<br>",
-        "<b>Count:</b> %{y:,}<extra></extra>"
+        "<br><b>Count:</b> %{y:,}<extra></extra>"
       )
     ) |>
       plotly::layout(
@@ -247,11 +250,9 @@ wn_render_status_type_charts <- function(region = NULL) {
       type = "bar",
       marker = list(color = primary_colour),
       hovertemplate = paste(
-        "<b>Type:</b> %{x}<br>",
-        "<b>Region:</b> ",
+        "<b>Type:</b> %{x}<br><b>Region:</b> ",
         htmltools::htmlEscape(region),
-        "<br>",
-        "<b>Count:</b> %{y:,}<extra></extra>"
+        "<br><b>Count:</b> %{y:,}<extra></extra>"
       )
     ) |>
       plotly::layout(
@@ -270,12 +271,10 @@ wn_render_status_type_charts <- function(region = NULL) {
   } else {
     glue::glue("Warning Notice status & type — {region}")
   }
-
   rand_id <- paste0(sample(c(letters, 0:9), 6, TRUE), collapse = "")
   dl_records_id <- paste0("wn_dl_records_csv_", rand_id)
-  dl_status_id <- paste0("wn_dl_status_csv_", rand_id)
-  dl_type_id <- paste0("wn_dl_type_csv_", rand_id)
 
+  # Download
   session <- shiny::getDefaultReactiveDomain()
   if (!is.null(session)) {
     session$output[[dl_records_id]] <- shiny::downloadHandler(
@@ -291,93 +290,35 @@ wn_render_status_type_charts <- function(region = NULL) {
         utils::write.csv(records_df, file, row.names = FALSE, na = "")
       }
     )
-    # Status summary CSV
-    session$output[[dl_status_id]] <- shiny::downloadHandler(
-      filename = function() {
-        suffix <- if (is.null(region)) {
-          "all_regions"
-        } else {
-          gsub("\\s+", "_", region)
-        }
-        paste0(
-          "wn_status_summary_",
-          suffix,
-          "_",
-          format(Sys.Date(), "%Y%m%d"),
-          ".csv"
-        )
-      },
-      content = function(file) {
-        out <- if (is.null(region)) {
-          dplyr::rename(
-            status_counts,
-            status = twn_status_name,
-            region = school_region
-          )
-        } else {
-          dplyr::rename(status_counts, status = twn_status_name)
-        }
-        utils::write.csv(out, file, row.names = FALSE, na = "")
-      }
-    )
-    # Type summary CSV
-    session$output[[dl_type_id]] <- shiny::downloadHandler(
-      filename = function() {
-        suffix <- if (is.null(region)) {
-          "all_regions"
-        } else {
-          gsub("\\s+", "_", region)
-        }
-        paste0(
-          "wn_type_summary_",
-          suffix,
-          "_",
-          format(Sys.Date(), "%Y%m%d"),
-          ".csv"
-        )
-      },
-      content = function(file) {
-        out <- if (is.null(region)) {
-          dplyr::rename(
-            type_counts,
-            type = twn_type_name,
-            region = school_region
-          )
-        } else {
-          dplyr::rename(type_counts, type = twn_type_name)
-        }
-        utils::write.csv(out, file, row.names = FALSE, na = "")
-      }
-    )
   }
+
+  # Summary tables
+  status_summary_table <- DT::datatable(
+    status_counts,
+    rownames = FALSE,
+    options = list(pageLength = 10)
+  )
+  type_summary_table <- DT::datatable(
+    type_counts,
+    rownames = FALSE,
+    options = list(pageLength = 10)
+  )
 
   # Build table UI
   table_heading <- htmltools::div(
     style = "margin: 1rem 0 0.25rem 0; font-weight:600;",
     "Underlying records"
   )
-
-  table_widget <- if (have_DT) {
-    DT::datatable(
-      records_df |>
-        dplyr::mutate(link = sprintf('%sOpen</a>', link)),
-      escape = FALSE,
-      rownames = FALSE,
-      options = list(
-        pageLength = 10,
-        autoWidth = TRUE,
-        order = list(list(6, "desc"))
-      )
+  table_widget <- DT::datatable(
+    records_df,
+    escape = FALSE,
+    rownames = FALSE,
+    options = list(
+      pageLength = 10,
+      autoWidth = TRUE,
+      order = list(list(6, "desc"))
     )
-  } else {
-    shinyGovstyle::govTable(
-      inputId = paste0("wn_fallback_tbl_", rand_id),
-      df = records_df,
-      caption = NULL,
-      caption_size = "m",
-      num_col = NULL
-    )
-  }
+  )
 
   # --- Compose UI ---
   ui <- shinyGovstyle::gov_layout(
@@ -391,43 +332,59 @@ wn_render_status_type_charts <- function(region = NULL) {
         "Filtered by school region."
       }
     ),
-    shiny::fluidRow(
-      shiny::column(
-        width = 12,
-        htmltools::div(
-          style = "margin: 0.5rem 0 0.5rem 0;",
-          htmltools::tags$strong("Downloads: "),
-          shiny::downloadButton(dl_records_id, "Records CSV"),
-          htmltools::span(" "),
-          shiny::downloadButton(dl_status_id, "Status summary CSV"),
-          htmltools::span(" "),
-          shiny::downloadButton(dl_type_id, "Type summary CSV")
-        )
-      )
-    ),
-    shiny::fluidRow(
-      shiny::column(
-        width = 6,
-        htmltools::div(
-          style = "margin-bottom: 0.5rem; font-weight:600;",
-          "By status"
-        ),
-        p_status
+    shiny::tabsetPanel(
+      id = paste0("wn_tabs_", rand_id),
+      type = "tabs",
+      tabPanel(
+        "Status Chart",
+        shiny::fluidRow(shiny::column(
+          width = 12,
+          htmltools::div(
+            style = "margin-bottom: 0.5rem; font-weight:600;",
+            "By status"
+          ),
+          p_status
+        )),
+        shiny::fluidRow(shiny::column(
+          width = 12,
+          htmltools::div(
+            style = "margin-top: 1rem; font-weight:600;",
+            "Status Summary"
+          ),
+          status_summary_table
+        ))
       ),
-      shiny::column(
-        width = 6,
-        htmltools::div(
-          style = "margin-bottom: 0.5rem; font-weight:600;",
-          "By type"
-        ),
-        p_type
-      )
-    ),
-    shiny::fluidRow(
-      shiny::column(
-        width = 12,
-        table_heading,
-        table_widget
+      tabPanel(
+        "Type Chart",
+        shiny::fluidRow(shiny::column(
+          width = 12,
+          htmltools::div(
+            style = "margin-bottom: 0.5rem; font-weight:600;",
+            "By type"
+          ),
+          p_type
+        )),
+        shiny::fluidRow(shiny::column(
+          width = 12,
+          htmltools::div(
+            style = "margin-top: 1rem; font-weight:600;",
+            "Type Summary"
+          ),
+          type_summary_table
+        ))
+      ),
+      tabPanel(
+        "Underlying Data",
+        shiny::fluidRow(shiny::column(
+          width = 12,
+          htmltools::div(
+            style = "margin: 0.5rem 0;",
+            htmltools::tags$strong("Download all records: "),
+            shiny::downloadButton(dl_records_id, "Records CSV")
+          ),
+          table_heading,
+          table_widget
+        ))
       )
     )
   )
@@ -436,6 +393,5 @@ wn_render_status_type_charts <- function(region = NULL) {
   dauPortalTools::log_event(glue::glue(
     "Finished wn_render_status_type_charts in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
   ))
-
   return(ui)
 }
