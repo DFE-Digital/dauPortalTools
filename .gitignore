@@ -2,3 +2,9 @@
 .Rhistory
 .RData
 .Ruserdata
+
+/logs/
+
+config.yml
+config.yaml
+
