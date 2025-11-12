@@ -10,13 +10,20 @@ wn_render_status_type_charts(region = NULL)
 wn_render_status_type_charts(region = NULL)
 }
 \arguments{
-\item{region}{Character scalar or \code{NULL}. If provided, filters by \code{school_region}.
-If \code{NULL}, shows a stacked view by all \code{school_region} values.}
+\item{region}{Character string or \code{NULL}. Optional filter for school region.
+If \code{NULL}, charts are stacked by region; if provided, charts are filtered
+for that region only.}
 }
 \value{
 A \code{shiny.tag} UI fragment suitable for use in \code{renderUI()}.
 
-A \code{shiny.tag} UI fragment suitable for use in \code{renderUI()}.
+A Shiny UI element containing:
+\itemize{
+\item Heading and descriptive hint
+\item Download buttons for records and summaries
+\item Two Plotly bar charts (status and type)
+\item A table of underlying records (DT or GOV.UK table)
+}
 }
 \description{
 Renders two side-by-side Plotly bar charts:
@@ -25,11 +32,10 @@ Renders two side-by-side Plotly bar charts:
 \item Right: x = Type,   y = count (stacked by school_region if region = NULL)
 }
 
-Renders two side-by-side Plotly bar charts:
-\itemize{
-\item Left: x = Status, y = count (stacked by school_region if region = NULL)
-\item Right: x = Type,   y = count (stacked by school_region if region = NULL)
-}
+This function generates a GOV.UK-styled UI component for displaying
+warning notice data by status and type. It retrieves data from SQL Server,
+processes it, and renders interactive Plotly bar charts, download buttons,
+and a table of underlying records.
 }
 \details{
 If \code{region} is provided, data are filtered to that region and bars are not stacked.
@@ -41,12 +47,20 @@ Includes:
 \item A table of underlying records with a per-row direct wn link to the portal.
 }
 
-If \code{region} is provided, data are filtered to that region and bars are not stacked.
-Status ID 7 ("removed") is always excluded.
-
-Includes:
 \itemize{
-\item Download buttons for records CSV, status summary CSV, and type summary CSV.
-\item A table of underlying records with a per-row direct wn link to the portal.
+\item Connects to SQL Server using \code{sql_manager("dit")}.
+\item Queries \verb{[twn_all_notices]} joined with status and type config tables.
+\item Excludes records where \code{twn_status_id = 7}.
+\item Handles missing values by replacing with "(Unknown)".
 }
+}
+\examples{
+\dontrun{
+# Render charts for all regions
+wn_render_status_type_charts()
+
+# Render charts for a specific region
+wn_render_status_type_charts(region = "East Midlands")
+}
+
 }

@@ -2,46 +2,40 @@
 % Please edit documentation in R/school_render_info.R
 \name{school_render_overview}
 \alias{school_render_overview}
-\title{Render School Overview Panel}
+\title{Render School Overview UI}
 \usage{
 school_render_overview(urn)
 }
 \arguments{
-\item{urn}{Character scalar. The unique URN of the school to display.}
+\item{urn}{A character string representing the Unique Reference Number (URN) of a school.}
 }
 \value{
-A \code{shiny.tag} object representing a GOV.UK-styled tabbed layout suitable for use in \code{renderUI()}.
+A Shiny UI object containing the school overview layout. If no data is found,
+returns a message indicating that no data is available.
 }
 \description{
-Creates a GOV.UK-styled tabbed panel displaying key school information grouped into sections:
-\itemize{
-\item \strong{School Details}: Basic identifiers and status (URN, name, LA, region, type, open/close dates).
-\item \strong{Trust Details}: Trust reference and name (only shown if the school is part of a trust).
-\item \strong{More School Details}: Phase, religious character, diocese, gender, pupil numbers, FSM percentage.
-\item \strong{Important Links}: School website, Ofsted inspection link, and GIAS links for school and trust.
-}
+Generates a GOV.UK-styled tabbed UI layout displaying school summary information
+for a given URN, including school details, trust details, additional metadata,
+and useful external links (e.g., Ofsted, GIAS).
 }
 \details{
-This UI fragment can be inserted anywhere in a Shiny app (e.g., inside \code{uiOutput()} / \code{renderUI()}).
-
-The function:
+This function:
 \itemize{
-\item Queries the Edubase table using \code{DBI::dbGetQuery()} and a connection from \code{sql_manager("dit")}.
-\item Uses \code{glue_sql()} for safe SQL interpolation.
-\item Dynamically builds a long-format data frame grouped by tab names.
-\item Converts this data into \code{shinyGovstyle::govTabs()} panels, with clickable external links opening in a new tab.
+\item Connects to the \code{dit} SQL Server database.
+\item Queries the latest Edubase record for the given URN.
+\item Constructs a tabbed UI layout using \code{shinyGovstyle::gov_summary}.
+\item Includes links to the school's website, Ofsted report, and GIAS pages.
+\item Logs start and end times using \code{dauPortalTools::log_event}.
 }
-
-If the query fails or returns no data, the UI will display a fallback heading and empty tabs.
-
-Styling is provided by \code{shinyGovstyle} components (\code{gov_layout()}, \code{heading_text()}, \code{govTabs()}).
 }
 \examples{
 \dontrun{
-# --- Minimal Shiny example -------------------------------------
+# Run interactively in a Shiny app
 if (interactive()) {
   library(shiny)
   library(shinyGovstyle)
+  library(dfeshiny)
+  library(bslib)
 
   ui <- fluidPage(
     uiOutput("school_overview")
@@ -49,15 +43,11 @@ if (interactive()) {
 
   server <- function(input, output, session) {
     output$school_overview <- renderUI({
-      school_render_overview(urn = "123456")  # Replace with a valid URN
+      school_render_overview(urn = "123456") # Replace with a valid URN
     })
   }
 
   shinyApp(ui, server)
 }
 }
-
-}
-\seealso{
-\code{\link[shinyGovstyle]{govTabs}}, \code{\link[shinyGovstyle]{gov_layout}}
 }
