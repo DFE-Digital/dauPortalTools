@@ -1,34 +1,28 @@
-#' Render School Overview Panel
+#' Render School Overview UI
 #'
-#' Creates a GOV.UK-styled tabbed panel displaying key school information grouped into sections:
-#' - **School Details**: Basic identifiers and status (URN, name, LA, region, type, open/close dates).
-#' - **Trust Details**: Trust reference and name (only shown if the school is part of a trust).
-#' - **More School Details**: Phase, religious character, diocese, gender, pupil numbers, FSM percentage.
-#' - **Important Links**: School website, Ofsted inspection link, and GIAS links for school and trust.
+#' Generates a GOV.UK-styled tabbed UI layout displaying school summary information
+#' for a given URN, including school details, trust details, additional metadata,
+#' and useful external links (e.g., Ofsted, GIAS).
 #'
-#' This UI fragment can be inserted anywhere in a Shiny app (e.g., inside `uiOutput()` / `renderUI()`).
+#' @param urn A character string representing the Unique Reference Number (URN) of a school.
 #'
-#' @param urn Character scalar. The unique URN of the school to display.
-#'
-#' @return A `shiny.tag` object representing a GOV.UK-styled tabbed layout suitable for use in `renderUI()`.
+#' @return A Shiny UI object containing the school overview layout. If no data is found,
+#' returns a message indicating that no data is available.
 #'
 #' @details
-#' The function:
-#' - Queries the Edubase table using `DBI::dbGetQuery()` and a connection from `sql_manager("dit")`.
-#' - Uses `glue_sql()` for safe SQL interpolation.
-#' - Dynamically builds a long-format data frame grouped by tab names.
-#' - Converts this data into `shinyGovstyle::govTabs()` panels, with clickable external links opening in a new tab.
-#'
-#' If the query fails or returns no data, the UI will display a fallback heading and empty tabs.
-#'
-#' Styling is provided by `shinyGovstyle` components (`gov_layout()`, `heading_text()`, `govTabs()`).
+#' This function:
+#' - Connects to the `dit` SQL Server database.
+#' - Queries the latest Edubase record for the given URN.
+#' - Constructs a tabbed UI layout using `shinyGovstyle::gov_summary`.
 #'
 #' @examples
 #' \dontrun{
-#' # --- Minimal Shiny example -------------------------------------
+#' # Run interactively in a Shiny app
 #' if (interactive()) {
 #'   library(shiny)
 #'   library(shinyGovstyle)
+#'   library(dfeshiny)
+#'   library(bslib)
 #'
 #'   ui <- fluidPage(
 #'     uiOutput("school_overview")
@@ -36,15 +30,13 @@
 #'
 #'   server <- function(input, output, session) {
 #'     output$school_overview <- renderUI({
-#'       school_render_overview(urn = "123456")  # Replace with a valid URN
+#'       school_render_overview(urn = "123456") # Replace with a valid URN
 #'     })
 #'   }
 #'
 #'   shinyApp(ui, server)
 #' }
 #' }
-#'
-#' @seealso \code{\link[shinyGovstyle]{govTabs}}, \code{\link[shinyGovstyle]{gov_layout}}
 #' @export
 #'
 
@@ -101,14 +93,11 @@ school_render_overview <- function(urn) {
     ))
   }
 
-  urn_val <- summary_data$urn[1]
-  trust_ref_val <- summary_data$trust_ref[1]
+  # Prepare tab data
+  tabs <- list()
 
-  rows <- list()
-
-  rows[["School Details"]] <- c(
-    "URN" = urn_val,
-    "Name" = summary_data$school_name,
+  # School Details
+  tabs[["School Details"]] <- list(
     "LA" = summary_data$la,
     "Region" = summary_data$region,
     "Type" = summary_data$school_type,
@@ -119,8 +108,8 @@ school_render_overview <- function(urn) {
     )
   )
   if (!is.na(summary_data$close_date)) {
-    rows[["School Details"]] <- c(
-      rows[["School Details"]],
+    tabs[["School Details"]] <- c(
+      tabs[["School Details"]],
       "Closed" = format(
         as.Date(summary_data$close_date, origin = "1970-01-01"),
         "%d-%m-%Y"
@@ -129,14 +118,18 @@ school_render_overview <- function(urn) {
     )
   }
 
-  if (!is.na(trust_ref_val)) {
-    rows[["Trust Details"]] <- c(
-      "Trust Ref" = trust_ref_val,
+  # Trust Details
+  if (!is.na(summary_data$trust_ref)) {
+    tabs[["Trust Details"]] <- list(
+      "Trust Ref" = summary_data$trust_ref,
       "Trust Name" = summary_data$trust_name
     )
+  } else {
+    tabs[["Trust Details"]] <- NULL
   }
 
-  rows[["More Details"]] <- c(
+  # More Details
+  tabs[["More Details"]] <- list(
     "Phase" = summary_data$phase,
     "Religious" = summary_data$religious_character,
     "Diocese" = summary_data$diocese_name,
@@ -146,65 +139,134 @@ school_render_overview <- function(urn) {
   )
 
   links <- c(
-    "Website" = summary_data$school_website,
-    "Ofsted" = paste0(
-      "http://www.ofsted.gov.uk/inspection-reports/find-inspection-report/provider/ELS/",
-      urn_val
-    ),
-    "GIAS School" = paste0(
-      "https://get-information-schools.service.gov.uk/Establishments/Establishment/Details/",
-      urn_val
-    )
+    summary_data$school_website,
+    ofsted_url(summary_data$urn),
+    gias_school_url(summary_data$urn)
   )
-  if (!is.na(trust_ref_val)) {
+
+  link_names <- c(
+    paste(summary_data$school_name, "Website"),
+    paste(summary_data$school_name, "Ofsted Report"),
+    paste(summary_data$school_name, "GIAS School")
+  )
+
+  # Add Trust link if available
+  if (
+    !is.na(summary_data$trust_ref) &&
+      summary_data$trust_ref != "" &&
+      !is.na(summary_data$trust_name) &&
+      summary_data$trust_name != ""
+  ) {
     links <- c(
       links,
-      "GIAS Trust" = paste0(
-        "https://get-information-schools.service.gov.uk/Groups/Group/Details/",
-        trust_ref_val
-      )
+      gias_trust_url(summary_data$trust_ref)
     )
+    link_names <- c(link_names, paste(summary_data$trust_name, "GIAS Trust"))
   }
-  rows[["Important Links"]] <- links
 
-  final_df <- do.call(
-    rbind,
-    lapply(names(rows), function(tab) {
-      data.frame(
-        tabs = tab,
-        field = names(rows[[tab]]),
-        value = unname(rows[[tab]]),
-        stringsAsFactors = FALSE
+  # Name the links vector
+  names(links) <- link_names
+
+  # Convert to shiny links
+  tabs[["Important Links"]] <- make_shiny_links(links)
+
+  # Remove empty tabs
+  tabs <- tabs[!sapply(tabs, is.null)]
+
+  # Create tab buttons
+  tab_buttons <- shiny::tags$div(
+    class = "custom-tabs-buttons",
+    lapply(names(tabs), function(tab) {
+      shiny::tags$button(
+        class = if (tab == names(tabs)[1]) {
+          "custom-tab-btn active"
+        } else {
+          "custom-tab-btn"
+        },
+        `data-tab` = tab,
+        tab
       )
     })
   )
 
-  final_df$value <- ifelse(
-    grepl("^http", final_df$value),
-    paste0(
-      "<a href='",
-      final_df$value,
-      "' target='_blank'>",
-      final_df$field,
-      "</a>"
-    ),
-    final_df$value
+  # Create tab contents with gov_summary
+  tab_contents <- shiny::tags$div(
+    class = "custom-tabs-contents",
+    lapply(names(tabs), function(tab) {
+      shiny::tags$div(
+        class = if (tab == names(tabs)[1]) {
+          "custom-tab-content active"
+        } else {
+          "custom-tab-content"
+        },
+        `data-tab` = tab,
+        shinyGovstyle::gov_summary(
+          inputId = paste0("sum_", gsub(" ", "_", tolower(tab))),
+          headers = names(tabs[[tab]]),
+          info = unname(tabs[[tab]]),
+          border = TRUE
+        )
+      )
+    })
   )
+
+  # Vanilla JS for tabs
+  tab_js <- shiny::tags$script(shiny::HTML(
+    "
+  (function() {
+    function attachTabHandlers() {
+      const buttons = document.querySelectorAll('.custom-tab-btn');
+      if (!buttons.length) { setTimeout(attachTabHandlers, 50); return; }
+      buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const target = this.dataset.tab;
+          document.querySelectorAll('.custom-tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.custom-tab-content').forEach(c => c.classList.remove('active'));
+          this.classList.add('active');
+          document.querySelector(`.custom-tab-content[data-tab='${target}']`).classList.add('active');
+        });
+      });
+    }
+    attachTabHandlers();
+  })();
+  "
+  ))
+
+  # CSS for UKGov-ish look
+  tab_css <- shiny::tags$style(shiny::HTML(
+    "
+    .custom-tabs-buttons { display: flex; flex-wrap: wrap; margin-bottom: 10px; }
+    .custom-tab-btn {
+      background: #f3f2f1;
+      border: 1px solid #b1b4b6;
+      padding: 6px 12px;
+      margin-right: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 3px;
+    }
+    .custom-tab-btn.active { background: #005ea5; color: white; border-color: #005ea5; }
+    .custom-tab-btn:hover:not(.active) { background: #e1e1e1; }
+    .custom-tab-content { display: none; padding: 10px 0; }
+    .custom-tab-content.active { display: block; }
+    .govuk-summary-list__row:nth-child(even) { background-color: #f3f2f1; }
+    "
+  ))
 
   ui <- shinyGovstyle::gov_layout(
     shinyGovstyle::heading_text(
-      glue::glue("{summary_data$school_name} ({urn_val})"),
+      glue::glue("{summary_data$school_name} ({summary_data$urn})"),
       size = "l"
     ),
-    shinyGovstyle::govTabs(
-      inputId = "school_tabs",
-      df = final_df,
-      group_col = "tabs"
-    )
+    tab_css,
+    tab_buttons,
+    tab_contents,
+    tab_js
   )
 
   dauPortalTools::log_event(glue::glue(
     "Finished school_render_overview in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)} seconds"
   ))
-  return(ui)
+
+  ui
 }
