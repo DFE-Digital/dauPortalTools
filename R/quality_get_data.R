@@ -46,8 +46,9 @@ get_aidt_quality_data <- function(record = NULL) {
     record <- ""
   }
 
-  # Construct the SQL query to retrieve quality data
+  schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
 
+  # Construct the SQL query to retrieve quality data
   sql_command <- glue::glue_sql(
     "
     SELECT c.quality_name,
@@ -55,10 +56,10 @@ get_aidt_quality_data <- function(record = NULL) {
            [quality_status],
            [date_created],
            [last_checked]
-    FROM {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_list] l
-    LEFT JOIN {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_check] c 
+    FROM {schema_01a}.[quality_list] l
+    LEFT JOIN .{schema_01a}.[quality_check] c 
         ON c.quality_check_id = l.error_id
-    LEFT JOIN {`conf$database`}.{`conf$schema$db_schema_01a`}.[app_list] a 
+    LEFT JOIN {schema_01a}.[app_list] a 
         ON l.app_id = a.app_id
     WHERE l.app_id = {app_id}
       AND quality_status = 0
