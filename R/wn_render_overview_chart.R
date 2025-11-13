@@ -130,7 +130,7 @@ wn_render_status_type_charts <- function(region = NULL) {
     dplyr::mutate(
       link = vapply(
         link,
-        function(x) as.character(make_shiny_link(x, "Open")),
+        function(x) as.character(dauPortalTools::make_shiny_link(x, "Open")),
         character(1)
       )
     )
