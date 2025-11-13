@@ -32,6 +32,8 @@ log_transaction <- function(
   conf <- yaml::read_yaml("conf.yml")
   app_id <- conf$app_details$app_id
 
+  schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
+
   conn <- sql_manager("dit")
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
@@ -39,7 +41,7 @@ log_transaction <- function(
     {
       query <- glue::glue_sql(
         "
-      INSERT INTO {`conf$database`}.{`conf$schemas$db_schema_01a`}.[transaction_table] (
+      INSERT INTO {schema_01a}.[transaction_table] (
         app_id, action, record_id, record_type, performed_by, performed_on, status, notes, created_on
       ) VALUES (
         {app_id},

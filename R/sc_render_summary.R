@@ -1,7 +1,7 @@
-#' Render Warning Notice Summary Panel
+#' Render Significant Change Summary Panel
 #'
 #' Creates a GOV.UK-styled summary panel displaying three key metrics:
-#' - Total live TWN records
+#' - Total live SC records
 #' - Records updated in the last 30 days
 #' - Open quality issues
 #'
@@ -11,6 +11,9 @@
 #' @param region Character scalar or `NULL`. If provided, metrics are filtered
 #'   to this region. If `NULL`, metrics are unfiltered. Region values must match
 #'   the database column values used in the SQL.
+#'
+#' @param rsc bool (default = NULL). If provided, metrics are filtered
+#'   by case_to_rcs. If `NULL`, metrics are unfiltered.
 #'
 #' @return A `shiny.tag` object representing a GOV.UK-styled table suitable for
 #'   use in `renderUI()`.
@@ -31,19 +34,19 @@
 #'   library(shinyGovstyle)
 #'
 #'   ui <- fluidPage(
-#'     uiOutput("summary_metrics")
+#'     uiOutput("sc_summary_metrics")
 #'   )
 #'
 #'   server <- function(input, output, session) {
-#'     output$summary_metrics <- renderUI({
-#'       wn_render_summary()  # No region filter
+#'     output$sc_summary_metrics <- renderUI({
+#'       sc_render_summary()  # No region/rcs filter
 #'     })
 #'   }
 #'
 #'   shinyApp(ui, server)
 #' }
 #'
-#' # --- Example with region filter -------------------------------
+#' # --- Example with region filter and RCS enabled-------------------
 #' if (interactive()) {
 #'   library(shiny)
 #'   library(shinyGovstyle)
@@ -56,13 +59,13 @@
 #'       select_text  = c("", "North West", "North East", "London"),
 #'       select_value = c("", "North West", "North East", "London")
 #'     ),
-#'     uiOutput("summary_metrics")
+#'     uiOutput("sc_summary_metrics")
 #'   )
 #'
 #'   server <- function(input, output, session) {
-#'     output$summary_metrics <- renderUI({
+#'     output$sc_summary_metrics <- renderUI({
 #'       selected <- if (is.null(input$region) || input$region == "") NULL else input$region
-#'       wn_render_summary(region = selected)
+#'       sc_render_summary(region = selected, rcs=TRUE)
 #'     })
 #'   }
 #'
@@ -74,97 +77,101 @@
 #' @export
 #'
 
-wn_render_summary <- function(region = NULL) {
+sc_render_summary <- function(region = NULL, rcs = NULL) {
   start_time <- Sys.time()
   dauPortalTools::log_event(glue::glue(
-    "Starting wn_render_summary with region: {region}"
+    "Starting sc_render_summary with region: {region} and rcs: {rcs}"
   ))
 
-  conn <- sql_manager("data_insight_team")
+  conn <- sql_manager("dit")
 
   school_region <- if (!is.null(region)) {
-    glue::glue_sql(" AND school_region = {region}", .con = conn)
+    glue::glue_sql(" AND e.[GOR (name)] = {region}", .con = conn)
   } else {
     DBI::SQL("")
   }
-  region_filter <- if (!is.null(region)) {
-    glue::glue_sql(" AND region = {region}", .con = conn)
+
+  rsc_check <- if (is.null(rcs)) {
+    DBI::SQL("")
+  } else if (rcs == TRUE) {
+    glue::glue_sql(" AND t.case_to_rcs IS NOT NULL", .con = conn)
+  } else if (rcs == FALSE) {
+    glue::glue_sql(" AND t.case_to_rcs IS NULL", .con = conn)
   } else {
     DBI::SQL("")
   }
+
+  schema_00c <- DBI::SQL(conf$schemas$db_schema_00c)
+  schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
+  schema_01s <- DBI::SQL(conf$schemas$db_schema_01s)
 
   sql_command <- glue::glue_sql(
     "
-    SELECT
-      (SELECT COUNT(twn_id)
-       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_all_notices]
-       WHERE [twn_status_id] <> 7{school_region}) AS total_live_records,
-      (SELECT COUNT(t.twn_date_id)
-       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_date_tracking] t
-       LEFT JOIN {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_all_notices] a ON t.twn_id = a.twn_id
-       WHERE t.updated_on >= DATEADD(DAY, -30, GETDATE()){school_region}) AS updated_records,
-      (SELECT COUNT(quality_id)
-       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[quality_list] l
-       WHERE l.app_id > 0 AND l.app_id < 3 AND quality_status = 0{region_filter}) AS quality_issues
-  ",
+WITH LatestDate AS (
+    SELECT MAX(DateStamp) AS MaxDate FROM {schema_00c}.[Edubase]
+)
+SELECT
+    (SELECT COUNT(t.sig_change_id)
+     FROM {schema_01s}.[tracker] t
+     LEFT JOIN {schema_00c}.[Edubase] e ON t.URN = e.URN AND e.DateStamp = (SELECT MaxDate FROM LatestDate)
+     WHERE t.all_actions_completed <> 1 {school_region} {rsc_check}) AS total_live_records,
+    (SELECT COUNT(t.sig_change_id)
+     FROM {schema_01s}.[tracker] t
+     LEFT JOIN {schema_00c}.[Edubase] e ON t.URN = e.URN AND e.DateStamp = (SELECT MaxDate FROM LatestDate)
+     WHERE t.change_edit_date >= DATEADD(DAY, -30, GETDATE()) {school_region} {rsc_check}) AS updated_records,
+    (SELECT COUNT(l.quality_id)
+     FROM {schema_01a}.[quality_list] l
+     LEFT JOIN {schema_01s}.[tracker] t ON t.sig_change_id = l.record_id AND l.app_id = 3
+     LEFT JOIN {schema_00c}.[Edubase] e ON t.URN = e.URN AND e.DateStamp = (SELECT MaxDate FROM LatestDate)
+     WHERE l.quality_status = 0 {school_region} {rsc_check}) AS quality_issues
+",
     .con = conn
   )
 
   summary_data <- tryCatch(
-    {
-      DBI::dbGetQuery(conn, sql_command)
-    },
+    DBI::dbGetQuery(conn, sql_command),
     error = function(e) {
       dauPortalTools::log_event(glue::glue(
         "Error fetching summary: {e$message}"
       ))
-      return(data.frame(
-        total_live_records = NA,
-        updated_records = NA,
-        quality_issues = NA
-      ))
+      data.frame(
+        total_live_records = NA_integer_,
+        updated_records = NA_integer_,
+        quality_issues = NA_integer_
+      )
     }
   )
 
-  df <- data.frame(
-    Metric = c(
-      "Total Live Records",
-      "Records Updated in Last 30 Days",
-      "Quality Issues"
-    ),
-    Value = c(
-      format(summary_data$total_live_records, big.mark = ","),
-      format(summary_data$updated_records, big.mark = ","),
-      format(summary_data$quality_issues, big.mark = ",")
-    )
-  )
+  total_live <- suppressWarnings(as.integer(summary_data$total_live_records[1]))
+  updated_30d <- suppressWarnings(as.integer(summary_data$updated_records[1]))
+  qual_issues <- suppressWarnings(as.integer(summary_data$quality_issues[1]))
 
-  heading <- if (!is.null(region)) {
-    glue::glue("Summary for {region}")
-  } else {
-    "Summary"
+  fmt <- function(x) {
+    ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
   }
 
   ui <- shinyGovstyle::gov_layout(
-    size = "two-thirds",
-    shinyGovstyle::heading_text(heading, size = "l"),
-    shinyGovstyle::label_hint(
-      "summary_label",
-      "Key metrics for Warning Notices"
-    ),
-    shinyGovstyle::govTable(
-      inputId = "summary_table",
-      df = df,
-      caption = "Key Metrics",
-      caption_size = "l",
-      num_col = c(2)
+    bslib::layout_column_wrap(
+      width = 1 / 3,
+      bslib::card(
+        bslib::card_header("Total Live Records"),
+        tags$h2(fmt(total_live), class = "govuk-heading-m")
+      ),
+      bslib::card(
+        bslib::card_header("Updates This Month"),
+        tags$h2(fmt(updated_30d), class = "govuk-heading-m")
+      ),
+      bslib::card(
+        bslib::card_header("Quality Issues"),
+        tags$h2(fmt(qual_issues), class = "govuk-heading-m")
+      )
     )
   )
 
   end_time <- Sys.time()
   dauPortalTools::log_event(glue::glue(
-    "Finished wn_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
+    "Finished sc_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
   ))
 
-  return(ui)
+  ui
 }
