@@ -337,45 +337,45 @@ wn_render_status_type_charts <- function(region = NULL) {
       type = "tabs",
       tabPanel(
         "Status Chart",
-        shiny::fluidRow(shiny::column(
+        shiny::fluidRow(
           width = 12,
           htmltools::div(
             style = "margin-bottom: 0.5rem; font-weight:600;",
             "By status"
           ),
           p_status
-        )),
-        shiny::fluidRow(shiny::column(
+        ),
+        shiny::fluidRow(
           width = 12,
           htmltools::div(
             style = "margin-top: 1rem; font-weight:600;",
             "Status Summary"
           ),
           status_summary_table
-        ))
+        )
       ),
       tabPanel(
         "Type Chart",
-        shiny::fluidRow(shiny::column(
+        shiny::fluidRow(
           width = 12,
           htmltools::div(
             style = "margin-bottom: 0.5rem; font-weight:600;",
             "By type"
           ),
           p_type
-        )),
-        shiny::fluidRow(shiny::column(
+        ),
+        shiny::fluidRow(
           width = 12,
           htmltools::div(
             style = "margin-top: 1rem; font-weight:600;",
             "Type Summary"
           ),
           type_summary_table
-        ))
+        )
       ),
       tabPanel(
         "Underlying Data",
-        shiny::fluidRow(shiny::column(
+        shiny::fluidRow(
           width = 12,
           htmltools::div(
             style = "margin: 0.5rem 0;",
@@ -384,7 +384,7 @@ wn_render_status_type_charts <- function(region = NULL) {
           ),
           table_heading,
           table_widget
-        ))
+        )
       )
     )
   )
