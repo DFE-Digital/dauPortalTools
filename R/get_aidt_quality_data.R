@@ -1,8 +1,10 @@
 #' Retrieve Quality Issue Records from AIDT Tables
 #'
-#' This function queries the `[quality_list]` table for unresolved quality issues (`quality_status = 0`)
+#' Scheduled for removal
+#'
+#' This function queries the quality_list table for unresolved quality issues (`quality_status = 0`)
 #' associated with a specific application ID, optionally filtered by a record ID. It joins with the
-#' `[quality_check]` and `[app_list]` tables to enrich the results.
+#' quality_check and app_list tables to enrich the results.
 #'
 #' @param record Optional. A numeric record ID to filter the results. If `NULL`, all records for the app are returned.
 #'
@@ -30,6 +32,10 @@
 get_aidt_quality_data <- function(record = NULL) {
   # Log the start of the function
   log_event("Starting function get_aidt_quality_data", conf)
+  log_event(
+    "This function has been renamed too quality_get_data, please update before this function is removed",
+    conf
+  )
 
   # Load confuration from YAML file
   library(yaml)
@@ -46,31 +52,44 @@ get_aidt_quality_data <- function(record = NULL) {
     record <- ""
   }
 
+  schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
+
   # Construct the SQL query to retrieve quality data
   sql_command <- glue::glue_sql(
     "
-SELECT c.quality_name
-        ,c.quality_description
-        ,[quality_status]
-        ,[date_created]
-        ,[last_checked]
-     FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[quality_list] l
-     LEFT JOIN {`conf$database`}.{`conf$schemas$db_schema_01a`}.[quality_check] c ON c.quality_check_id = l.error_id
-     LEFT JOIN {`conf$database`}.{`conf$schemas$db_schema_01a`}.[app_list] a ON l.app_id = a.app_id
-     WHERE l.app_id = {app_id}
+    SELECT c.quality_name,
+           c.quality_description,
+           [quality_status],
+           [date_created],
+           [last_checked]
+    FROM {schema_01a}.[quality_list] l
+    LEFT JOIN .{schema_01a}.[quality_check] c 
+        ON c.quality_check_id = l.error_id
+    LEFT JOIN {schema_01a}.[app_list] a 
+        ON l.app_id = a.app_id
+    WHERE l.app_id = {app_id}
       AND quality_status = 0
-     {record}",
+    {record}  ",
     .con = conn
   )
 
-  # Log the constructed SQL command
-  log_event(glue::glue("Created {sql_command}."), conf)
+  summary_data <- tryCatch(
+    {
+      DBI::dbGetQuery(conn, sql_command)
+    },
+    error = function(e) {
+      dauPortalTools::log_event(glue::glue(
+        "Error fetching summary: {e$message}"
+      ))
+      return(data.frame(
+        total_live_records = NA,
+        updated_records = NA,
+        quality_issues = NA
+      ))
+    }
+  )
 
-  # Execute the SQL query and rename columns for clarity
-  quality_records <- DBI::dbGetQuery(
-    sql_manager("dit"),
-    sql_command
-  ) |>
+  summary_data <- summary_data |>
     dplyr::rename(
       "Quality Concern" = quality_name,
       "Description" = quality_description,
