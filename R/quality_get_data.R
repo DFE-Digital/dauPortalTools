@@ -100,6 +100,8 @@ quality_get_data <- function(record = NULL) {
 }
 
 get_aidt_quality_data <- function(record = NULL) {
+  conf <- yaml::read_yaml("config.yml", eval.expr = TRUE)
+
   log_event(
     "This function has been renamed too quality_get_data, please update before this function is removed",
     conf
