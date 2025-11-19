@@ -28,44 +28,43 @@
 #'
 
 quality_get_data <- function(record = NULL) {
-  # Log the start of the function
-  log_event("Starting function quality_get_data", conf)
-
-  # Load confuration from YAML file
-  library(yaml)
   conf <- yaml::read_yaml("config.yml", eval.expr = TRUE)
   app_id <- conf$app_details$app_id
+  conn <- sql_manager("dit")
 
-  # Log the received record ID and app ID
-  log_event(glue::glue("Received {record} id for app id: {app_id}."), conf)
+  log_event("Starting function quality_get_data", conf)
+  log_event(glue::glue("Received record: {record}, app_id: {app_id}"), conf)
 
-  # Validate and format the record filter if provided
-  if (!is.null("record") & is.numeric(record)) {
-    record <- paste0(" AND l.record_id = '", record, "'")
+  # Build record filter
+  record_filter <- if (!is.null(record) && is.numeric(record)) {
+    glue::glue_sql(" AND l.record_id = {record}", .con = conn)
   } else {
-    record <- ""
+    DBI::SQL("")
   }
 
   schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
 
-  # Construct the SQL query to retrieve quality data
+  # Construct SQL
   sql_command <- glue::glue_sql(
     "
-    SELECT c.quality_name,
-           c.quality_description,
-           [quality_status],
-           [date_created],
-           [last_checked]
+    SELECT c.[quality_name],
+           c.[quality_description],
+           l.[quality_status],
+           l.[date_created],
+           l.[last_checked]
     FROM {schema_01a}.[quality_list] l
-    LEFT JOIN .{schema_01a}.[quality_check] c 
+    LEFT JOIN {schema_01a}.[quality_check] c 
         ON c.quality_check_id = l.error_id
     LEFT JOIN {schema_01a}.[app_list] a 
         ON l.app_id = a.app_id
     WHERE l.app_id = {app_id}
-      AND quality_status = 0
-    {record}  ",
+      AND l.quality_status = 0
+      {record_filter}
+  ",
     .con = conn
   )
+
+  log_event(glue::glue("Executing SQL: {sql_command}"), conf)
 
   summary_data <- tryCatch(
     {
@@ -76,9 +75,11 @@ quality_get_data <- function(record = NULL) {
         "Error fetching summary: {e$message}"
       ))
       return(data.frame(
-        total_live_records = NA,
-        updated_records = NA,
-        quality_issues = NA
+        "Quality Concern" = NA,
+        "Description" = NA,
+        "Resolution Status" = NA,
+        "Date Identified" = NA,
+        "Last Reviewed" = NA
       ))
     }
   )
@@ -92,12 +93,16 @@ quality_get_data <- function(record = NULL) {
       "Last Reviewed" = last_checked
     )
 
-  # Log the completion of data retrieval
-  log_event("Finished retrieving records")
+  log_event("Finished retrieving records", conf)
+  log_summary(summary_data)
 
-  # Log a structured summary of the retrieved data
-  log_summary(quality_records)
+  return(summary_data)
+}
 
-  # Return the data frame of quality records
-  return(quality_records)
+get_aidt_quality_data <- function(record = NULL) {
+  log_event(
+    "This function has been renamed too quality_get_data, please update before this function is removed",
+    conf
+  )
+  quality_get_data(record)
 }
