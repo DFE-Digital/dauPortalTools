@@ -39,7 +39,7 @@ get_aidt_quality_data <- function(record = NULL) {
 
   # Load confuration from YAML file
   library(yaml)
-  conf <- yaml::read_yaml("conf.yml")
+  conf <- yaml::read_yaml("config.yml", eval.expr = TRUE)
   app_id <- conf$app_details$app_id
 
   # Log the received record ID and app ID
