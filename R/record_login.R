@@ -41,17 +41,13 @@ record_login <- function(user = "Guest") {
   schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
 
   # Construct the SQL query to retrieve quality data
+
   sql_command <- glue::glue_sql(
     "
-    INSERT INTO {schema_01a}.[tools_analytics]
-    (date_time_visited,
-           page_name,
-           action_type,
-           ad_username,
-           action_sub_type,
-           app_id)
-    VALUES (CAST({date} AS DATETIME),'Home page','Load',{user},'Initial Load',{app_id}) 
-    ",
+INSERT INTO {schema_01a}.[tools_analytics]
+(date_time_visited, page_name, action_type, ad_username, action_sub_type, app_id)
+VALUES (CONVERT(DATETIME, {date}, 120), 'Home page', 'Load', {user}, 'Initial Load', {app_id})
+",
     .con = conn
   )
 
