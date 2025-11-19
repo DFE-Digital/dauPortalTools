@@ -33,6 +33,7 @@ record_login <- function(user = "Guest") {
   conf <- yaml::read_yaml("config.yml", eval.expr = TRUE)
   app_id <- conf$app_details$app_id
   date <- Sys.time()
+  conn <- sql_manager("dit")
 
   # Log the received record ID and app ID
   log_event(glue::glue("Received {user} for app id: {app_id}."), conf)
