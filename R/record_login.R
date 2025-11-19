@@ -50,7 +50,7 @@ record_login <- function(user = "Guest") {
            ad_username,
            action_sub_type,
            app_id)
-    VALUES ({date},'Home page','Load',{user},'Initial Load',{app_id}) 
+    VALUES (CAST({date} AS DATETIME),'Home page','Load',{user},'Initial Load',{app_id}) 
     ",
     .con = conn
   )
