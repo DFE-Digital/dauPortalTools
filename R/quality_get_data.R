@@ -27,13 +27,13 @@
 #' @export
 #'
 
-get_aidt_quality_data <- function(record = NULL) {
+quality_get_data <- function(record = NULL) {
   # Log the start of the function
-  log_event("Starting function get_aidt_quality_data", conf)
+  log_event("Starting function quality_get_data", conf)
 
   # Load confuration from YAML file
   library(yaml)
-  conf <- yaml::read_yaml("conf.yml", eval.expr = TRUE)
+  conf <- yaml::read_yaml("config.yml", eval.expr = TRUE)
   app_id <- conf$app_details$app_id
 
   # Log the received record ID and app ID
