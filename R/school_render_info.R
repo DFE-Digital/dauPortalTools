@@ -213,22 +213,13 @@ school_render_overview <- function(urn) {
   # Vanilla JS for tabs
   tab_js <- shiny::tags$script(shiny::HTML(
     "
-  (function() {
-    function attachTabHandlers() {
-      const buttons = document.querySelectorAll('.custom-tab-btn');
-      if (!buttons.length) { setTimeout(attachTabHandlers, 50); return; }
-      buttons.forEach(btn => {
-        btn.addEventListener('click', function() {
-          const target = this.dataset.tab;
-          document.querySelectorAll('.custom-tab-btn').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.custom-tab-content').forEach(c => c.classList.remove('active'));
-          this.classList.add('active');
-          document.querySelector(`.custom-tab-content[data-tab='${target}']`).classList.add('active');
-        });
-      });
-    }
-    attachTabHandlers();
-  })();
+  $(document).on('click', '.custom-tab-btn', function() {
+  const target = $(this).data('tab');
+  $('.custom-tab-btn').removeClass('active');
+  $('.custom-tab-content').removeClass('active');
+  $(this).addClass('active');
+  $(`.custom-tab-content[data-tab='${target}']`).addClass('active');
+});
   "
   ))
 
