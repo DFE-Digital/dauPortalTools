@@ -32,7 +32,7 @@ record_login <- function(user = "Guest") {
   library(yaml)
   conf <- yaml::read_yaml("config.yml", eval.expr = TRUE)
   app_id <- conf$app_details$app_id
-  date <- Sys.time()
+  date <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
   conn <- sql_manager("dit")
 
   # Log the received record ID and app ID
