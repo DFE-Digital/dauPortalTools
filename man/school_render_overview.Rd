@@ -24,8 +24,6 @@ This function:
 \item Connects to the \code{dit} SQL Server database.
 \item Queries the latest Edubase record for the given URN.
 \item Constructs a tabbed UI layout using \code{shinyGovstyle::gov_summary}.
-\item Includes links to the school's website, Ofsted report, and GIAS pages.
-\item Logs start and end times using \code{dauPortalTools::log_event}.
 }
 }
 \examples{
