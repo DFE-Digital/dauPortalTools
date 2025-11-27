@@ -21,11 +21,6 @@
 #' - Excludes records where `twn_status_id = 7`.
 #' - Handles missing values by replacing with "(Unknown)".
 #'
-#' @dependencies
-#' Requires:
-#' - `DBI`, `glue`, `dplyr`, `plotly`, `htmltools`, `shiny`, `DT`, `shinyGovstyle`
-#' - Custom packages: `dauPortalTools` for logging
-#'
 #' @examples
 #' \dontrun{
 #' # Render charts for all regions
