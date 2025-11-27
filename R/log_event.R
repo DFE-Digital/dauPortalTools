@@ -19,12 +19,13 @@
 #'
 
 log_event <- function(message, config) {
-
   library(yaml)
-  config <- yaml::read_yaml("config.yml")
-  log_cfg <- config$logging
+  conf <- yaml::read_yaml("config.yml", eval.expr = TRUE)
+  log_cfg <- conf$logging
 
-  if (!isTRUE(log_cfg$enabled)) return(invisible(NULL))
+  if (!isTRUE(log_cfg$enabled)) {
+    return(invisible(NULL))
+  }
 
   if (!dir.exists(dirname(log_cfg$event_log_path))) {
     dir.create(dirname(log_cfg$event_log_path), recursive = TRUE)
