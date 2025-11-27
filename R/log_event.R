@@ -20,8 +20,8 @@
 
 log_event <- function(message, config) {
   library(yaml)
-  config <- yaml::read_yaml("config.yml", eval.expr = TRUE)
-  log_cfg <- config$logging
+  conf <- yaml::read_yaml("config.yml", eval.expr = TRUE)
+  log_cfg <- conf$logging
 
   if (!isTRUE(log_cfg$enabled)) {
     return(invisible(NULL))
