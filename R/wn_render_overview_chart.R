@@ -392,3 +392,127 @@ wn_render_status_type_charts <- function(region = NULL) {
   ))
   return(ui)
 }
+
+
+status_counts <- read.csv(
+  "C:/Users/mhorton/OneDrive - Department for Education/Downloads/wn_records_all_regions_20251113.csv"
+)
+
+
+status_per_region <- status_counts |>
+  summarise(count = n(), .by = c(status, school_region)) |>
+  mutate(status_total = sum(count), .by = status)
+
+type_per_region <- status_counts |>
+  summarise(count = n(), .by = c(type, school_region)) |>
+  mutate(type_total = sum(count), .by = type)
+
+
+govuk_region_names <- c(
+  "East Midlands",
+  "East of England",
+  "London",
+  "North East",
+  "North West",
+  "South East",
+  "South West",
+  "West Midlands",
+  "Yorkshire and the Humber"
+)
+
+govuk_palette <- c(
+  "#F0506B",
+  "#F7921E",
+  "#D446A1",
+  "#00AAB9",
+  "#73369B",
+  "#0C9144",
+  "#00468C",
+  "#BF1E2E",
+  "#8DC53E"
+)
+
+
+p_status <- ggplot2::ggplot(
+  status_per_region,
+  #filter(status_per_region, school_region %in% c("West Midlands", "East of England")),
+  aes(
+    fct_reorder(status, status_total, .desc = TRUE),
+    y = count,
+    fill = school_region,
+    text = glue("Region: {school_region}\nSchools: {count}")
+  )
+) +
+  ggplot2::geom_col() +
+  ggplot2::scale_fill_manual(
+    breaks = govuk_region_names,
+    values = govuk_palette
+  ) +
+  ggplot2::labs(
+    x = NULL,
+    y = NULL,
+    fill = NULL
+  ) +
+  ggplot2::scale_x_discrete(expand = c(0.15, 0), labels = function(x) {
+    str_wrap(x, width = 10)
+  }) +
+  ggplot2::scale_y_continuous(expand = c(0, 0)) +
+  ggplot2::theme_minimal()
+
+plotly::ggplotly(p_status, tooltip = c("text")) |>
+  plotly::layout(
+    yaxis = list(fixedrange = TRUE),
+    xaxis = list(fixedrange = TRUE)
+  ) |>
+  plotly::config(displayModeBar = FALSE) |>
+  plotly::layout(
+    legend = list(
+      x = 0.65,
+      y = 0.95,
+      itemclick = FALSE,
+      itemdoubleclick = FALSE
+    )
+  ) # puts legend inside chart to save space. fine if last two columns remain small!!
+
+
+p_type <- ggplot2::ggplot(
+  type_per_region,
+  #filter(status_per_region, school_region %in% c("West Midlands", "East of England")),
+  aes(
+    fct_reorder(type, type_total),
+    y = count,
+    fill = school_region,
+    text = glue("Region: {school_region}\nSchools: {count}")
+  )
+) +
+  ggplot2::geom_col() +
+  ggplot2::scale_fill_manual(
+    breaks = govuk_region_names,
+    values = govuk_palette
+  ) +
+  ggplot2::labs(
+    x = NULL,
+    y = NULL,
+    fill = NULL
+  ) +
+  ggplot2::scale_x_discrete(expand = c(0, 0), labels = function(x) {
+    str_wrap(x, width = 30)
+  }) +
+  ggplot2::scale_y_continuous(expand = c(0, 0)) +
+  ggplot2::theme_minimal() +
+  ggplot2::coord_flip()
+
+plotly::ggplotly(p_type, tooltip = c("text")) |>
+  plotly::layout(
+    yaxis = list(fixedrange = TRUE),
+    xaxis = list(fixedrange = TRUE)
+  ) |>
+  plotly::config(displayModeBar = FALSE) |>
+  plotly::layout(
+    legend = list(
+      x = 0.5,
+      y = 0.85,
+      itemclick = FALSE,
+      itemdoubleclick = FALSE
+    )
+  )
