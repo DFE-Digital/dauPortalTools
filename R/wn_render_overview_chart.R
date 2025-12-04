@@ -30,6 +30,8 @@
 #' wn_render_status_type_charts(region = "East Midlands")
 #' }
 #'
+#' @import plotly
+#'
 #' @export
 #'
 
