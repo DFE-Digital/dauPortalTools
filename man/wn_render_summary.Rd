@@ -139,7 +139,7 @@ if (interactive()) {
   )
 
   server <- function(input, output, session) {
-    output$summary_metrics <-renderUI({
+    output$summary_metrics <- renderUI({
       selected <- if (is.null(input$region) || input$region == "") NULL else input$region
       wn_render_summary(region = selected)
     })

@@ -23,7 +23,7 @@
 #'
 #' @dependencies
 #' Requires:
-#' - `DBI`, `glue`, `dplyr`, `plotly`, `htmltools`, `shiny`, `DT`, `shinyGovstyle`
+#' - `DBI`, `glue`, `dplyr`, `plotly`, `htmltools`, `shiny`, `DT`, `shinyGovstyle`, `forcats`
 #' - Custom packages: `dauPortalTools` for logging
 #'
 #' @examples
