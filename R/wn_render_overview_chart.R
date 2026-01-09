@@ -389,19 +389,3 @@ wn_render_status_type_charts <- function(region = NULL) {
   ))
   return(ui)
 }
-
-library(shiny)
-library(shinyGovstyle)
-conf <- yaml::read_yaml("./config.yml", eval.expr = TRUE)
-
-ui <- fluidPage(
-  uiOutput("summary_metrics")
-)
-
-server <- function(input, output, session) {
-  output$summary_metrics <- renderUI({
-    wn_render_status_type_charts() # No region filter
-  })
-}
-
-shinyApp(ui, server)
