@@ -1,49 +1,66 @@
-#' Render Warning Notice Summary Panel
+#' Render Quality Test Results for an Application
 #'
-#' Creates a GOV.UK-styled summary panel displaying three key metrics:
-#' - Total live TWN records
-#' - Records updated in the last 30 days
-#' - Open quality issues
+#' Generates a GOV.UK-styled UI panel summarising the latest quality‑check
+#' results for one or more applications. The function queries SQL Server for
+#' each quality check, retrieves the most recent run (via `OUTER APPLY`), and
+#' displays results in a searchable, sortable `DT::datatable`.
 #'
-#' This UI fragment can be inserted anywhere in a Shiny app (e.g., inside
-#' `uiOutput()` / `renderUI()`).
+#' This function is designed to be used inside Shiny, typically within
+#' `uiOutput()` / `renderUI()`. It also attaches a download handler for exporting
+#' the full quality‑check dataset.
 #'
-#' @param region Character scalar or `NULL`. If provided, metrics are filtered
-#'   to this region. If `NULL`, metrics are unfiltered. Region values must match
-#'   the database column values used in the SQL.
+#' @param app_id Integer or `NULL`.
+#'   Optional filter restricting results to a single application.
+#'   If `NULL`, results for all applications are returned.
+#'   If provided, it is safely interpolated into the SQL using
+#'   `glue::glue_sql()`.
 #'
-#' @return A `shiny.tag` object representing a GOV.UK-styled table suitable for
-#'   use in `renderUI()`.
+#' @return A `shiny.tag` object (UI fragment) containing:
+#'   - a GOV.UK‑styled layout,
+#'   - a download link, and
+#'   - a `DT::datatable` widget showing quality‑check results.
 #'
 #' @details
-#' The function queries database using `DBI::dbGetQuery()` and a
-#' connection from `sql_manager()`. It uses `glue_sql()` for
-#' safe SQL interpolation. If the query fails, the UI will display `NA` values.
+#' The function:
+#' - Opens a database connection via `sql_manager("dit")`.
+#' - Constructs a parameterised SQL query using `glue_sql()`.
+#' - Retrieves the most recent quality‑check log entry for each test using
+#'   `OUTER APPLY`.
+#' - Renders the results into a `DT::datatable`.
+#' - Generates a unique ID for a CSV download handler bound to the user's
+#'   session.
 #'
-#' Styling is provided by `shinyGovstyle` components (`gov_layout()`,
-#' `heading_text()`, `govTable()`).
+#' Logging is performed using `dauPortalTools::log_event()` to record start and
+#' end times.
 #'
+#' A GOV.UK‑themed layout is produced via `shinyGovstyle::gov_layout()`.
 #'
-#' @seealso \code{\link[shinyGovstyle]{govTable}}, \code{\link[shinyGovstyle]{select_Input}}
+#' @seealso
+#'   \code{\link[shinyGovstyle]{gov_layout}},
+#'   \code{\link[DT]{datatable}},
+#'   \code{\link[glue]{glue_sql}}
+#'
+#' @examples
+#' \dontrun{
+#' # Render for a specific app
+#' ui <- quality_render_tests(app_id = 12)
+#'
+#' # Render for all apps
+#' ui <- quality_render_tests()
+#' }
+#'
 #' @export
-#'
 
-quality_render_tests <- function(app_id = NULL, region = NULL) {
+quality_render_tests <- function(app_id = NULL) {
   start_time <- Sys.time()
   dauPortalTools::log_event(glue::glue(
-    "Starting quality_render_tests with app_id: {app_id} and region: {region}"
+    "Starting quality_render_tests with app_id: {app_id}"
   ))
 
   conn <- sql_manager("dit")
 
   app_id <- if (!is.null(app_id)) {
-    glue::glue_sql(" AND app_id = {app_id}", .con = conn)
-  } else {
-    DBI::SQL("")
-  }
-
-  region <- if (!is.null(region)) {
-    glue::glue_sql(" AND region = {region}", .con = conn)
+    glue::glue_sql(" AND al.app_id = {app_id}", .con = conn)
   } else {
     DBI::SQL("")
   }
@@ -57,7 +74,7 @@ SELECT
     qc.quality_name,
     qc.quality_check_justification,
     qcl_latest.last_run,
-    qcl_latest.live_issues,
+    qcl_latest.new_issues,
     qcl_latest.closed_issues
 FROM {schema_01a}.[quality_check] AS qc
 LEFT JOIN {schema_01a}.[app_list] AS al ON al.app_id = qc.app_id
@@ -69,11 +86,10 @@ OUTER APPLY (
         qcl.closed_issues
     FROM {schema_01a}.[quality_check_log] AS qcl
     WHERE qcl.quality_check_id = qc.quality_check_id
-    ORDER BY qcl.last_run DESC, qcl.quality_check_log_id DESC  -- tie-breaker
-) AS qcl_latest
+    ORDER BY qcl.last_run DESC, qcl.quality_check_log_id DESC
+    ) AS qcl_latest
     WHERE check_active = 1
-    {app_id}
-    {region};",
+    {app_id};",
     .con = conn
   )
 
