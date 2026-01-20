@@ -85,6 +85,7 @@ wn_render_status_type_charts <- function(region = NULL) {
       }
     )
   }
+
   sql_cmd <- glue::glue_sql(
     "
     SELECT

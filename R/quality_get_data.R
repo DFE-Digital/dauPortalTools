@@ -27,9 +27,9 @@
 #' @export
 #'
 
-get_aidt_quality_data <- function(record = NULL) {
+quality_get_data <- function(record = NULL) {
   # Log the start of the function
-  log_event("Starting function get_aidt_quality_data", conf)
+  log_event("Starting function quality_get_data", conf)
 
   # Load confuration from YAML file
   library(yaml)
@@ -99,4 +99,13 @@ get_aidt_quality_data <- function(record = NULL) {
 
   # Return the data frame of quality records
   return(quality_records)
+}
+
+
+get_aidt_quality_data <- function(record = NULL) {
+  log_event(
+    "get_aidt_quality_data is being discontinued in 2026.4 please update to quality_get_data()"
+  )
+
+  quality_get_data(record)
 }
