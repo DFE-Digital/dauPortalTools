@@ -57,7 +57,19 @@ Includes:
 \examples{
 \dontrun{
 # Render charts for all regions
-wn_render_status_type_charts()
+
+ui <- shiny::fluidPage(
+ shiny::uiOutput("school_overview")
+)
+
+server <- function(input, output, session) {
+ output$school_overview <- shiny::renderUI({
+   wn_render_status_type_charts()
+ })
+}
+
+shiny::shinyApp(ui, server)
+
 
 # Render charts for a specific region
 wn_render_status_type_charts(region = "East Midlands")
