@@ -12,19 +12,17 @@
 #'
 #' @return Invisibly returns `NULL`. Writes the log message to the specified file.
 #' @examples
-#' config <- list(logging = list(enabled = TRUE, event_log_path = "logs/events.log", log_to_console = TRUE))
-#' log_event("Process started", config)
+#' log_event("Process started")
 #'
 #' @export
 #'
 
-log_event <- function(message, config) {
+log_event <- function(message) {
+  log_cfg <- conf$logging
 
-  library(yaml)
-  config <- yaml::read_yaml("config.yml")
-  log_cfg <- config$logging
-
-  if (!isTRUE(log_cfg$enabled)) return(invisible(NULL))
+  if (!isTRUE(log_cfg$enabled)) {
+    return(invisible(NULL))
+  }
 
   if (!dir.exists(dirname(log_cfg$event_log_path))) {
     dir.create(dirname(log_cfg$event_log_path), recursive = TRUE)
