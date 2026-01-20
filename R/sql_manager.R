@@ -42,7 +42,6 @@
 #' }
 #'
 #' @export
-
 sql_manager <- function(service) {
   config <- config::get(
     paste0(service),
