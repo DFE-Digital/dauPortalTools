@@ -10,7 +10,6 @@
 #' \describe{
 #'   \item{Quality Concern}{Name of the quality issue.}
 #'   \item{Description}{Detailed description of the issue.}
-#'   \item{Resolution Status}{Status code (0 = unresolved).}
 #'   \item{Date Identified}{Date the issue was created.}
 #'   \item{Last Reviewed}{Date the issue was last checked.}
 #' }
@@ -29,15 +28,12 @@
 
 quality_get_data <- function(record = NULL) {
   # Log the start of the function
-  log_event("Starting function quality_get_data", conf)
+  log_event("Starting function quality_get_data")
 
-  # Load confuration from YAML file
-  library(yaml)
-  conf <- yaml::read_yaml("conf.yml")
   app_id <- conf$app_details$app_id
 
   # Log the received record ID and app ID
-  log_event(glue::glue("Received {record} id for app id: {app_id}."), conf)
+  log_event(glue::glue("Received {record} id for app id: {app_id}."))
 
   # Validate and format the record filter if provided
   if (!is.null("record") & is.numeric(record)) {
@@ -50,11 +46,10 @@ quality_get_data <- function(record = NULL) {
 
   sql_command <- glue::glue_sql(
     "
-    SELECT c.quality_name,
-           c.quality_description,
-           [quality_status],
-           [date_created],
-           [last_checked]
+    SELECT c.quality_name AS 'Quality Concern',
+           c.quality_description AS 'Description',
+           [date_created] AS 'Date Identified',
+           [last_checked] AS 'Last Reviewed'
     FROM {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_list] l
     LEFT JOIN {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_check] c 
         ON c.quality_check_id = l.error_id
@@ -66,30 +61,7 @@ quality_get_data <- function(record = NULL) {
     .con = conn
   )
 
-  summary_data <- tryCatch(
-    {
-      DBI::dbGetQuery(conn, sql_command)
-    },
-    error = function(e) {
-      dauPortalTools::log_event(glue::glue(
-        "Error fetching summary: {e$message}"
-      ))
-      return(data.frame(
-        total_live_records = NA,
-        updated_records = NA,
-        quality_issues = NA
-      ))
-    }
-  )
-
-  summary_data <- summary_data |>
-    dplyr::rename(
-      "Quality Concern" = quality_name,
-      "Description" = quality_description,
-      "Resolution Status" = quality_status,
-      "Date Identified" = date_created,
-      "Last Reviewed" = last_checked
-    )
+  summary_data <- DBI::dbGetQuery(conn, sql_command)
 
   # Log the completion of data retrieval
   log_event("Finished retrieving records")

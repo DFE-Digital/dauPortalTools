@@ -4,7 +4,7 @@
 \alias{log_event}
 \title{Log an Event Message}
 \usage{
-log_event(message, config)
+log_event(message)
 }
 \arguments{
 \item{message}{A character string containing the message to log.}
@@ -23,7 +23,6 @@ Invisibly returns \code{NULL}. Writes the log message to the specified file.
 This function logs a simple timestamped message to a specified file and optionally to the console.
 }
 \examples{
-config <- list(logging = list(enabled = TRUE, event_log_path = "logs/events.log", log_to_console = TRUE))
-log_event("Process started", config)
+log_event("Process started")
 
 }
