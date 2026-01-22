@@ -8,6 +8,9 @@
 #' @param service String. The name of the configuration block in `config.yml`
 #' that contains the connection details (e.g. `"prod"`, `"dev"`, `"test"`).
 #'
+#' @param config_file String. The name/location of the config file.
+#' Defaults:  "./config.yml"
+#'
 #' @return
 #' A DBI connection object created with `DBI::dbConnect()`, which can be used
 #' with standard DBI functions such as `DBI::dbGetQuery()`,
@@ -42,7 +45,13 @@
 #' }
 #'
 #' @export
-sql_manager <- function(service, conf = conf) {
+
+sql_manager <- function(service, config_file = "./config.yml") {
+  conf <- config::get(
+    paste0(service),
+    file = config_file
+  )
+
   server <- DBI::dbConnect(
     odbc::odbc(),
     Driver = conf$driver,
