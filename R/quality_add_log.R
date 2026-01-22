@@ -38,6 +38,7 @@
 #' # Log a quality check run
 #' quality_add_log(
 #'   quality_check_id = 12,
+#'   live_issues = 4,
 #'   new_issues = 3,
 #'   closed_issues = 1
 #' )
