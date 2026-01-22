@@ -8,6 +8,9 @@
 #'   The ID of the quality check being logged. Must correspond to an existing
 #'   record in the `[quality_check]` table.
 #'
+#' @param live_issues Integer.
+#'    The number of live issues after the test has ran.
+#'
 #' @param new_issues Integer.
 #'   The number of newly identified issues found during this run.
 #'
@@ -48,6 +51,7 @@
 
 quality_add_log <- function(
   quality_check_id,
+  live_issues,
   new_issues,
   closed_issues
 ) {
@@ -59,11 +63,13 @@ quality_add_log <- function(
       INSERT INTO {`conf$database`}.{`conf$schemas$db_schema_01a`}.[quality_check_log] (
         [quality_check_id],
         [last_run],
+        [live_issues],
         [new_issues],
         [closed_issues]
       ) VALUES (
         {quality_check_id},
         {timestamp},
+        {live_issues},
         {new_issues},
         {closed_issues}
       );
