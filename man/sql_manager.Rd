@@ -4,11 +4,14 @@
 \alias{sql_manager}
 \title{Create a SQL Server Connection Using a Named Service Configuration}
 \usage{
-sql_manager(service)
+sql_manager(service, config_file = "./config.yml")
 }
 \arguments{
 \item{service}{String. The name of the configuration block in \code{config.yml}
 that contains the connection details (e.g. \code{"prod"}, \code{"dev"}, \code{"test"}).}
+
+\item{config_file}{String. The name/location of the config file.
+Defaults:  "./config.yml"}
 }
 \value{
 A DBI connection object created with \code{DBI::dbConnect()}, which can be used
