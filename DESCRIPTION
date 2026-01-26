@@ -10,11 +10,22 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
+    bslib,
+    config,
     DBI,
-    glue,
-    yaml,
     dplyr,
+    DT,
     forcats,
+    ggplot2,
+    glue,
+    htmltools,
+    jsonlite,
+    odbc,
     plotly,
-    config
+    shiny,
+    shinyGovstyle,
+    stringr,
+    yaml,
+    dauPortalTools
+
 
