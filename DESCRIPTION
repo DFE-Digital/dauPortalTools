@@ -25,7 +25,6 @@ Imports:
     shiny,
     shinyGovstyle,
     stringr,
-    yaml,
-    dauPortalTools
+    yaml
 
 
