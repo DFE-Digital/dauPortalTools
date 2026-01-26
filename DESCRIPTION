@@ -14,5 +14,6 @@ Imports:
     glue,
     yaml,
     dplyr,
-    forcats
+    forcats,
+    plotly
 
