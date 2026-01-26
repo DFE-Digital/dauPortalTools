@@ -1,7 +1,7 @@
 #' Log a Transaction to the Central SQL Table
 #'
 #' This function inserts a transaction record into the central transaction table
-#' and also logs a structured summary and event message using DAUPORTALTOOLS.
+#' and also logs a structured summary and event message
 #'
 #' @param action Character. The action performed (e.g., "Update Delivery Officer").
 #' @param record_id Integer or NULL. The ID of the affected record.
@@ -69,10 +69,10 @@ log_transaction <- function(
         notes = notes,
         timestamp = timestamp
       )
-      dauPortalTools::log_summary(summary)
+      log_summary(summary)
 
       # Log event
-      dauPortalTools::log_event(
+      log_event(
         glue::glue("[{status}] {action} on {record_type} (ID: {record_id})"),
         conf = NULL
       )
@@ -80,7 +80,7 @@ log_transaction <- function(
       invisible(TRUE)
     },
     error = function(e) {
-      dauPortalTools::log_event(
+      log_event(
         glue::glue("Transaction logging failed: {e$message}"),
         conf = NULL
       )

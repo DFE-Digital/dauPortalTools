@@ -30,8 +30,6 @@
 #' - Generates a unique ID for a CSV download handler bound to the user's
 #'   session.
 #'
-#' Logging is performed using `dauPortalTools::log_event()` to record start and
-#' end times.
 #'
 #' A GOV.UK‑themed layout is produced via `shinyGovstyle::gov_layout()`.
 #'
@@ -53,7 +51,7 @@
 
 quality_render_tests <- function(app_id = NULL) {
   start_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Starting quality_render_tests with app_id: {app_id}"
   ))
 
@@ -142,7 +140,7 @@ OUTER APPLY (
   )
 
   end_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Finished quality_render_tests in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
   ))
 

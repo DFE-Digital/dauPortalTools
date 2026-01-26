@@ -20,26 +20,40 @@
 #'
 
 log_summary <- function(summary) {
-
   library(yaml)
   config <- yaml::read_yaml("config.yml")
   log_cfg <- config$logging
 
-  if (!isTRUE(log_cfg$enabled)) return(invisible(NULL))
+  if (!isTRUE(log_cfg$enabled)) {
+    return(invisible(NULL))
+  }
 
   if (!dir.exists(log_cfg$summary_log_dir)) {
     dir.create(log_cfg$summary_log_dir, recursive = TRUE)
   }
 
   timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-  log_file <- file.path(log_cfg$summary_log_dir, paste0("quality_log_", timestamp, ".json"))
+  log_file <- file.path(
+    log_cfg$summary_log_dir,
+    paste0("quality_log_", timestamp, ".json")
+  )
 
-  tryCatch({
-    jsonlite::write_json(summary, path = log_file, pretty = TRUE, auto_unbox = TRUE)
-    if (isTRUE(log_cfg$log_to_console)) message("Structured log written to: ", log_file)
-  }, error = function(e) {
-    warning("Failed to write structured log: ", e$message)
-  })
+  tryCatch(
+    {
+      jsonlite::write_json(
+        summary,
+        path = log_file,
+        pretty = TRUE,
+        auto_unbox = TRUE
+      )
+      if (isTRUE(log_cfg$log_to_console)) {
+        message("Structured log written to: ", log_file)
+      }
+    },
+    error = function(e) {
+      warning("Failed to write structured log: ", e$message)
+    }
+  )
 
   invisible(log_file)
 }

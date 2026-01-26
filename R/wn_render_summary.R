@@ -76,7 +76,7 @@
 
 wn_render_summary <- function(region = NULL) {
   start_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Starting wn_render_summary with region: {region}"
   ))
 
@@ -115,7 +115,7 @@ wn_render_summary <- function(region = NULL) {
   summary_data <- tryCatch(
     DBI::dbGetQuery(conn, sql_command),
     error = function(e) {
-      dauPortalTools::log_event(glue::glue(
+      log_event(glue::glue(
         "Error fetching summary: {e$message}"
       ))
       data.frame(
@@ -134,7 +134,7 @@ wn_render_summary <- function(region = NULL) {
     ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
   }
 
-  ui <- gov_layout(
+  ui <- shinyGovstyle::gov_layout(
     layout_column_wrap(
       width = 1 / 3,
       card(
@@ -153,7 +153,7 @@ wn_render_summary <- function(region = NULL) {
   )
 
   end_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Finished wn_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
   ))
 

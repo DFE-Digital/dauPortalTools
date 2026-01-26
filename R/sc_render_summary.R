@@ -76,7 +76,7 @@
 
 wn_render_summary <- function(region = NULL) {
   start_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Starting wn_render_summary with region: {region}"
   ))
 
@@ -115,7 +115,7 @@ wn_render_summary <- function(region = NULL) {
       DBI::dbGetQuery(conn, sql_command)
     },
     error = function(e) {
-      dauPortalTools::log_event(glue::glue(
+      log_event(glue::glue(
         "Error fetching summary: {e$message}"
       ))
       return(data.frame(
@@ -162,7 +162,7 @@ wn_render_summary <- function(region = NULL) {
   )
 
   end_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Finished wn_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
   ))
 

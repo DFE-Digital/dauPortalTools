@@ -40,7 +40,7 @@ identified. The log timestamp is generated in SQL Server using \code{SYSDATETIME
 \details{
 This function:
 \itemize{
-\item Connects to SQL Server using \code{dauPortalTools::sql_manager("dit")}.
+\item Connects to SQL Server using \code{sql_manager("dit")}.
 \item Reads configuration from \code{config.yml} to obtain the target schema
 (\code{conf$schemas$db_schema_01a}).
 \item Normalises \code{live_issues}, \code{new_issues}, and \code{closed_issues} so that

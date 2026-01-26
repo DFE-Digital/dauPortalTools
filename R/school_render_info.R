@@ -42,7 +42,7 @@
 
 school_render_overview <- function(urn) {
   start_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Starting school_render_overview with urn: {urn}"
   ))
 
@@ -79,7 +79,7 @@ school_render_overview <- function(urn) {
   summary_data <- tryCatch(
     DBI::dbGetQuery(conn, sql_command),
     error = function(e) {
-      dauPortalTools::log_event(glue::glue(
+      log_event(glue::glue(
         "Error fetching summary: {e$message}"
       ))
       return(data.frame(urn = NA, school_name = NA))
@@ -264,7 +264,7 @@ school_render_overview <- function(urn) {
     tab_js
   )
 
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Finished school_render_overview in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)} seconds"
   ))
 

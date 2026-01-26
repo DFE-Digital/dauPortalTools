@@ -49,7 +49,7 @@
 
 wn_render_status_type_charts <- function(region = NULL) {
   start_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Starting wn_render_status_type_charts with region: {region}"
   ))
 
@@ -108,7 +108,7 @@ wn_render_status_type_charts <- function(region = NULL) {
   )
 
   df <- tryCatch(DBI::dbGetQuery(conn, sql_cmd), error = function(e) {
-    dauPortalTools::log_event(glue::glue(
+    log_event(glue::glue(
       "Error fetching status/type data: {e$message}"
     ))
     NULL
@@ -136,7 +136,7 @@ wn_render_status_type_charts <- function(region = NULL) {
       shinyGovstyle::label_hint("wn_st_hint", "No data available to plot.")
     )
     end_time <- Sys.time()
-    dauPortalTools::log_event(glue::glue(
+    log_event(glue::glue(
       "Finished wn_render_status_type_charts in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
     ))
     return(ui_empty)
@@ -170,7 +170,7 @@ wn_render_status_type_charts <- function(region = NULL) {
     dplyr::mutate(
       link = vapply(
         link,
-        function(x) as.character(dauPortalTools::make_shiny_link(x, "Open")),
+        function(x) as.character(make_shiny_link(x, "Open")),
         character(1)
       )
     )
@@ -385,7 +385,7 @@ wn_render_status_type_charts <- function(region = NULL) {
   )
 
   end_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Finished wn_render_status_type_charts in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
   ))
   return(ui)

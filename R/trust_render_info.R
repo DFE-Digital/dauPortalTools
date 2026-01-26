@@ -20,7 +20,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
   `%||%` <- function(a, b) if (is.null(a) || length(a) == 0) b else a
   safe_na <- function(x) ifelse(is.na(x) | length(x) == 0, NA, x)
 
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Starting trust_render_overview urn={urn %||% 'NULL'}, trust_id={trust_id %||% 'NULL'}"
   ))
 
@@ -29,7 +29,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
   # Resolve trust_id from URN if not provided
   if (is.null(trust_id)) {
     if (is.null(urn)) {
-      dauPortalTools::log_event(
+      log_event(
         "No URN or Trust_ID provided; returning fallback UI"
       )
       return(
@@ -58,7 +58,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
     trust_row <- tryCatch(
       DBI::dbGetQuery(conn, trust_id_q),
       error = function(e) {
-        dauPortalTools::log_event(glue::glue(
+        log_event(glue::glue(
           "Error resolving Trust_ID by URN: {e$message}"
         ))
         data.frame()
@@ -66,7 +66,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
     )
 
     if (nrow(trust_row) == 0 || is.na(trust_row$Trust_ID[1])) {
-      dauPortalTools::log_event("No Trust_ID found for URN in latest snapshot")
+      log_event("No Trust_ID found for URN in latest snapshot")
       return(
         shinyGovstyle::gov_layout(
           size = "two-thirds",
@@ -102,7 +102,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
   trust_details <- tryCatch(
     DBI::dbGetQuery(conn, trust_details_q),
     error = function(e) {
-      dauPortalTools::log_event(glue::glue(
+      log_event(glue::glue(
         "Error fetching trust details: {e$message}"
       ))
       data.frame()
@@ -110,7 +110,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
   )
 
   if (nrow(trust_details) == 0) {
-    dauPortalTools::log_event("Trust details not found in latest snapshot")
+    log_event("Trust details not found in latest snapshot")
     return(
       shinyGovstyle::gov_layout(
         size = "two-thirds",
@@ -142,7 +142,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
   )
 
   schools_df <- tryCatch(DBI::dbGetQuery(conn, schools_q), error = function(e) {
-    dauPortalTools::log_event(glue::glue(
+    log_event(glue::glue(
       "Error fetching schools for trust: {e$message}"
     ))
     data.frame()
@@ -252,7 +252,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
   )
 
   end_time <- Sys.time()
-  dauPortalTools::log_event(glue::glue(
+  log_event(glue::glue(
     "Finished trust_render_overview in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
   ))
 

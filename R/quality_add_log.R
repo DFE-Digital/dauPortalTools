@@ -26,7 +26,7 @@
 #' @details
 #' This function:
 #' \itemize{
-#'   \item Connects to SQL Server using `dauPortalTools::sql_manager("dit")`.
+#'   \item Connects to SQL Server using `sql_manager("dit")`.
 #'   \item Reads configuration from `config.yml` to obtain the target schema
 #'         (`conf$schemas$db_schema_01a`).
 #'   \item Normalises `live_issues`, `new_issues`, and `closed_issues` so that
@@ -76,7 +76,7 @@ quality_add_log <- function(
   new_issues <- scalar_zero(new_issues)
   closed_issues <- scalar_zero(closed_issues)
 
-  conn <- dauPortalTools::sql_manager("dit")
+  conn <- sql_manager("dit")
   conf <- yaml::read_yaml("config.yml")
 
   schema <- DBI::SQL(conf$schemas$db_schema_01a)

@@ -43,9 +43,6 @@ The function:
 session.
 }
 
-Logging is performed using \code{dauPortalTools::log_event()} to record start and
-end times.
-
 A GOV.UK‑themed layout is produced via \code{shinyGovstyle::gov_layout()}.
 }
 \examples{

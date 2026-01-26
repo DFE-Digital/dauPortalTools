@@ -24,7 +24,7 @@ Invisibly returns TRUE if successful, FALSE otherwise.
 }
 \description{
 This function inserts a transaction record into the central transaction table
-and also logs a structured summary and event message using DAUPORTALTOOLS.
+and also logs a structured summary and event message
 }
 \examples{
 log_transaction(action = "Update Delivery Officer", record_id = 123,
