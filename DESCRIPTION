@@ -15,5 +15,6 @@ Imports:
     yaml,
     dplyr,
     forcats,
-    plotly
+    plotly,
+    config
 
