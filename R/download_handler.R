@@ -68,10 +68,24 @@ download_handler <- function(
       content = function(file) {
         data_to_write <- if (shiny::is.reactive(df)) df() else df
 
-        filename_final <- session$output[[dl_id]]$filename()
+        filename_final <- paste0(
+          safe_label(file_label1),
+          if (!is.null(file_label2)) paste0("_", safe_label(file_label2)),
+          "_",
+          format(Sys.Date(), "%Y%m%d"),
+          ".csv"
+        )
 
-        page_name_auto <- infer_page_name(session)
+        page_name_auto <- try(
+          {
+            infer_page_name(session)
+          },
+          silent = TRUE
+        )
 
+        if (inherits(page_name_auto, "try-error") || is.null(page_name_auto)) {
+          page_name_auto <- "Unknown Page"
+        }
         shiny::withProgress(message = "Preparing your download...", value = 0, {
           utils::write.csv(
             data_to_write,
