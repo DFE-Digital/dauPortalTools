@@ -12,6 +12,8 @@
 #' @return A Shiny downloadButton with server-side downloadHandler.
 #'
 #' @export
+#'
+
 download_handler <- function(
   df,
   file_label1,
