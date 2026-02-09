@@ -84,7 +84,7 @@ download_handler <- function(
         })
 
         record_download(
-          user = session$userData$username %||% "Guest",
+          user = session$user %||% "Guest",
           page_name = page_name_auto,
           file_name = filename_final
         )
