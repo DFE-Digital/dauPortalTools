@@ -28,7 +28,7 @@ record_login <- function(user = "Guest") {
   log_event("Starting function record_login")
 
   app_id <- conf$app_details$app_id
-  date_time <- Sys.time()
+  date_time <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
   conn <- sql_manager("dit")
 
   log_event(glue::glue("Received {user} for app id: {app_id}."))
