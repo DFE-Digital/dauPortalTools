@@ -28,7 +28,7 @@ record_login <- function(user = "Guest") {
   log_event("Starting function record_login")
 
   app_id <- conf$app_details$app_id
-  date <- Sys.time()
+  date_time <- Sys.time()
   conn <- sql_manager("dit")
 
   log_event(glue::glue("Received {user} for app id: {app_id}."))
@@ -44,7 +44,7 @@ record_login <- function(user = "Guest") {
            ad_username,
            action_sub_type,
            app_id)
-    VALUES ({date},'Home page','Load',{user},'Initial Load',{app_id}) 
+    VALUES ({date_time},'Home page','Load',{user},'Initial Load',{app_id}) 
     ",
     .con = conn
   )

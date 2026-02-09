@@ -33,7 +33,7 @@ record_download <- function(
   log_event("Starting function record_download")
 
   app_id <- conf$app_details$app_id
-  date <- Sys.time()
+  date_time <- Sys.time()
   conn <- sql_manager("dit")
 
   log_event(
@@ -55,7 +55,7 @@ record_download <- function(
        action_sub_type,
        app_id)
     VALUES
-      ({date},
+      ({date_time},
        {page_name},
        'Download',
        {user},
