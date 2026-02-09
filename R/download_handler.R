@@ -1,39 +1,102 @@
+#' Unified download button helper for Shiny apps
+#'
+#' Creates a consistent GOV.UK-styled download button with safe IDs,
+#' safe filenames, and support for both reactive and static data. Also
+#' records download analytics via `record_download()` including auto-
+#' inferred page name.
+#'
+#' @param df Data frame or reactive expression returning a data frame.
+#' @param file_label1 Main filename label (required).
+#' @param file_label2 Optional secondary filename label.
+#'
+#' @return A Shiny downloadButton with server-side downloadHandler.
+#'
+#' @export
 download_handler <- function(
   df,
   file_label1,
-  file_label2 = NULL,
-  button_label = "Download CSV"
+  file_label2 = NULL
 ) {
-  # Generate random ID
-  rand_id <- paste0(sample(c(letters, 0:9), 6, TRUE), collapse = "")
-  dl_id <- paste0(file_label1, file_label2, rand_id)
+  safe_label <- function(x) {
+    if (is.null(x)) {
+      return("")
+    }
+    x <- gsub("[^A-Za-z0-9]+", "_", x)
+    x <- gsub("_+", "_", x)
+    x <- tolower(x)
+    trimws(x, which = "both", whitespace = "_")
+  }
 
-  # Get current Shiny session
+  infer_page_name <- function(session) {
+    if (!is.null(session$input$`router$page`)) {
+      return(session$input$`router$page`)
+    }
+
+    if (!is.null(session$input$tabs)) {
+      return(session$input$tabs)
+    }
+
+    if (!is.null(session$input$tab)) {
+      return(session$input$tab)
+    }
+
+    if (!is.null(session$userData$page_name)) {
+      return(session$userData$page_name)
+    }
+
+    return("Unknown Page")
+  }
+
+  rand_id <- paste0(sample(c(letters, 0:9), 6, TRUE), collapse = "")
+  hash_id <- digest::digest(paste(file_label1, file_label2, rand_id))
+  dl_id <- paste0("dl_", hash_id)
+
   session <- shiny::getDefaultReactiveDomain()
 
-  # Generate download
   if (!is.null(session)) {
     session$output[[dl_id]] <- shiny::downloadHandler(
       filename = function() {
-        file_label2 <- if (is.null(file_label2)) {
-          ""
-        } else {
-          gsub("\\s+", "_", file_label2)
-        }
         paste0(
-          file_label1,
-          file_label2,
+          safe_label(file_label1),
+          if (!is.null(file_label2)) paste0("_", safe_label(file_label2)),
           "_",
           format(Sys.Date(), "%Y%m%d"),
           ".csv"
         )
       },
+
       content = function(file) {
-        utils::write.csv(df, file, row.names = FALSE, na = "")
-      }
+        data_to_write <- if (shiny::is.reactive(df)) df() else df
+
+        filename_final <- session$output[[dl_id]]$filename()
+
+        page_name_auto <- infer_page_name(session)
+
+        shiny::withProgress(message = "Preparing your download...", value = 0, {
+          utils::write.csv(
+            data_to_write,
+            file,
+            row.names = FALSE,
+            na = ""
+          )
+
+          incProgress(1)
+        })
+
+        record_download(
+          user = session$userData$username %||% "Guest",
+          page_name = page_name_auto,
+          file_name = filename_final
+        )
+      },
+
+      contentType = "text/csv"
     )
   }
 
-  # Return the UI download button
-  shiny::downloadButton(dl_id, label)
+  shiny::downloadButton(
+    dl_id,
+    "Download CSV",
+    class = "govuk-button govuk-button--secondary"
+  )
 }
