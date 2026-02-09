@@ -39,8 +39,7 @@ record_download <- function(
   log_event(
     glue::glue(
       "Recording download by {user} for app id {app_id}. Page: {page_name}, File: {file_name}"
-    ),
-    conf
+    )
   )
 
   schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
