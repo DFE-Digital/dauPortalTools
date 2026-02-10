@@ -121,3 +121,26 @@ scp_sc_url <- function(sigchange_id) {
     sigchange_id
   )
 }
+
+#' Generate SLIC URL for the SLIC portal
+#'
+#' Constructs a SLIC URL to our internal portal for a given urn
+#'
+#' @param sigchange_id A character string representing the urn of a school.
+#'
+#' @return A character string containing the full link to the slic portal, or `NULL` if the urn is invalid.
+#' @examples
+#' slic_urn_url("1234")
+#' slic_urn_url(NULL) # returns NULL
+#' @export
+#'
+
+slic_urn_url <- function(urn) {
+  if (is.null(urn) || is.na(urn) || urn == "") {
+    return(NULL)
+  }
+  paste0(
+    "https://rsconnect/rsc/slic/?urn=",
+    urn
+  )
+}
