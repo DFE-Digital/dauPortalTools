@@ -33,7 +33,6 @@ log_transaction <- function(
   app_id <- conf$app_details$app_id
 
   conn <- sql_manager("dit")
-  timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
   tryCatch(
     {
@@ -50,7 +49,7 @@ log_transaction <- function(
         {timestamp},
         {status},
         {notes},
-        {timestamp}
+        SYSUTCDATETIME()
       );
     ",
         .con = conn

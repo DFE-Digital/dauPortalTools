@@ -91,7 +91,7 @@ quality_add_log <- function(
         [closed_issues]
       ) VALUES (
         {quality_check_id},
-        SYSDATETIME(),
+        SYSUTCDATETIME(),
         {live_issues},
         {new_issues},
         {closed_issues}
