@@ -244,11 +244,11 @@ school_render_overview <- function(urn) {
 
 .custom-tab-content {
   padding-top: 6px !important;
-  padding-bottom: 6px !important; /* was 10px — this removes base whitespace */
+  padding-bottom: 6px !important; 
 }
 
 .custom-tab-content .govuk-summary-list {
-  margin-bottom: 8px !important; /* tighten default ~20–30px spacing */
+  margin-bottom: 8px !important; 
 }
 
 .custom-tab-content .govuk-summary-list__row {
@@ -283,15 +283,14 @@ school_render_overview <- function(urn) {
   ))
 
   ui <- shinyGovstyle::gov_layout(
-      shinyGovstyle::heading_text(
-        glue::glue("{summary_data$school_name} ({summary_data$urn})"),
-        size = "l"
-      ),
-      tab_css,
-      tab_buttons,
-      tab_contents,
-      tab_js
-    )
+    shinyGovstyle::heading_text(
+      glue::glue("{summary_data$school_name} ({summary_data$urn})"),
+      size = "l"
+    ),
+    tab_css,
+    tab_buttons,
+    tab_contents,
+    tab_js
   )
 
   log_event(glue::glue(
