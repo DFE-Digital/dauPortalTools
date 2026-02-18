@@ -632,7 +632,6 @@ ui_school_ofsted_history <- function(urn) {
   ))
 
   ui <- shinyGovstyle::gov_layout(
-    shinyGovstyle::heading_text("Ofsted", size = "l"),
     tab_css,
     tab_buttons,
     tab_contents,
