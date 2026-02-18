@@ -632,6 +632,7 @@ ui_school_ofsted_history <- function(urn) {
   ))
 
   ui <- shinyGovstyle::gov_layout(
+    htmltools::tags$div(style = "margin-top: -20px; padding-top: 0;"),
     tab_css,
     tab_buttons,
     tab_contents,
