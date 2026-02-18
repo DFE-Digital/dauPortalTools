@@ -237,33 +237,63 @@ school_render_overview <- function(urn) {
   # CSS for UKGov-ish look
   tab_css <- shiny::tags$style(shiny::HTML(
     "
-    .custom-tabs-buttons { display: flex; flex-wrap: wrap; margin-bottom: 10px; }
-    .custom-tab-btn {
-      background: #f3f2f1;
-      border: 1px solid #b1b4b6;
-      padding: 6px 12px;
-      margin-right: 4px;
-      cursor: pointer;
-      font-weight: 600;
-      border-radius: 3px;
-    }
-    .custom-tab-btn.active { background: #005ea5; color: white; border-color: #005ea5; }
-    .custom-tab-btn:hover:not(.active) { background: #e1e1e1; }
-    .custom-tab-content { display: none; padding: 10px 0; }
-    .custom-tab-content.active { display: block; }
-    .govuk-summary-list__row:nth-child(even) { background-color: #f3f2f1; }
-    "
+  .school-overview-root .govuk-heading-l {
+    margin-bottom: 12px; /* default is bigger; tune to taste (8–16px) */
+  }
+
+  .school-overview-root .custom-tab-content {
+    padding-top: 6px;
+    padding-bottom: 6px; /* was 10px 0; cut the bottom especially */
+  }
+
+  .school-overview-root .govuk-summary-list {
+    margin-bottom: 8px; /* GOV.UK default is larger */
+  }
+  .school-overview-root .govuk-summary-list__row {
+    margin: 0; /* remove any extra gaps between rows (browser/GOVUK differences) */
+  }
+
+  .school-overview-root .govuk-summary-list__row:nth-child(even) {
+    background-color: #f3f2f1;
+  }
+
+  .school-overview-root .govuk-main-wrapper {
+    padding-bottom: 12px !important; /* default ~40px; tune as needed */
+  }
+
+  .school-overview-root .custom-tab-content.active > :last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .school-overview-root .custom-tab-content.active .govuk-summary-list:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  
+.school-overview-root .custom-tabs-buttons {
+  margin-top: 6px;     /* keep small top gap under heading */
+  margin-bottom: 6px;  /* reduce button-to-content gap */
+}
+.school-overview-root .custom-tabs-contents {
+  margin-bottom: 0;    /* reduce overall bottom gap */
+}
+
+"
   ))
 
   ui <- shinyGovstyle::gov_layout(
-    shinyGovstyle::heading_text(
-      glue::glue("{summary_data$school_name} ({summary_data$urn})"),
-      size = "l"
-    ),
-    tab_css,
-    tab_buttons,
-    tab_contents,
-    tab_js
+    htmltools::tags$div(
+      class = "school-overview-root",
+      shinyGovstyle::heading_text(
+        glue::glue("{summary_data$school_name} ({summary_data$urn})"),
+        size = "l"
+      ),
+      tab_css,
+      tab_buttons,
+      tab_contents,
+      tab_js
+    )
   )
 
   log_event(glue::glue(
