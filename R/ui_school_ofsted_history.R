@@ -628,15 +628,22 @@ ui_school_ofsted_history <- function(urn) {
     .ofsted-details-body { padding:10px 12px; }
     .ofsted-details-body ul { margin:0 0 6px 20px; }
     .ofsted-source-hint { color:#505a5f; margin:4px 0 0; font-size:0.9rem; }
+
+    
+    .ofsted-root {
+    margin-top: -32px;
+    }
     "
   ))
 
   ui <- shinyGovstyle::gov_layout(
-    htmltools::tags$div(style = "margin-top: -20px; padding-top: 0;"),
     tab_css,
-    tab_buttons,
-    tab_contents,
-    tab_js
+    htmltools::tags$div(
+      class = "ofsted-root",
+      tab_buttons,
+      tab_contents,
+      tab_js
+    )
   )
 
   log_event(glue::glue(
