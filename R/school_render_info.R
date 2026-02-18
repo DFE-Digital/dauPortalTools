@@ -237,49 +237,65 @@ school_render_overview <- function(urn) {
   # CSS for UKGov-ish look
   tab_css <- shiny::tags$style(shiny::HTML(
     "
-.custom-tabs-buttons ~ .custom-tabs-contents .govuk-heading-l,
-.govuk-heading-l {
-  margin-bottom: 14px !important;
-}
+    .custom-tabs-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 4px; 
+      margin-bottom: 6px;
+    }
 
-.custom-tab-content {
-  padding-top: 6px !important;
-  padding-bottom: 6px !important; 
-}
+    .custom-tab-btn {
+      background: #f3f2f1;
+      border: 1px solid #b1b4b6;
+      padding: 6px 12px;
+      margin-right: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 3px;
+    }
+    .custom-tab-btn.active {
+      background: #005ea5;
+      color: white;
+      border-color: #005ea5;
+    }
+    .custom-tab-btn:hover:not(.active) {
+      background: #e1e1e1;
+    }
 
-.custom-tab-content .govuk-summary-list {
-  margin-bottom: 8px !important; 
-}
+    .custom-tab-content {
+      display: none;
+      padding-top: 4px !important;  
+      padding-bottom: 4px !important;
+      margin-bottom: 0 !important;
+    }
+    .custom-tab-content.active {
+      display: block;
+    }
 
-.custom-tab-content .govuk-summary-list__row {
-  margin: 0 !important;
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
-}
+    .custom-tab-content.active > :last-child {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+    }
 
-.custom-tab-content .govuk-summary-list__row:nth-child(even) {
-  background-color: #f3f2f1;
-}
 
-.custom-tab-content.active > :last-child {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-}
+    .govuk-summary-list {
+      margin-bottom: 8px !important; 
+    }
 
-.custom-tab-content.active .govuk-summary-list:last-child {
-  margin-bottom: 0 !important;
-}
+    .govuk-summary-list__row {
+      margin: 0 !important;
+      padding-top: 2px !important;
+      padding-bottom: 2px !important;
+    }
 
-.custom-tabs-buttons {
-  margin-top: 8px !important;
-  margin-bottom: 8px !important;
-}
+    .govuk-summary-list__row:nth-child(even) {
+      background-color: #f3f2f1;
+    }
 
-.custom-tabs-contents {
-  margin-bottom: 0 !important;
-}
-
-"
+    .govuk-heading-l {
+      margin-bottom: 12px !important;
+    }
+  "
   ))
 
   ui <- shinyGovstyle::gov_layout(
