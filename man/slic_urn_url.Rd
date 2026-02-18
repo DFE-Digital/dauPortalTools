@@ -7,15 +7,16 @@
 slic_urn_url(urn)
 }
 \arguments{
-\item{sigchange_id}{A character string representing the urn of a school.}
+\item{urn}{A character vector (or coercible to character) of URNs.}
 }
 \value{
-A character string containing the full link to the slic portal, or \code{NULL} if the urn is invalid.
+A character vector containing the full link(s) to the SLIC portal.
+Invalid/missing inputs yield NA_character_.
 }
 \description{
-Constructs a SLIC URL to our internal portal for a given urn
+Constructs a SLIC URL to our internal portal for a given URN (vectorised).
 }
 \examples{
 slic_urn_url("1234")
-slic_urn_url(NULL) # returns NULL
+slic_urn_url(c("1234", NA, ""))
 }

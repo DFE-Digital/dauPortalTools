@@ -17,6 +17,7 @@ Imports:
     DBI,
     dplyr,
     DT,
+    gt,
     forcats,
     ggplot2,
     glue,
