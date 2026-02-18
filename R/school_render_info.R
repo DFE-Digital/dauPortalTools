@@ -86,52 +86,12 @@ school_render_overview <- function(urn) {
     }
   )
 
-  db_schema_00a <- DBI::SQL(conf$schemas$db_schema_00a)
-
-  sql_ofsted <- glue::glue_sql(
-    "
-    SELECT *
-    FROM {db_schema_00a}.[ofsted_weekly_graded]
-    WHERE urn = {urn}
-  ",
-    .con = conn
-  )
-
-  ofsted <- DBI::dbGetQuery(conn, sql_ofsted)
-
   if (nrow(summary_data) == 0 || is.na(summary_data$urn[1])) {
     return(shinyGovstyle::gov_layout(
       shinyGovstyle::heading_text("School Overview", size = "l"),
       shiny::HTML("<p>No data available for this URN.</p>")
     ))
   }
-
-  sql_command <- glue::glue_sql(
-    "
-    SELECT URN AS urn
-          ,[EstablishmentName] AS school_name
-          ,[LA (name)] AS la
-          ,[GOR (name)] AS region
-          ,[TypeOfEstablishment (name)] AS school_type
-          ,[EstablishmentTypeGroup (name)] AS school_type_group
-          ,[OpenDate] AS open_date
-          ,[CloseDate] AS close_date
-          ,[ReasonEstablishmentClosed (name)] AS reason_closed
-          ,[PhaseOfEducation (name)] AS phase
-          ,[ReligiousCharacter (name)] AS religious_character
-          ,[Diocese (name)] AS diocese_name
-          ,[Gender (name)] AS gender
-          ,[NumberOfPupils] AS pupil_number
-          ,[PercentageFSM] AS perc_fsm
-          ,[Trusts (code)] AS trust_ref
-          ,[Trusts (name)] AS trust_name
-          ,[SchoolWebsite] AS school_website
-    FROM {db_schema_00c}.[Edubase]
-    WHERE URN = {urn}
-      AND [DateStamp] = (SELECT MAX(DateStamp) FROM {db_schema_00c}.[Edubase])
-  ",
-    .con = conn
-  )
 
   # Prepare tab data
   tabs <- list()
