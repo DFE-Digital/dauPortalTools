@@ -49,7 +49,7 @@
 sql_manager <- function(service, config_file = "./config.yml") {
   conf <- config::get(
     paste0(service),
-    file = config_file
+    get_config()
   )
 
   server <- DBI::dbConnect(
