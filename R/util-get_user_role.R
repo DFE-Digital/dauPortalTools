@@ -49,13 +49,8 @@ get_user_role <- function(username) {
     return(NULL)
   }
 
-  app_id <- tryCatch(
-    config::get("app_details")$app_id,
-    error = function(e) NULL
-  )
-  if (is.null(app_id)) {
-    stop("No app_id defined in config under app_details$app_id")
-  }
+  conf <- get_config()
+  app_id <- conf$app_details$app_id
 
   conn <- sql_manager("dit")
 
