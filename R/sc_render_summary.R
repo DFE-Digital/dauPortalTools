@@ -74,7 +74,7 @@
 #' @export
 #'
 
-wn_render_summary <- function(region = NULL) {
+sc_render_summary <- function(region = NULL) {
   start_time <- Sys.time()
   log_event(glue::glue(
     "Starting wn_render_summary with region: {region}"
