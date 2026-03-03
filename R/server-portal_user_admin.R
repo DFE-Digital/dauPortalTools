@@ -6,7 +6,7 @@ server_portal_user_admin <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    conf <- config_get()
+    conf <- get_config()
     app_id <- conf$app_details$app_id
 
     username <- reactive(get_user(session = session, fallback = "admin"))
