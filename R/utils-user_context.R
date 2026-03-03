@@ -10,13 +10,23 @@
 
 get_user <- function(session = NULL, fallback = "admin") {
   if (is.null(session)) {
-    session <- tryCatch(shiny::getDefaultReactiveDomain(), error = function(e) {
-      NULL
-    })
+    session <- tryCatch(
+      shiny::getDefaultReactiveDomain(),
+      error = function(e) NULL
+    )
   }
 
   if (!is.null(session) && !is.null(session$user) && nzchar(session$user)) {
     return(session$user)
+  }
+
+  emulate_user <- tryCatch(
+    config::get("emulate_user"),
+    error = function(e) NULL
+  )
+
+  if (!is.null(emulate_user) && nzchar(emulate_user)) {
+    return(emulate_user)
   }
 
   fallback
