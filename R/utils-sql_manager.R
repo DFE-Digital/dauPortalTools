@@ -46,21 +46,20 @@
 #'
 #' @export
 
-sql_manager <- function(service) {
-  conf <- get_config()
-
-  service <- config::get(
+sql_manager <- function(service, config_file = "./config.yml") {
+  conf <- config::get(
     paste0(service),
+    file = config_file
   )
 
   server <- DBI::dbConnect(
     odbc::odbc(),
-    Driver = service$driver,
-    Server = service$server,
-    Database = service$database,
-    UID = service$uid,
-    PWD = service$pwd,
-    Trusted_Connection = service$trusted
+    Driver = conf$driver,
+    Server = conf$server,
+    Database = conf$database,
+    UID = conf$uid,
+    PWD = conf$pwd,
+    Trusted_Connection = conf$trusted
   )
   return(server)
 }
