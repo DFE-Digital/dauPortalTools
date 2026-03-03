@@ -18,7 +18,7 @@
 #' @export
 #'
 
-wn_render_status_type_charts <- function(region = NULL) {
+sc_render_status_type_charts <- function(region = NULL) {
   start_time <- Sys.time()
   log_event(glue::glue(
     "Starting wn_render_status_type_charts with region: {region}"
