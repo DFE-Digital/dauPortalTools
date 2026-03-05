@@ -83,7 +83,9 @@ sc_render_summary <- function() {
   app_id <- conf$app_details$app_id
   db_schema_01a <- conf$schemas$db_schema_01a
   db_schema_01s <- conf$schemas$db_schema_01s
-  print(app_id, db_schema_01a, db_schema_01s)
+  print(app_id)
+  print(db_schema_01a)
+  print(db_schema_01s)
   conn <- sql_manager("dit")
 
   sql_command <- glue::glue_sql(
