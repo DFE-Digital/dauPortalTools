@@ -130,21 +130,14 @@ sc_render_summary <- function() {
       format(summary_data$quality_issues, big.mark = ",")
     )
   )
+  print(df)
 
-  ui <- shinyGovstyle::gov_layout(
-    size = "two-thirds",
-    shinyGovstyle::heading_text("Sig Change Summary", size = "l"),
-    shinyGovstyle::label_hint(
-      "summary_label",
-      "Key metrics for Warning Notices"
-    ),
-    shinyGovstyle::govTable(
-      inputId = "summary_table",
-      df = df,
-      caption = "Key Metrics",
-      caption_size = "l",
-      num_col = c(2)
-    )
+  ui <- shinyGovstyle::govTable(
+    inputId = "summary_table",
+    df = df,
+    caption = "Key Metrics",
+    caption_size = "l",
+    num_col = c(2)
   )
 
   end_time <- Sys.time()
