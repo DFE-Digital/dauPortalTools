@@ -81,20 +81,22 @@ sc_render_summary <- function() {
   ))
 
   app_id <- conf$app_details$app_id
+  db_schema_01a <- conf$schemas$db_schema_01a
+  db_schema_01s <- conf$schemas$db_schema_01s
 
-  conn <- sql_manager("data_insight_team")
+  conn <- sql_manager("dit")
 
   sql_command <- glue::glue_sql(
     "
     SELECT
       (SELECT COUNT(sig_change_id)
-       FROM {`conf$schemas$db_schema_01s`}.[tracker]
+       FROM {db_schema_01s}.[tracker]
        WHERE [all_actions_completed] <> 1) AS total_live_records,
       (SELECT COUNT(sig_change_id)
-       FROM {`conf$schemas$db_schema_01s`}.[tracker]
+       FROM {db_schema_01s}.[tracker]
        WHERE change_edit_date >= DATEADD(DAY, -30, GETDATE())) AS updated_records,
       (SELECT COUNT(quality_id)
-       FROM {`conf$schemas$db_schema_01a`}.[quality_list] l
+       FROM {db_schema_01a}.[quality_list] l
        WHERE l.app_id = {app_id} AND quality_status = 0) AS quality_issues
   ",
     .con = conn
