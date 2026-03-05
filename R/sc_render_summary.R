@@ -95,7 +95,7 @@ sc_render_summary <- function() {
        WHERE change_edit_date >= DATEADD(DAY, -30, GETDATE())) AS updated_records,
       (SELECT COUNT(quality_id)
        FROM {`conf$schemas$db_schema_01a`}.[quality_list] l
-       WHERE l.app_id = {app_id} AND quality_status = 0{region_filter}) AS quality_issues
+       WHERE l.app_id = {app_id} AND quality_status = 0) AS quality_issues
   ",
     .con = conn
   )
