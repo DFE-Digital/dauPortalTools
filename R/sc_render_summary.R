@@ -131,12 +131,6 @@ sc_render_summary <- function() {
     )
   )
 
-  heading <- if (!is.null(region)) {
-    glue::glue("Summary for {region}")
-  } else {
-    "Summary"
-  }
-
   ui <- shinyGovstyle::gov_layout(
     size = "two-thirds",
     shinyGovstyle::heading_text(heading, size = "l"),
