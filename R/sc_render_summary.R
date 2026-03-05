@@ -90,13 +90,13 @@ sc_render_summary <- function() {
     "
     SELECT
       (SELECT COUNT(sig_change_id)
-       FROM {db_schema_01s}.[tracker]
+       FROM [{db_schema_01s}].[tracker]
        WHERE [all_actions_completed] <> 1) AS total_live_records,
       (SELECT COUNT(sig_change_id)
-       FROM {db_schema_01s}.[tracker]
+       FROM [{db_schema_01s}].[tracker]
        WHERE change_edit_date >= DATEADD(DAY, -30, GETDATE())) AS updated_records,
       (SELECT COUNT(quality_id)
-       FROM {db_schema_01a}.[quality_list] l
+       FROM [{db_schema_01a}].[quality_list] l
        WHERE l.app_id = {app_id} AND quality_status = 0) AS quality_issues
   ",
     .con = conn
