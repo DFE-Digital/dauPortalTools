@@ -74,38 +74,28 @@
 #' @export
 #'
 
-sc_render_summary <- function(region = NULL) {
+sc_render_summary <- function() {
   start_time <- Sys.time()
   log_event(glue::glue(
-    "Starting wn_render_summary with region: {region}"
+    "Starting sc_render_summary"
   ))
 
-  conn <- sql_manager("data_insight_team")
+  app_id <- conf$app_details$app_id
 
-  school_region <- if (!is.null(region)) {
-    glue::glue_sql(" AND school_region = {region}", .con = conn)
-  } else {
-    DBI::SQL("")
-  }
-  region_filter <- if (!is.null(region)) {
-    glue::glue_sql(" AND region = {region}", .con = conn)
-  } else {
-    DBI::SQL("")
-  }
+  conn <- sql_manager("data_insight_team")
 
   sql_command <- glue::glue_sql(
     "
     SELECT
-      (SELECT COUNT(twn_id)
-       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_all_notices]
-       WHERE [twn_status_id] <> 7{school_region}) AS total_live_records,
-      (SELECT COUNT(t.twn_date_id)
-       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_date_tracking] t
-       LEFT JOIN {`conf$database`}.{`conf$schemas$db_schema_01a`}.[twn_all_notices] a ON t.twn_id = a.twn_id
-       WHERE t.updated_on >= DATEADD(DAY, -30, GETDATE()){school_region}) AS updated_records,
+      (SELECT COUNT(sig_change_id)
+       FROM {`conf$database`}.{`conf$schemas$db_schema_01s`}.[tracker]
+       WHERE [all_actions_completed] <> 1) AS total_live_records,
+      (SELECT COUNT(sig_change_id)
+       FROM {`conf$database`}.{`conf$schemas$db_schema_01s`}.[tracker]
+       WHERE change_edit_date >= DATEADD(DAY, -30, GETDATE())) AS updated_records,
       (SELECT COUNT(quality_id)
-       FROM {`conf$database`}.{`conf$schemas$db_schema_01a`}.[quality_list] l
-       WHERE l.app_id > 0 AND l.app_id < 3 AND quality_status = 0{region_filter}) AS quality_issues
+       FROM {`conf$database`}.{`conf$schemas$db_schema_01s`}.[quality_list] l
+       WHERE l.app_id = {app_id} AND quality_status = 0{region_filter}) AS quality_issues
   ",
     .con = conn
   )
@@ -163,7 +153,7 @@ sc_render_summary <- function(region = NULL) {
 
   end_time <- Sys.time()
   log_event(glue::glue(
-    "Finished wn_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
+    "Finished sc_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
   ))
 
   return(ui)
