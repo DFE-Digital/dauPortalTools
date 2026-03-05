@@ -133,7 +133,7 @@ sc_render_summary <- function() {
 
   ui <- shinyGovstyle::gov_layout(
     size = "two-thirds",
-    shinyGovstyle::heading_text(heading, size = "l"),
+    shinyGovstyle::heading_text("Sig Change Summary", size = "l"),
     shinyGovstyle::label_hint(
       "summary_label",
       "Key metrics for Warning Notices"
