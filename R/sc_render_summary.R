@@ -74,7 +74,7 @@
 #' @export
 #'
 
-sc_render_summary <- function() {
+sc_render_summary <- function(user = NULL) {
   start_time <- Sys.time()
   log_event(glue::glue(
     "Starting sc_render_summary"
@@ -83,23 +83,31 @@ sc_render_summary <- function() {
   app_id <- conf$app_details$app_id
   db_schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
   db_schema_01s <- DBI::SQL(conf$schemas$db_schema_01s)
-  print(app_id)
-  print(db_schema_01a)
-  print(db_schema_01s)
+
   conn <- sql_manager("dit")
+
+  user_query <- if (!is.null(user)) {
+    glue::glue_sql(
+      " AND ([delivery_lead] = {user} OR [RSCContact] = {user})",
+      .con = conn
+    )
+  } else {
+    DBI::SQL("")
+  }
 
   sql_command <- glue::glue_sql(
     "
     SELECT
-      (SELECT COUNT(sig_change_id)
-       FROM {db_schema_01s}.[tracker]
-       WHERE [all_actions_completed] <> 1) AS total_live_records,
-      (SELECT COUNT(sig_change_id)
-       FROM {db_schema_01s}.[tracker]
-       WHERE change_edit_date >= DATEADD(DAY, -30, GETDATE())) AS updated_records,
+      (SELECT COUNT(t.sig_change_id)
+       FROM {db_schema_01s}.[tracker] t
+       WHERE [all_actions_completed] <> 1 {user_query}) AS total_live_records,
+      (SELECT COUNT(t.sig_change_id)
+       FROM {db_schema_01s}.[tracker] t
+       WHERE change_edit_date >= DATEADD(DAY, -30, GETDATE()){user_query}) AS updated_records,
       (SELECT COUNT(quality_id)
        FROM {db_schema_01a}.[quality_list] l
-       WHERE l.app_id = {app_id} AND quality_status = 0) AS quality_issues
+       RIGHT JOIN {db_schema_01s}.[tracker] t on t.record_id = l.sig_change_id
+       WHERE l.app_id = {app_id} AND t.quality_status = 0{user_query}) AS quality_issues
   ",
     .con = conn
   )
@@ -134,14 +142,27 @@ sc_render_summary <- function() {
   )
   print(df)
 
-  ui <- shinyGovstyle::govTable(
-    inputId = "summary_table",
-    df = df,
-    caption = "Key Metrics",
-    caption_size = "l",
-    num_col = c(2)
-  )
+  fmt <- function(x) {
+    ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
+  }
 
+  ui <- shinyGovstyle::gov_layout(
+    layout_column_wrap(
+      width = 1 / 3,
+      card(
+        card_header("Total Live Records"),
+        tags$h2(fmt(total_live), class = "govuk-heading-m")
+      ),
+      card(
+        card_header("Updates This Month"),
+        tags$h2(fmt(updated_30d), class = "govuk-heading-m")
+      ),
+      card(
+        card_header("Quality Issues"),
+        tags$h2(fmt(qual_issues), class = "govuk-heading-m")
+      )
+    )
+  )
   end_time <- Sys.time()
   log_event(glue::glue(
     "Finished sc_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
