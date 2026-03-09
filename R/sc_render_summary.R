@@ -111,39 +111,24 @@ sc_render_summary <- function(user = NULL) {
   ",
     .con = conn
   )
-  print(sql_command)
+
   summary_data <- tryCatch(
-    {
-      DBI::dbGetQuery(conn, sql_command)
-    },
+    DBI::dbGetQuery(conn, sql_command),
     error = function(e) {
       log_event(glue::glue(
         "Error fetching summary: {e$message}"
       ))
-      return(data.frame(
-        total_live_records = NA,
-        updated_records = NA,
-        quality_issues = NA
-      ))
+      data.frame(
+        total_live_records = NA_integer_,
+        updated_records = NA_integer_,
+        quality_issues = NA_integer_
+      )
     }
   )
 
-  df <- data.frame(
-    Metric = c(
-      "Total Live Records",
-      "Records Updated in Last 30 Days",
-      "Quality Issues"
-    ),
-    Value = c(
-      format(summary_data$total_live_records, big.mark = ","),
-      format(summary_data$updated_records, big.mark = ","),
-      format(summary_data$quality_issues, big.mark = ",")
-    )
-  )
-
-  total_live <- suppressWarnings(as.integer(df$total_live_records[1]))
-  updated_30d <- suppressWarnings(as.integer(df$updated_records[1]))
-  qual_issues <- suppressWarnings(as.integer(df$quality_issues[1]))
+  total_live <- suppressWarnings(as.integer(summary_data$total_live_records[1]))
+  updated_30d <- suppressWarnings(as.integer(summary_data$updated_records[1]))
+  qual_issues <- suppressWarnings(as.integer(summary_data$quality_issues[1]))
 
   fmt <- function(x) {
     ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
@@ -166,6 +151,7 @@ sc_render_summary <- function(user = NULL) {
       )
     )
   )
+
   end_time <- Sys.time()
   log_event(glue::glue(
     "Finished sc_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
