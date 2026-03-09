@@ -31,7 +31,8 @@ quality_get_data <- function(record = NULL) {
   log_event("Starting function quality_get_data")
 
   app_id <- conf$app_details$app_id
-
+  db_schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
+  db_schema_01s <- DBI::SQL(conf$schemas$db_schema_01s)
   # Log the received record ID and app ID
   log_event(glue::glue("Received {record} id for app id: {app_id}."))
 
@@ -50,10 +51,10 @@ quality_get_data <- function(record = NULL) {
            c.quality_description AS 'Description',
            [date_created] AS 'Date Identified',
            [last_checked] AS 'Last Reviewed'
-    FROM {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_list] l
-    LEFT JOIN {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_check] c 
+    FROM {db_schema_01a}.[quality_list] l
+    LEFT JOIN {db_schema_01a}.[quality_check] c 
         ON c.quality_check_id = l.error_id
-    LEFT JOIN {`conf$database`}.{`conf$schema$db_schema_01a`}.[app_list] a 
+    LEFT JOIN {db_schema_01a}.[app_list] a 
         ON l.app_id = a.app_id
     WHERE l.app_id = {app_id}
       AND quality_status = 0
