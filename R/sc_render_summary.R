@@ -141,9 +141,9 @@ sc_render_summary <- function(user = NULL) {
     )
   )
 
-  total_live <- suppressWarnings(as.integer(summary_data$total_live_records[1]))
-  updated_30d <- suppressWarnings(as.integer(summary_data$updated_records[1]))
-  qual_issues <- suppressWarnings(as.integer(summary_data$quality_issues[1]))
+  total_live <- suppressWarnings(as.integer(df$total_live_records[1]))
+  updated_30d <- suppressWarnings(as.integer(df$updated_records[1]))
+  qual_issues <- suppressWarnings(as.integer(df$quality_issues[1]))
 
   fmt <- function(x) {
     ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
