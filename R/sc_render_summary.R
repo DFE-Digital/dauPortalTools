@@ -76,6 +76,7 @@
 
 sc_render_summary <- function(user = NULL) {
   start_time <- Sys.time()
+
   log_event(glue::glue(
     "Starting sc_render_summary"
   ))
@@ -106,8 +107,8 @@ sc_render_summary <- function(user = NULL) {
        WHERE change_edit_date >= DATEADD(DAY, -30, GETDATE()){user_query}) AS updated_records,
       (SELECT COUNT(quality_id)
        FROM {db_schema_01a}.[quality_list] l
-       RIGHT JOIN {db_schema_01s}.[tracker] t on t.record_id = l.sig_change_id
-       WHERE l.app_id = {app_id} AND t.quality_status = 0{user_query}) AS quality_issues
+       RIGHT JOIN {db_schema_01s}.[tracker] t on l.record_id = t.sig_change_id
+       WHERE l.app_id = {app_id} AND l.quality_status = 0{user_query}) AS quality_issues
   ",
     .con = conn
   )
