@@ -36,6 +36,8 @@ quality_get_data <- function(record = NULL) {
   # Log the received record ID and app ID
   log_event(glue::glue("Received {record} id for app id: {app_id}."))
 
+  conn <- sql_manager("dit")
+
   record <- if (!is.null(record)) {
     glue::glue_sql(
       " AND l.record_id = '{record}'",
@@ -71,6 +73,8 @@ quality_get_data <- function(record = NULL) {
 
   # Log a structured summary of the retrieved data
   log_summary(quality_records)
+
+  DBI::dbDisconnect(conn)
 
   # Return the data frame of quality records
   return(quality_records)
