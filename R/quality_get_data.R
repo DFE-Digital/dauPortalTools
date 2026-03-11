@@ -32,15 +32,17 @@ quality_get_data <- function(record = NULL) {
 
   app_id <- conf$app_details$app_id
   db_schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
-  db_schema_01s <- DBI::SQL(conf$schemas$db_schema_01s)
+
   # Log the received record ID and app ID
   log_event(glue::glue("Received {record} id for app id: {app_id}."))
 
-  # Validate and format the record filter if provided
-  if (!is.null("record") & is.numeric(record)) {
-    record <- paste0(" AND l.record_id = '", record, "'")
+  record <- if (!is.null(record)) {
+    glue::glue_sql(
+      " AND l.record_id = '{record}'",
+      .con = conn
+    )
   } else {
-    record <- ""
+    DBI::SQL("")
   }
 
   # Construct the SQL query to retrieve quality data
@@ -72,13 +74,4 @@ quality_get_data <- function(record = NULL) {
 
   # Return the data frame of quality records
   return(quality_records)
-}
-
-
-get_aidt_quality_data <- function(record = NULL) {
-  log_event(
-    "get_aidt_quality_data is being discontinued in 2026.4 please update to quality_get_data()"
-  )
-
-  quality_get_data(record)
 }
