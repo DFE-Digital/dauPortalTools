@@ -89,7 +89,7 @@ sc_render_summary <- function(user = NULL) {
 
   user_query <- if (!is.null(user)) {
     glue::glue_sql(
-      " AND ([delivery_lead] = {user} OR [RSCContact] = {user})",
+      " AND ([delivery_lead] = '{user}' OR [RSCContact] = '{user}')",
       .con = conn
     )
   } else {
