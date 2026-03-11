@@ -153,6 +153,8 @@ sc_render_summary <- function(user = NULL) {
     )
   )
 
+  DBI::dbDisconnect(conn)
+
   end_time <- Sys.time()
   log_event(glue::glue(
     "Finished sc_render_summary in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
