@@ -47,20 +47,21 @@ quality_get_data <- function(record = NULL) {
 
   sql_command <- glue::glue_sql(
     "
-    SELECT c.quality_name AS 'Quality Concern',
-           c.quality_description AS 'Description',
-           l.date_created AS 'Date Identified',
-           l.last_checked AS 'Last Reviewed'
-    FROM {db_schema_01a}.[quality_list] l
-    LEFT JOIN {db_schema_01a}.[quality_check] c 
-        ON c.quality_check_id = l.error_id
-    WHERE l.app_id = {app_id}
-      AND l.quality_status = 0
-    {query_record}  ",
+  SELECT c.quality_name      AS [Quality Concern],
+         c.quality_description AS [Description],
+         l.date_created       AS [Date Identified],
+         l.last_checked       AS [Last Reviewed]
+  FROM {db_schema_01a}.[quality_list] l
+  LEFT JOIN {db_schema_01a}.[quality_check] c
+         ON c.quality_check_id = l.error_id
+  WHERE l.app_id = {app_id}
+    AND l.quality_status = 0
+  {query_record}
+  ",
     .con = conn
   )
 
-  quality_records <- DBI::dbGetQuery(conn, sql_command)
+  quality_records <- DBI::dbGetQuery(conn, as.character(sql_command))
 
   log_summary(quality_records)
 
