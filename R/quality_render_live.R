@@ -84,7 +84,7 @@ quality_render_live <- function(
   }
 
   user <- if (!is.null(user)) {
-    glue::glue_sql(" AND ql.user = '{user}'", .con = conn)
+    glue::glue_sql(" AND ql.username = '{user}'", .con = conn)
   } else {
     DBI::SQL("")
   }
@@ -96,7 +96,7 @@ quality_render_live <- function(
   }
 
   region <- if (!is.null(region)) {
-    glue::glue_sql(" AND ql.region = '{region}'", .con = conn)
+    glue::glue_sql(" AND ql.region = {region}", .con = conn)
   } else {
     DBI::SQL("")
   }
@@ -109,7 +109,7 @@ SELECT al.app_id,
   al.app_name AS 'App Name',
   ql.record_id,
   qc.quality_description  AS 'Quality Concern',
-  ql.user AS 'User',
+  ql.username AS 'User',
   ql.region AS 'Region',
   ql.with_rcs AS 'With RCS?',
   ql.date_created AS 'Date Identified',
