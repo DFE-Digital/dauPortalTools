@@ -176,7 +176,7 @@ SELECT al.app_id,
     rownames = FALSE,
     options = list(
       pageLength = 10,
-      autoWidth = TRUE,
+      autoWidth = TRUE
     )
   )
 
