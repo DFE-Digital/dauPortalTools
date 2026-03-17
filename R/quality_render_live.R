@@ -84,7 +84,7 @@ quality_render_live <- function(
   }
 
   user <- if (!is.null(user)) {
-    glue::glue_sql(" AND ql.user = {user}", .con = conn)
+    glue::glue_sql(" AND ql.user = '{user}'", .con = conn)
   } else {
     DBI::SQL("")
   }
@@ -96,7 +96,7 @@ quality_render_live <- function(
   }
 
   region <- if (!is.null(region)) {
-    glue::glue_sql(" AND ql.region = {region}", .con = conn)
+    glue::glue_sql(" AND ql.region = '{region}'", .con = conn)
   } else {
     DBI::SQL("")
   }
