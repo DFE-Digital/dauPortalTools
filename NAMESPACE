@@ -2,6 +2,7 @@
 
 export(db_get_app_users)
 export(db_get_roles)
+export(db_get_sig_change_w_region)
 export(db_update_user_role)
 export(download_handler)
 export(get_config)

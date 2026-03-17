@@ -4,7 +4,7 @@
 \alias{get_user}
 \title{Get the current portal username}
 \usage{
-get_user(session = NULL, fallback = "admin")
+get_user(session = NULL, fallback = "Guest")
 }
 \arguments{
 \item{session}{Optional shiny session; if NULL, we try to detect it.}

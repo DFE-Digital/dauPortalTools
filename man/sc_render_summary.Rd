@@ -4,7 +4,7 @@
 \alias{sc_render_summary}
 \title{Render Warning Notice Summary Panel}
 \usage{
-sc_render_summary(region = NULL)
+sc_render_summary(user = NULL)
 }
 \arguments{
 \item{region}{Character scalar or \code{NULL}. If provided, metrics are filtered
