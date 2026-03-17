@@ -150,7 +150,7 @@ SELECT al.app_id,
   summary_data <- summary_data |> dplyr::select(-app_id, -record_id)
 
   # Download
-  download_handler(summary_data, "live_quality_issues")
+  download_handler(df = summary_data, file_label1 = "live_quality_issues")
 
   table_widget <- DT::datatable(
     summary_data,
