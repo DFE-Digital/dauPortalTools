@@ -149,26 +149,8 @@ SELECT al.app_id,
 
   summary_data <- summary_data |> dplyr::select(-app_id, -record_id)
 
-  rand_id <- paste0(sample(c(letters, 0:9), 6, TRUE), collapse = "")
-  dl_tests_id <- paste0("wn_dl_records_csv_", rand_id)
-
   # Download
-  session <- shiny::getDefaultReactiveDomain()
-  if (!is.null(session)) {
-    session$output[[dl_tests_id]] <- shiny::downloadHandler(
-      filename = function() {
-        suffix <- if (is.null(region)) {
-          "all_regions"
-        } else {
-          gsub("\\s+", "_", region)
-        }
-        paste0("wn_records_", suffix, "_", format(Sys.Date(), "%Y%m%d"), ".csv")
-      },
-      content = function(file) {
-        utils::write.csv(records_df, file, row.names = FALSE, na = "")
-      }
-    )
-  }
+  download_handler(summary_data, "live_quality_issues")
 
   table_widget <- DT::datatable(
     summary_data,
