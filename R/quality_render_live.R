@@ -114,10 +114,10 @@ SELECT al.app_id,
   ql.with_rcs AS 'With RCS?',
   ql.date_created AS 'Date Identified',
   ql.last_checked AS 'Last Reviewed'              
-  FROM {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_list] ql
-  LEFT JOIN {`conf$database`}.{`conf$schema$db_schema_01a`}.[app_list] al
+  FROM {schema_01a}.[quality_list] ql
+  LEFT JOIN {schema_01a}.[app_list] al
         ON ql.app_id = al.app_id
-  LEFT JOIN {`conf$database`}.{`conf$schema$db_schema_01a`}.[quality_check] qc 
+  LEFT JOIN {schema_01a}.[quality_check] qc 
         ON qc.quality_check_id = ql.error_id
     WHERE check_active = 1
     {app_id}
