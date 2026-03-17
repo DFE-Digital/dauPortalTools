@@ -150,7 +150,6 @@ SELECT al.app_id,
   summary_data <- summary_data |> dplyr::select(-app_id, -record_id)
 
   # Download
-  download_handler(df = summary_data, file_label1 = "live_quality_issues")
 
   table_widget <- DT::datatable(
     summary_data,
@@ -169,7 +168,10 @@ SELECT al.app_id,
         htmltools::div(
           style = "margin: 0.5rem 0;",
           htmltools::tags$strong("Download all records: "),
-          download_handler(table_widget)
+          download_handler(
+            df = summary_data,
+            file_label1 = "live_quality_issues"
+          )
         ),
         table_widget
       )
