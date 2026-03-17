@@ -9,7 +9,7 @@ server_portal_user_admin <- function(id) {
     conf <- get_config()
     app_id <- conf$app_details$app_id
 
-    username <- get_user(session = session, fallback = "admin")
+    username <- get_user(session = session, fallback = "guest")
 
     conn <- sql_manager("dit")
 
