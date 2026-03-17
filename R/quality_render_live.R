@@ -59,6 +59,8 @@ quality_render_live <- function(
     "Starting quality_render_live with app_id: {app_id}, user: {user}, with_rcs: {with_rcs}, region: {region}"
   ))
 
+  conf <- get_config()
+
   url_link <- function(url_func, id, text) {
     if (is.null(id) || is.na(id) || id == "") {
       return(NA_character_)
