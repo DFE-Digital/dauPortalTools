@@ -72,14 +72,13 @@ download_handler <- function(
           if (shiny::is.reactive(df) || is.function(df)) df() else df
         )
 
-        data_to_write <-
-          filename_final <- paste0(
-            safe_label(file_label1),
-            if (!is.null(file_label2)) paste0("_", safe_label(file_label2)),
-            "_",
-            format(Sys.Date(), "%Y%m%d"),
-            ".csv"
-          )
+        filename_final <- paste0(
+          safe_label(file_label1),
+          if (!is.null(file_label2)) paste0("_", safe_label(file_label2)),
+          "_",
+          format(Sys.Date(), "%Y%m%d"),
+          ".csv"
+        )
 
         page_name_auto <- try(
           {
