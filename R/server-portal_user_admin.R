@@ -10,7 +10,7 @@ server_portal_user_admin <- function(id) {
     app_id <- conf$app_details$app_id
 
     username <- get_user(session = session, fallback = "guest")
-
+    a_user_id <- get_user_id(username)
     conn <- sql_manager("dit")
 
     users_data <- reactiveVal(db_get_app_users(conn, app_id))
@@ -41,7 +41,7 @@ server_portal_user_admin <- function(id) {
         user_id = input$selected_user_id,
         role_id = input$selected_role_id,
         app_id = app_id,
-        assigned_by = username
+        assigned_by = a_user_id
       )
 
       removeModal()
