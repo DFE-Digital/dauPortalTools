@@ -26,10 +26,11 @@ db_get_roles <- function(conn) {
     "SELECT role_id, role_name FROM [01_AIDT].[roles] ORDER BY role_name"
   )
 }
-
-#' Insert or update user role for an app
-#' @export
 db_update_user_role <- function(conn, user_id, role_id, app_id, assigned_by) {
+  user_id <- as.integer(user_id)
+  role_id <- as.integer(role_id)
+  app_id <- as.integer(app_id)
+
   sql <- "
     MERGE [01_AIDT].[user_roles] AS tgt
     USING (SELECT ? AS user_id, ? AS role_id, ? AS app_id) AS src
@@ -42,6 +43,7 @@ db_update_user_role <- function(conn, user_id, role_id, app_id, assigned_by) {
       INSERT (user_id, role_id, app_id, assigned_by)
       VALUES (src.user_id, src.role_id, src.app_id, ?);
   "
+
   DBI::dbExecute(
     conn,
     sql,
