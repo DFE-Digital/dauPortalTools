@@ -109,3 +109,35 @@ get_user_role <- function(username) {
 
   res$role_name[[1]]
 }
+
+#' Get user_id from username
+#'
+#' Looks up a user's numeric user_id in the AIDT users table.
+#'
+#' @param conn A DBI connection from sql_manager("dit")
+#' @param username A character string (e.g., "bsmith7")
+#'
+#' @return Integer user_id, or NA_integer_ if not found
+#' @export
+
+get_user_id <- function(conn, username) {
+  if (is.null(username) || is.na(username) || username == "") {
+    return(NA_integer_)
+  }
+
+  result <- DBI::dbGetQuery(
+    conn,
+    "
+      SELECT user_id
+      FROM [Data_Insight_Team].[01_AIDT].[users]
+      WHERE username = ?
+    ",
+    params = list(username)
+  )
+
+  if (nrow(result) == 0) {
+    return(NA_integer_)
+  }
+
+  return(as.integer(result$user_id[1]))
+}
