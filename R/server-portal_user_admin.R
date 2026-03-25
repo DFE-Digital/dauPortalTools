@@ -41,7 +41,7 @@ server_portal_user_admin <- function(id) {
         user_id = input$selected_user_id,
         role_id = input$selected_role_id,
         app_id = app_id,
-        assigned_by = username()
+        assigned_by = username
       )
 
       removeModal()
