@@ -10,8 +10,9 @@ server_portal_user_admin <- function(id) {
     app_id <- conf$app_details$app_id
 
     username <- get_user(session = session, fallback = "guest")
-    a_user_id <- get_user_id(username)
     conn <- sql_manager("dit")
+
+    a_user_id <- get_user_id(conn, username)
 
     users_data <- reactiveVal(db_get_app_users(conn, app_id))
 
