@@ -178,6 +178,8 @@ SELECT al.app_id,
     )
   )
 
+  attr(ui, "data") <- summary_data
+
   end_time <- Sys.time()
   log_event(glue::glue(
     "Finished quality_render_live in {round(difftime(end_time, start_time, units = 'secs'), 2)} seconds"
