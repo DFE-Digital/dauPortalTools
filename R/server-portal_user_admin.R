@@ -13,9 +13,7 @@ server_portal_user_admin <- function(id) {
 
     conn <- sql_manager("dit")
 
-    users_data <- reactive({
-      db_get_app_users(conn, app_id)
-    })
+    users_data <- reactiveVal(db_get_app_users(conn, app_id))
 
     output$user_table <- renderDT({
       datatable(
@@ -26,11 +24,12 @@ server_portal_user_admin <- function(id) {
       )
     })
 
-    observeEvent(input$user_table_cell_double_click, {
-      row <- input$user_table_cell_double_click$row
+    observeEvent(input$user_table_cell_clicked, {
+      click <- input$user_table_cell_clicked
+      req(click$row)
+
       df <- users_data()
-      req(row, df)
-      selected <- df[row, ]
+      selected <- df[click$row, ]
       showModal(ui_role_edit_modal(ns, selected, conn))
     })
 
@@ -46,7 +45,7 @@ server_portal_user_admin <- function(id) {
       )
 
       removeModal()
-      users_data(users_data())
+      users_data(db_get_app_users(conn, app_id))
     })
   })
 }
