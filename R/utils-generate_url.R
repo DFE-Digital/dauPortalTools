@@ -117,7 +117,7 @@ scp_sc_url <- function(sigchange_id) {
     return(NULL)
   }
   paste0(
-    "https://rsconnect/rsc/sig-change-portal/?sigchangeid=",
+    "https://rsconnect/rsc/sig-change-portal/?scid=",
     sigchange_id
   )
 }
