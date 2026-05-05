@@ -21,7 +21,7 @@ db_get_app_users <- function(
     add = TRUE
   )
 
-  app_id <- as.integer(as.character(app_id))
+  app_id <- utils_get_app_id()
 
   schema <- utils_resolve_schema("db_schema_01a")
 
