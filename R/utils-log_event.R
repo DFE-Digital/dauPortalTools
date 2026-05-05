@@ -9,6 +9,8 @@
 .log_con <- NULL
 
 log_event <- function(message) {
+  cfg <- get_config()
+
   log_cfg <- cfg$logging
   if (!isTRUE(log_cfg$enabled)) {
     return(invisible(NULL))
