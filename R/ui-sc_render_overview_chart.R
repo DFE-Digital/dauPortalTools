@@ -1,22 +1,55 @@
-#' Render Warning Notice Status/Type Charts + Downloads
+#' Render warning notice status and type charts with downloads
 #'
-#' Renders two side-by-side Plotly bar charts:
-#' - Left: x = Status, y = count (stacked by school_region if region = NULL)
-#' - Right: x = Type,   y = count (stacked by school_region if region = NULL)
+#' Generates a GOV.UK–styled UI fragment containing two side-by-side Plotly
+#' bar charts summarising warning notices by status and by type, along with
+#' CSV download options and a table of underlying records.
 #'
-#' If `region` is provided, data are filtered to that region and bars are not stacked.
-#' Status ID 7 ("removed") is always excluded.
+#' When \code{region} is \code{NULL}, both charts display stacked bars by
+#' school region. When a region is provided, the data are filtered to that
+#' region and the bars are shown unstacked.
 #'
-#' Includes:
-#' - Download buttons for records CSV, status summary CSV, and type summary CSV.
-#' - A table of underlying records with a per-row direct wn link to the portal.
+#' Warning notices with status ID 7 ("removed") are always excluded.
 #'
-#' @param region Character scalar or `NULL`. If provided, filters by `school_region`.
-#'               If `NULL`, shows a stacked view by all `school_region` values.
+#' Included components:
+#' \itemize{
+#'   \item Status summary bar chart
+#'   \item Type summary bar chart
+#'   \item Download buttons for:
+#'     \itemize{
+#'       \item Full records CSV
+#'       \item Status summary CSV
+#'       \item Type summary CSV
+#'     }
+#'   \item Table of underlying records with direct links to the portal
+#' }
 #'
-#' @return A `shiny.tag` UI fragment suitable for use in `renderUI()`.
+#' @param region Character scalar or \code{NULL}. If provided, filters
+#'   records to the specified \code{school_region}. If \code{NULL},
+#'   all regions are included and results are stacked by region.
+#'
+#' @return A \code{shiny.tag} UI fragment suitable for use within
+#'   \code{renderUI()} or directly in a Shiny UI definition.
+#'
+#' @details
+#' Data are retrieved from the warning notice tables and joined to status
+#' and type configuration tables. Aggregations are performed in-memory to
+#' support both stacked and filtered chart views.
+#'
+#' Download handlers are registered dynamically using the current Shiny
+#' session and are uniquely namespaced to allow multiple instances of the
+#' component to coexist on the same page.
+#'
+#' The underlying records table falls back to a GOV.UK–styled static table
+#' if the DT package is not available.
+#'
+#' @seealso
+#' \itemize{
+#'   \item \code{\link[plotly]{plot_ly}}
+#'   \item \code{\link[shiny]{downloadHandler}}
+#'   \item \code{\link[DT]{datatable}}
+#' }
+#'
 #' @export
-#'
 
 sc_render_status_type_charts <- function(region = NULL) {
   start_time <- Sys.time()

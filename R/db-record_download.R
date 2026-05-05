@@ -1,51 +1,42 @@
 #' Record a File Download Event
 #'
-#' Logs a user's download action into the `tools_analytics` table, capturing
-#' timestamp, page name, action type, username, downloaded file name, and app ID.
+#' Logs a user's download action into the tools_analytics table.
 #'
-#' @param user Character. Active Directory username. Default is `"Guest"`.
-#' @param page_name Character. Name of the page or module where the download occurred.
-#' @param file_name Character. Name of the file being downloaded (e.g. `"school_data_20240209.csv"`).
+#' @param user Character. Active Directory username. Default is "Guest".
+#' @param page_name Character. Page where the download occurred.
+#' @param file_name Character. Name of the file downloaded.
+#' @param db_execute Function used to execute SQL (dependency injection).
 #'
-#' @details
-#' Reads configuration from `config.yml` to obtain the application ID and schema
-#' settings. An SQL `INSERT` is performed into the `tools_analytics` table.
-#' This function mirrors the `record_login()` structure for consistency across
-#' DAU Portal Tools.
-#'
-#' @return None. Called for its side effect of logging analytics.
-#'
-#' @examples
-#' \dontrun{
-#' record_download(
-#'   user = "ben.smith",
-#'   page_name = "School Details",
-#'   file_name = "school_data_20240208.csv"
-#' )
-#' }
-#'
+#' @return Invisibly returns NULL.
 #' @export
-record_download <- function(
+db_record_download <- function(
   user = "Guest",
   page_name,
-  file_name
+  file_name,
+  db_execute = utils_db_execute
 ) {
-  log_event("Starting function record_download")
+  log_event("Starting record_download")
 
-  app_id <- conf$app_details$app_id
-  conn <- sql_manager("dit")
+  app_id <- utils_get_app_id()
 
   log_event(
     glue::glue(
-      "Recording download by {user} for app id {app_id}. Page: {page_name}, File: {file_name}"
+      "Recording download: user={user}, app_id={app_id}, page={page_name}, file={file_name}"
     )
   )
 
-  schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
+  conn <- sql_manager("dit")
+  on.exit(
+    {
+      try(DBI::dbDisconnect(conn), silent = TRUE)
+      log_event("Finished record_download")
+    },
+    add = TRUE
+  )
 
-  sql_command <- glue::glue_sql(
+  query <- glue_sql(
     "
-    INSERT INTO {schema_01a}.[tools_analytics]
+    INSERT INTO {utils_resolve_schema('01a')}.[tools_analytics]
       (date_time_visited,
        page_name,
        action_type,
@@ -63,7 +54,25 @@ record_download <- function(
     .con = conn
   )
 
-  DBI::dbExecute(conn, sql_command)
+  db_execute(conn, query)
 
-  log_event("Finished recording download")
+  invisible(NULL)
+}
+
+
+record_download <- function(
+  user = "Guest",
+  page_name,
+  file_name
+) {
+  .Deprecated(
+    "db_record_download",
+    msg = "record_download() is deprecated; use db_record_download() instead"
+  )
+
+  db_record_download(
+    user = user,
+    page_name = page_name,
+    file_name = file_name
+  )
 }

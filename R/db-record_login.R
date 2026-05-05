@@ -1,56 +1,67 @@
 #' Record User Login Activity
 #'
-#' This function logs a user's visit to the application by inserting a record into the
-#' `tools_analytics` table. It captures details such as the timestamp, page name, action type,
-#' username, and associated application ID.
+#' Logs a user's visit to the application by inserting a record into the
+#' tools_analytics table.
 #'
-#' @param user Character. The username to record. Defaults to `"Guest"`.
+#' @param user Character. The username to record. Defaults to "Guest".
+#' @param db_execute Function used to execute SQL (dependency injection).
 #'
-#' @details
-#' The function reads configuration details from `config.yml` to determine the application ID
-#' and database schema. It then constructs and executes an SQL `INSERT` statement to log the
-#' visit. Logging messages are generated at the start and end of the process.
-#'
-#' @return No return value. The function is called for its side effect of recording the login.
-#'
-#' @examples
-#' \dontrun{
-#' # Record a login for the default user
-#' record_login()
-#'
-#' # Record a login for a specific user
-#' record_login(user = "ben.smith")
-#' }
-#'
+#' @return Invisibly returns NULL.
 #' @export
+db_record_login <- function(
+  user = "Guest",
+  db_execute = utils_db_execute
+) {
+  log_event("Starting db_record_login")
 
-record_login <- function(user = "Guest") {
-  log_event("Starting function record_login")
+  app_id <- utils_get_app_id()
 
-  app_id <- conf$app_details$app_id
-  date_time <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+  log_event(
+    glue::glue(
+      "Recording login: user={user}, app_id={app_id}"
+    )
+  )
+
   conn <- sql_manager("dit")
+  on.exit(
+    {
+      try(DBI::dbDisconnect(conn), silent = TRUE)
+      log_event("Finished db_record_login")
+    },
+    add = TRUE
+  )
 
-  log_event(glue::glue("Received {user} for app id: {app_id}."))
-
-  schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
-
-  sql_command <- glue::glue_sql(
+  query <- glue_sql(
     "
-    INSERT INTO {schema_01a}.[tools_analytics]
-    (date_time_visited,
-           page_name,
-           action_type,
-           ad_username,
-           action_sub_type,
-           app_id)
-    VALUES ( SYSUTCDATETIME(),
-'Home page','Load',{user},'Initial Load',{app_id}) 
+    INSERT INTO {utils_resolve_schema('01a')}.[tools_analytics]
+      (date_time_visited,
+       page_name,
+       action_type,
+       ad_username,
+       action_sub_type,
+       app_id)
+    VALUES
+      (SYSUTCDATETIME(),
+       'Home page',
+       'Load',
+       {user},
+       'Initial Load',
+       {app_id})
     ",
     .con = conn
   )
 
-  DBI::dbExecute(conn, sql_command)
+  db_execute(conn, query)
 
-  log_event("Finished recording login")
+  invisible(NULL)
+}
+
+#' @export
+record_login <- function(user = "Guest") {
+  .Deprecated(
+    "db_record_login",
+    msg = "record_login() is deprecated; use db_record_login() instead"
+  )
+
+  db_record_login(user = user)
 }

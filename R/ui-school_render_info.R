@@ -1,44 +1,65 @@
-#' Render School Overview UI
+#' Render school overview panel
 #'
-#' Generates a GOV.UK-styled tabbed UI layout displaying school summary information
-#' for a given URN, including school details, trust details, additional metadata,
-#' and useful external links (e.g., Ofsted, GIAS).
+#' Generates a GOV.UK–styled tabbed UI layout displaying summary information
+#' for an individual school, using the latest available Edubase snapshot.
+#' The overview includes school details, trust details (if applicable),
+#' additional metadata, and a set of useful external links.
 #'
-#' @param urn A character string representing the Unique Reference Number (URN) of a school.
+#' The rendered UI is organised into tabs, typically including:
+#' \itemize{
+#'   \item \strong{School Details} – Local authority, region, phase, type,
+#'         opening and (if applicable) closing dates
+#'   \item \strong{Trust Details} – Trust reference and name (if the school
+#'         is part of a trust)
+#'   \item \strong{More Details} – Demographic and structural attributes
+#'         such as pupil numbers and FSM percentage
+#'   \item \strong{Important Links} – Links to SLIC, the school website,
+#'         Ofsted reports, GIAS, and (where applicable) trust GIAS pages
+#' }
 #'
-#' @return A Shiny UI object containing the school overview layout. If no data is found,
-#' returns a message indicating that no data is available.
+#' @param urn Character string or numeric scalar representing the Unique
+#'   Reference Number (URN) of the school to display.
+#'
+#' @return A \code{shiny.tag} UI object containing the school overview layout.
+#'   If no data is available for the supplied URN, a GOV.UK–styled message
+#'   indicating that no data was found is returned instead.
 #'
 #' @details
-#' This function:
-#' - Connects to the `dit` SQL Server database.
-#' - Queries the latest Edubase record for the given URN.
-#' - Constructs a tabbed UI layout using `shinyGovstyle::gov_summary`.
+#' This function connects to the \code{dit} SQL Server database and queries
+#' the Edubase table using the most recent \code{DateStamp} to ensure a
+#' consistent snapshot view.
+#'
+#' Tabbed navigation is implemented using lightweight custom JavaScript and
+#' CSS to provide a GOV.UK–style experience without relying on Shiny tabsets.
+#' Summary content within each tab is rendered using
+#' \code{shinyGovstyle::gov_summary}.
+#'
+#' Database access and query execution are wrapped in error handling, and
+#' execution timing is logged for monitoring and performance diagnostics.
 #'
 #' @examples
 #' \dontrun{
-#' # Run interactively in a Shiny app
-#' if (interactive()) {
-#'   library(shiny)
-#'   library(shinyGovstyle)
-#'   library(dfeshiny)
-#'   library(bslib)
+#' # Use within a Shiny app
+#' ui <- shiny::fluidPage(
+#'   shiny::uiOutput("school_overview")
+#' )
 #'
-#'   ui <- fluidPage(
-#'     uiOutput("school_overview")
-#'   )
-#'
-#'   server <- function(input, output, session) {
-#'     output$school_overview <- renderUI({
-#'       school_render_overview(urn = "123456") # Replace with a valid URN
-#'     })
-#'   }
-#'
-#'   shinyApp(ui, server)
+#' server <- function(input, output, session) {
+#'   output$school_overview <- shiny::renderUI({
+#'     school_render_overview(urn = "123456")
+#'   })
 #' }
+#'
+#' shiny::shinyApp(ui, server)
 #' }
+#'
+#' @seealso
+#' \itemize{
+#'   \item \code{\link[shinyGovstyle]{gov_layout}}
+#'   \item \code{\link[shinyGovstyle]{gov_summary}}
+#' }
+#'
 #' @export
-#'
 
 school_render_overview <- function(urn) {
   start_time <- Sys.time()

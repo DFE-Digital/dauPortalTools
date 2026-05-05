@@ -29,7 +29,7 @@ log_transaction <- function(
 ) {
   # Load confuration from YAML file
   library(yaml)
-  conf <- yaml::read_yaml("conf.yml")
+  conf <- yaml::read_yaml("config.yml")
   app_id <- conf$app_details$app_id
 
   conn <- sql_manager("dit")

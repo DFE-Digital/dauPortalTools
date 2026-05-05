@@ -1,17 +1,40 @@
-#' Get all available roles
+#' Retrieve significant change records with region information
+#'
+#' Returns all significant change records enriched with Government Office
+#' Region (GOR) information from the latest Edubase snapshot.
+#'
+#' @param db_get_query Function used to execute SQL queries.
+#'
+#' @return A data frame of significant change records with region metadata.
 #' @export
-db_get_sig_change_w_region <- function(conn) {
-  DBI::dbGetQuery(
-    conn,
+db_get_sig_change_w_region <- function(
+  db_get_query = utils_db_get_query
+) {
+  log_event("Starting db_get_sig_change_w_region")
+
+  conn <- sql_manager("dit")
+  on.exit(
+    {
+      try(DBI::dbDisconnect(conn), silent = TRUE)
+      log_event("Finished db_get_sig_change_w_region")
+    },
+    add = TRUE
+  )
+
+  query <- glue_sql(
     "
-    ;WITH LatestDate AS (
+    WITH LatestDate AS (
       SELECT MAX(DateStamp) AS MaxDate
-      FROM [Data_Insight_Team].[00_Core].[Edubase]
+      FROM {utils_resolve_schema('00c')}.[Edubase]
     ),
     LatestEdubase AS (
-      SELECT e.[URN], e.[GOR (name)], e.[DateStamp]
-      FROM [Data_Insight_Team].[00_Core].[Edubase] e
-      JOIN LatestDate d ON e.DateStamp = d.MaxDate
+      SELECT
+        e.[URN],
+        e.[GOR (name)],
+        e.[DateStamp]
+      FROM {utils_resolve_schema('00c')}.[Edubase] e
+      JOIN LatestDate d
+        ON e.DateStamp = d.MaxDate
     )
     SELECT
         s.[sig_change_id],
@@ -53,11 +76,14 @@ db_get_sig_change_w_region <- function(conn) {
         s.[withdrawn],
         s.[decision_comment],
         s.[action_required],
-        e.[GOR (name)],
-        e.[DateStamp]
-    FROM [Data_Insight_Team].[01_sigchange].[tracker] s
+        e.[GOR (name)] AS gor_name,
+        e.[DateStamp] AS edubase_datestamp
+    FROM {utils_resolve_schema('01s')}.[tracker] s
     LEFT JOIN LatestEdubase e
       ON e.[URN] = s.[URN]
-    "
+    ",
+    .con = conn
   )
+
+  db_get_query(conn, query)
 }
