@@ -217,7 +217,7 @@ school_render_overview <- function(
           }});
         }});
       }})();
-      "
+    "
     )
   ))
 
@@ -228,7 +228,7 @@ school_render_overview <- function(
       #{id} .custom-tab-btn.active {{ background:#005ea5; color:white; }}
       #{id} .custom-tab-content {{ display:none; }}
       #{id} .custom-tab-content.active {{ display:block; }}
-      "
+    "
     )
   ))
 
@@ -238,7 +238,7 @@ school_render_overview <- function(
       size = "l"
     ),
     tab_css,
-    shiny::tags$div(
+    shiny::div(
       class = "govuk-!-margin-top-3",
       tab_buttons,
       tab_contents
@@ -250,5 +250,9 @@ school_render_overview <- function(
     "Finished school_render_overview in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)} seconds"
   ))
 
-  ui
+  shiny::div(
+    id = id,
+    class = "school-overview-wrapper",
+    ui
+  )
 }
