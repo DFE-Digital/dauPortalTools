@@ -35,7 +35,7 @@ db_add_portal_message <- function(
 
   query <- glue_sql(
     "
-    INSERT INTO {utils_resolve_schema('01s')}.[portal_messages] (
+    INSERT INTO {utils_resolve_schema('db_schema_01sr')}.[portal_messages] (
       message_text,
       app_id,
       priority,

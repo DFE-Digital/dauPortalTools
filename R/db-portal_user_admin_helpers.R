@@ -25,11 +25,11 @@ db_get_app_users <- function(
       u.email,
       ISNULL(r.role_name, 'User') AS role_name,
       ur.role_id
-    FROM {utils_resolve_schema('01a')}.[users] u
-    LEFT JOIN {utils_resolve_schema('01a')}.[user_roles] ur
+    FROM {utils_resolve_schema('db_schema_01a')}.[users] u
+    LEFT JOIN {utils_resolve_schema('db_schema_01a')}.[user_roles] ur
       ON ur.user_id = u.user_id
      AND ur.app_id  = {app_id}
-    LEFT JOIN {utils_resolve_schema('01a')}.[roles] r
+    LEFT JOIN {utils_resolve_schema('db_schema_01a')}.[roles] r
       ON ur.role_id = r.role_id
     ORDER BY u.username;
     ",
@@ -59,7 +59,7 @@ db_get_roles <- function(
   query <- glue_sql(
     "
     SELECT role_id, role_name
-    FROM {utils_resolve_schema('01a')}.[roles]
+    FROM {utils_resolve_schema('db_schema_01a')}.[roles]
     ORDER BY role_name;
     ",
     .con = conn
@@ -96,7 +96,7 @@ db_update_user_role <- function(
 
   query <- glue_sql(
     "
-    MERGE {utils_resolve_schema('01a')}.[user_roles] AS tgt
+    MERGE {utils_resolve_schema('db_schema_01a')}.[user_roles] AS tgt
     USING (
       SELECT
         {user_id} AS user_id,

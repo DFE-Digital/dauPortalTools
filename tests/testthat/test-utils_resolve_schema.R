@@ -6,7 +6,7 @@ test_that("utils_resolve_schema resolves a valid schema key and logs success", {
 
   expect_match(
     .last_log_event,
-    "resolved schema key '01a'"
+    "resolved schema key 'db_schema_01a'"
   )
 })
 

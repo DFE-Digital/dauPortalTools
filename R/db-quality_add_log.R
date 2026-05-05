@@ -41,7 +41,7 @@ quality_add_log <- function(
 
   query <- glue_sql(
     "
-    INSERT INTO {utils_resolve_schema('01a')}.[quality_check_log] (
+    INSERT INTO {utils_resolve_schema('db_schema_01a')}.[quality_check_log] (
       quality_check_id,
       last_run,
       live_issues,

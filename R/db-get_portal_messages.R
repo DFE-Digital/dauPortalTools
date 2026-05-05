@@ -27,7 +27,7 @@ db_get_portal_messages <- function() {
       app_id,
       priority,
       ad_username
-    FROM {utils_resolve_schema('01s')}.[portal_messages]
+    FROM {utils_resolve_schema('db_schema_01sr')}.[portal_messages]
     WHERE
       is_active = 1
       AND app_id IN (1, {app_id})

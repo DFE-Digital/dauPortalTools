@@ -78,7 +78,7 @@ db_get_sig_change_w_region <- function(
         s.[action_required],
         e.[GOR (name)] AS gor_name,
         e.[DateStamp] AS edubase_datestamp
-    FROM {utils_resolve_schema('01s')}.[tracker] s
+    FROM {utils_resolve_schema('db_schema_01sc')}.[tracker] s
     LEFT JOIN LatestEdubase e
       ON e.[URN] = s.[URN]
     ",

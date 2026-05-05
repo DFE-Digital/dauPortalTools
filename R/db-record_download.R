@@ -36,7 +36,7 @@ db_record_download <- function(
 
   query <- glue_sql(
     "
-    INSERT INTO {utils_resolve_schema('01a')}.[tools_analytics]
+    INSERT INTO {utils_resolve_schema('db_schema_01a')}.[tools_analytics]
       (date_time_visited,
        page_name,
        action_type,
