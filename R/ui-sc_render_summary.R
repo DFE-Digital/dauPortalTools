@@ -83,7 +83,7 @@ sc_render_summary <- function(user = NULL) {
 
   app_id <- conf$app_details$app_id
   db_schema_01a <- DBI::SQL(conf$schemas$db_schema_01a)
-  db_schema_01s <- DBI::SQL(conf$schemas$db_schema_01s)
+  db_schema_01sc <- DBI::SQL(conf$schemas$db_schema_01sc)
 
   conn <- sql_manager("dit")
 
@@ -100,14 +100,14 @@ sc_render_summary <- function(user = NULL) {
     "
     SELECT
       (SELECT COUNT(t.sig_change_id)
-       FROM {db_schema_01s}.[tracker] t
+       FROM {db_schema_01sc}.[tracker] t
        WHERE [all_actions_completed] <> 1 {user_query}) AS total_live_records,
       (SELECT COUNT(t.sig_change_id)
-       FROM {db_schema_01s}.[tracker] t
+       FROM {db_schema_01sc}.[tracker] t
        WHERE change_edit_date >= DATEADD(DAY, -30, GETDATE()){user_query}) AS updated_records,
       (SELECT COUNT(quality_id)
        FROM {db_schema_01a}.[quality_list] l
-       RIGHT JOIN {db_schema_01s}.[tracker] t on l.record_id = t.sig_change_id
+       RIGHT JOIN {db_schema_01sc}.[tracker] t on l.record_id = t.sig_change_id
        WHERE l.app_id = {app_id} AND l.quality_status = 0{user_query}) AS quality_issues
   ",
     .con = conn
