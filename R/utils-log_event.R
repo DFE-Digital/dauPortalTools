@@ -5,10 +5,11 @@
 #' @param message Character string containing the message to log.
 #' @return Invisibly returns NULL.
 #' @export
-log_event <- function(message) {
-  cfg <- get_config()
-  log_cfg <- cfg$logging
 
+.log_con <- NULL
+
+log_event <- function(message) {
+  log_cfg <- cfg$logging
   if (!isTRUE(log_cfg$enabled)) {
     return(invisible(NULL))
   }
@@ -23,14 +24,14 @@ log_event <- function(message) {
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
   log_line <- sprintf("[%s] %s", timestamp, message)
 
-  con <- file(log_path, open = "a", encoding = "UTF-8")
-  on.exit(close(con), add = TRUE)
-
+  con <- file(log_path, open = "a")
   writeLines(log_line, con)
   flush(con)
+  close(con)
 
   if (isTRUE(log_cfg$log_to_console)) {
-    message(log_line)
+    cat(log_line, "\n")
+    flush.console()
   }
 
   invisible(NULL)
