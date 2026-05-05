@@ -4,6 +4,8 @@
 #' @export
 #' Fetch application users and their assigned role
 #' @export
+#' Fetch application users and their assigned role
+#' @export
 db_get_app_users <- function(
   app_id,
   db_get_query = utils_db_get_query
@@ -19,7 +21,7 @@ db_get_app_users <- function(
     add = TRUE
   )
 
-  app_id <- as.integer(app_id)
+  app_id <- as.integer(as.character(app_id))
 
   schema <- utils_resolve_schema("db_schema_01a")
 
