@@ -8,17 +8,17 @@ assignInNamespace(
   ns = "dauPortalTools"
 )
 
-# Config stub (schema keys only)
+# Config stub — MUST match canonical schema keys
 assignInNamespace(
   "get_config",
   function(...) {
     list(
       app_details = list(app_id = 7),
       schemas = list(
-        "00c" = "[TEST_00c]",
-        "01a" = "[TEST_01a]",
-        "01s" = "[TEST_01s]",
-        "02s" = "[TEST_02s]"
+        db_schema_00c = "[TEST_00c]",
+        db_schema_01a = "[TEST_01a]",
+        db_schema_01sc = "[TEST_01sc]",
+        db_schema_02s = "[TEST_02s]"
       ),
       logging = list(
         enabled = TRUE,

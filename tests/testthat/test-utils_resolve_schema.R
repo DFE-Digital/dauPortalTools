@@ -1,5 +1,5 @@
 test_that("utils_resolve_schema resolves a valid schema key and logs success", {
-  out <- utils_resolve_schema("01a")
+  out <- utils_resolve_schema("db_schema_01a")
 
   expect_true(methods::is(out, "SQL"))
   expect_equal(as.character(out), "[TEST_01a]")
