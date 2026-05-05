@@ -49,8 +49,8 @@ quality_get_data <- function(
       c.quality_description AS [Description],
       l.date_created        AS [Date Identified],
       l.last_checked        AS [Last Reviewed]
-    FROM {utils_resolve_schema('01a')}.[quality_list] l
-    LEFT JOIN {utils_resolve_schema('01a')}.[quality_check] c
+    FROM {utils_resolve_schema('db_schema_01a')}.[quality_list] l
+    LEFT JOIN {utils_resolve_schema('db_schema_01a')}.[quality_check] c
            ON c.quality_check_id = l.error_id
     WHERE l.app_id = {app_id}
       AND l.quality_status = 0
