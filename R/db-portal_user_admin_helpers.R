@@ -1,11 +1,8 @@
-# R/db-portal_user_admin_helpers.R
+#' Fetch application users and their assigned roles
+#'
+#' @return A data frame of users and roles
+#' @export
 
-#' Fetch application users and their assigned role
-#' @export
-#' Fetch application users and their assigned role
-#' @export
-#' Fetch application users and their assigned role
-#' @export
 db_get_app_users <- function(
   app_id,
   db_get_query = utils_db_get_query
