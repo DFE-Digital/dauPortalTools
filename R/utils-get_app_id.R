@@ -22,5 +22,5 @@ utils_get_app_id <- function() {
     )
   )
 
-  as.integer(cfg$app_details$app_id)
+  cfg$app_details$app_id
 }
