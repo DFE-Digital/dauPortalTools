@@ -39,3 +39,18 @@ assignInNamespace(
   },
   ns = "dauPortalTools"
 )
+
+assignInNamespace(
+  "utils_db_get_query",
+  function(conn, query) {
+    data.frame(
+      user_id = c(1, 2),
+      username = c("alice", "bob"),
+      email = c("alice@example.com", "bob@example.com"),
+      role_name = c("Admin", "User"),
+      role_id = c(1, 2),
+      stringsAsFactors = FALSE
+    )
+  },
+  ns = "dauPortalTools"
+)
