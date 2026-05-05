@@ -2,13 +2,29 @@
 % Please edit documentation in R/ui-portal_user_admin.R
 \name{ui_portal_user_admin}
 \alias{ui_portal_user_admin}
-\title{User/Role Management UI}
+\title{User access management UI}
 \usage{
 ui_portal_user_admin(id)
 }
 \arguments{
-\item{id}{Module ID}
+\item{id}{Character string; Shiny module namespace identifier.}
+}
+\value{
+A Shiny \code{tagList} containing the UI elements for the
+user administration module.
 }
 \description{
-User/Role Management UI
+Defines the user interface for the user and role administration module.
+This UI presents a table of application users and supports role management
+actions via server-side logic. The main components include a heading and
+a DataTable output for displaying users.
+}
+\details{
+This UI is intended to be paired with the corresponding server module
+\code{server_portal_user_admin()}. The user table is rendered using
+\code{DTOutput()}, and role changes are handled via a modal dialog
+triggered by server-side observers.
+}
+\seealso{
+\code{\link{NS}}, \code{\link[DT]{DTOutput}}
 }

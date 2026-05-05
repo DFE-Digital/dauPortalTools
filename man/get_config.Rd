@@ -7,16 +7,11 @@
 get_config(path = "./config.yml")
 }
 \arguments{
-\item{path}{Path to config YAML file}
+\item{path}{Path to config YAML file.}
 }
 \value{
-A structured configuration list
+A structured configuration list.
 }
 \description{
 Reads a YAML config file and returns a validated configuration list.
-}
-\details{
-Expected YAML structure:
-app_details:
-app_id: 7
 }

@@ -4,32 +4,17 @@
 \alias{quality_get_data}
 \title{Retrieve Quality Issue Records from AIDT Tables}
 \usage{
-quality_get_data(record = NULL)
+quality_get_data(record = NULL, db_get_query = utils_db_get_query)
 }
 \arguments{
-\item{record}{Optional. A numeric record ID to filter the results. If \code{NULL}, all records for the app are returned.}
+\item{record}{Optional integer. Record ID to filter results.}
+
+\item{db_get_query}{Function used to execute SQL queries.}
 }
 \value{
-A data frame containing quality issue records with the following columns:
-\describe{
-\item{Quality Concern}{Name of the quality issue.}
-\item{Description}{Detailed description of the issue.}
-\item{Date Identified}{Date the issue was created.}
-\item{Last Reviewed}{Date the issue was last checked.}
-}
+A data frame of quality issue records.
 }
 \description{
-This function queries the quality_list table for unresolved quality issues (\code{quality_status = 0})
-associated with a specific application ID, optionally filtered by a record ID. It joins with the
-quality_check and app_list tables to enrich the results.
-}
-\examples{
-\dontrun{
-# Retrieve all unresolved quality issues for the current app
-get_aidt_quality_data()
-
-# Retrieve issues for a specific record ID
-get_aidt_quality_data(record = 12345)
-}
-
+Retrieves unresolved quality issues for the current application,
+optionally filtered by a specific record ID.
 }

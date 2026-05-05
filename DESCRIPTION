@@ -1,13 +1,11 @@
 Package: dauPortalTools
 Title: What the Package Does (One Line, Title Case)
 Version: 2026.3.2
-Authors@R: 
-    person("Ben", "Smith", , "ben7.smith@education.gov.uk", role = c("aut", "cre"))
-    person("Ben", "Clewarth", , "ben.clewarth@education.gov.uk", role = c("aut", "cre"))
-    person("Mark", "Horton", , "mark.horton@education.gov.uk", role = c("aut", "cre"))
+Authors@R: c(person("Ben","Smith",email="ben7.smith@education.gov.uk",role=c("aut","cre")),
+             person("Ben","Clewarth",email="ben.clewarth@education.gov.uk",role="aut"),
+             person("Mark","Horton",email="mark.horton@education.gov.uk",role="aut"))
 Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+License: Proprietary
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
@@ -17,10 +15,10 @@ Imports:
     DBI,
     dplyr,
     DT,
-    gt,
     forcats,
     ggplot2,
     glue,
+    gt,
     htmltools,
     jsonlite,
     odbc,
@@ -29,5 +27,7 @@ Imports:
     shinyGovstyle,
     stringr,
     yaml
-
-
+Suggests:
+    RSQLite,
+    testthat
+    

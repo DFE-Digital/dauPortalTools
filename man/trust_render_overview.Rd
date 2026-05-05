@@ -2,26 +2,51 @@
 % Please edit documentation in R/ui-trust_render_info.R
 \name{trust_render_overview}
 \alias{trust_render_overview}
-\title{Render Trust Overview Panel}
+\title{Render trust overview panel}
 \usage{
 trust_render_overview(urn = NULL, trust_id = NULL)
 }
 \arguments{
-\item{urn}{Optional. Character or numeric scalar URN to resolve Trust_ID from the latest snapshot.}
+\item{urn}{Optional character or numeric scalar. If supplied, the function
+resolves the corresponding \code{Trust_ID} from the latest Chains snapshot.
+Ignored if \code{trust_id} is provided.}
 
-\item{trust_id}{Optional. Character or numeric scalar Trust_ID. If supplied, URN lookup is skipped.}
+\item{trust_id}{Optional character or numeric scalar identifying the trust.
+If supplied, no URN lookup is performed.}
 }
 \value{
-A \code{shiny.tag} suitable for use in \code{renderUI()}.
+A \code{shiny.tag} UI fragment suitable for use inside \code{renderUI()}
+or directly in a Shiny UI definition.
 }
 \description{
-GOV.UK-styled tabbed panel showing Trust Details and Schools in Trust, using the
-latest monthly snapshot of Chains data.
+Generates a GOV.UK–styled UI panel summarising trust-level information using
+the latest available monthly snapshot from the Chains dataset. The panel is
+presented as a tabbed layout showing trust details and a list of schools
+belonging to the trust.
 }
 \details{
-Tabs:
+The UI contains two tabs:
 \itemize{
-\item Trust Details: Trust_ID, Trust_Name, Trust_Type, Trust_Region, Number_In_Trust
-\item Schools in Trust: URN, Academy_Name, Local_Authority, Region, Date_Joined_Trust
+\item \strong{Trust Details} – Trust ID, name, type, region, and number of
+schools in the trust
+\item \strong{Schools in Trust} – URN, academy name, local authority,
+region, and date joined trust
+}
+
+The function always uses the most recent \code{DateStamp} available in the
+Chains dataset to ensure consistency across trust details and associated
+schools.
+
+If neither \code{urn} nor \code{trust_id} is provided, or if the trust cannot
+be resolved in the latest snapshot, a GOV.UK–styled fallback UI is returned
+explaining the issue to the user.
+
+All database access is wrapped in error handling with log messages generated
+for monitoring and diagnostics.
+}
+\seealso{
+\itemize{
+\item \code{\link[shinyGovstyle]{gov_layout}}
+\item \code{\link[shinyGovstyle]{govTabs}}
 }
 }

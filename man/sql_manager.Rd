@@ -7,49 +7,13 @@
 sql_manager(service, config_file = "./config.yml")
 }
 \arguments{
-\item{service}{String. The name of the configuration block in \code{config.yml}
-that contains the connection details (e.g. \code{"prod"}, \code{"dev"}, \code{"test"}).}
+\item{service}{Character name of the config section (e.g. "prod", "dev").}
 
-\item{config_file}{String. The name/location of the config file.
-Defaults:  "./config.yml"}
+\item{config_file}{Path to the config YAML file.}
 }
 \value{
-A DBI connection object created with \code{DBI::dbConnect()}, which can be used
-with standard DBI functions such as \code{DBI::dbGetQuery()},
-\code{DBI::dbWriteTable()}, and \code{DBI::dbDisconnect()}.
+A DBI connection object.
 }
 \description{
-Establishes a database connection to a SQL Server instance using details
-stored in a \code{config.yml} file.
-The function loads configuration values for the specified service name and
-uses them to create an ODBC connection via \code{DBI::dbConnect()}.
-}
-\details{
-The function expects a \code{config.yml} file located in the working directory.
-Each configuration block should define the fields:
-\code{driver}, \code{server}, \code{database}, \code{uid}, \code{pwd}, and \code{trusted}.
-
-Example \code{config.yml} structure:
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{prod:
-  driver: "SQL Server"
-  server: "myserver.database.windows.net"
-  database: "mydatabase"
-  uid: "username"
-  pwd: "password"
-  trusted: "False"
-}\if{html}{\out{</div>}}
-}
-\examples{
-\dontrun{
-# Connect to production database
-conn <- sql_manager("prod")
-
-# Run a query
-DBI::dbGetQuery(conn, "SELECT TOP 10 * FROM mytable")
-
-# Disconnect when finished
-DBI::dbDisconnect(conn)
-}
-
+Creates an ODBC connection using credentials stored in a config file.
 }

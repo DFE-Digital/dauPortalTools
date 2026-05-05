@@ -8,70 +8,25 @@ quality_add_log(
   quality_check_id,
   live_issues = 0,
   new_issues = 0,
-  closed_issues = 0
+  closed_issues = 0,
+  db_execute = utils_db_execute
 )
 }
 \arguments{
-\item{quality_check_id}{Integer scalar.
-The ID of the quality check being logged. Must correspond to an existing
-record in the \verb{[quality_check]} table.}
+\item{quality_check_id}{Integer scalar.}
 
-\item{live_issues}{Integer scalar.
-The number of live issues after the check has run. If \code{NULL}, \code{NA}, or
-length-0, this is treated as \code{0}.}
+\item{live_issues}{Integer scalar or NULL/NA.}
 
-\item{new_issues}{Integer scalar.
-The number of newly identified issues found during this run. If \code{NULL}, \code{NA},
-or length-0, this is treated as \code{0}.}
+\item{new_issues}{Integer scalar or NULL/NA.}
 
-\item{closed_issues}{Integer scalar.
-The number of issues that were closed/resolved during this run. If \code{NULL},
-\code{NA}, or length-0, this is treated as \code{0}.}
+\item{closed_issues}{Integer scalar or NULL/NA.}
+
+\item{db_execute}{Function used to execute SQL (dependency injection).}
 }
 \value{
-Invisibly returns the number of rows affected (typically \code{1L}) as
-returned by \code{\link[DBI:dbExecute]{DBI::dbExecute()}}.
+Invisibly returns number of rows affected.
 }
 \description{
-Adds a new row to the \verb{[01_AIDT].[quality_check_log]} table, recording when a
-quality check was executed and how many live, new, and closed issues were
-identified. The log timestamp is generated in SQL Server using \code{SYSDATETIME()}.
-}
-\details{
-This function:
-\itemize{
-\item Connects to SQL Server using \code{sql_manager("dit")}.
-\item Reads configuration from \code{config.yml} to obtain the target schema
-(\code{conf$schemas$db_schema_01a}).
-\item Normalises \code{live_issues}, \code{new_issues}, and \code{closed_issues} so that
-\code{NULL}, \code{NA}, or length-0 values are converted to \code{0} (avoids empty
-SQL generation in \code{glue_sql()}).
-\item Constructs a parameterised \code{INSERT} statement using \code{\link[glue:glue_sql]{glue::glue_sql()}}.
-The schema identifier is wrapped with \code{\link[DBI:SQL]{DBI::SQL()}} to ensure it is
-treated as SQL (not quoted as a string).
-\item Uses SQL Server \code{SYSDATETIME()} to populate \verb{[last_run]}.
-}
-}
-\examples{
-\dontrun{
-# Log a quality check run
-quality_add_log(
-  quality_check_id = 21,
-  live_issues = 10,
-  new_issues = 0,
-  closed_issues = 0
-)
-
-# Safe with NULL/NA (normalised to 0)
-quality_add_log(
-  quality_check_id = 21,
-  live_issues = NULL,
-  new_issues = NA,
-  closed_issues = numeric(0)
-)
-}
-
-}
-\seealso{
-\code{\link[DBI:dbExecute]{DBI::dbExecute()}}, \code{\link[glue:glue_sql]{glue::glue_sql()}}, \code{\link[DBI:SQL]{DBI::SQL()}}
+Logs the execution of a quality check, recording counts of live, new,
+and closed issues.
 }

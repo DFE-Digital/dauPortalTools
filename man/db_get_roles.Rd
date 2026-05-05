@@ -2,10 +2,10 @@
 % Please edit documentation in R/db-portal_user_admin_helpers.R
 \name{db_get_roles}
 \alias{db_get_roles}
-\title{Get all available roles}
+\title{Retrieve roles}
 \usage{
-db_get_roles(conn)
+db_get_roles(db_get_query = utils_db_get_query)
 }
 \description{
-Get all available roles
+Retrieve roles
 }

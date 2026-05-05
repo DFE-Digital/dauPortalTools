@@ -2,10 +2,10 @@
 % Please edit documentation in R/db-portal_user_admin_helpers.R
 \name{db_get_app_users}
 \alias{db_get_app_users}
-\title{Fetch app users and their role (default "User" if none)}
+\title{Fetch application users and their assigned role}
 \usage{
-db_get_app_users(conn, app_id)
+db_get_app_users(app_id, db_get_query = utils_db_get_query)
 }
 \description{
-Fetch app users and their role (default "User" if none)
+Fetch application users and their assigned role
 }

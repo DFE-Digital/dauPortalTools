@@ -2,10 +2,17 @@
 % Please edit documentation in R/db-sig_change_helpers.R
 \name{db_get_sig_change_w_region}
 \alias{db_get_sig_change_w_region}
-\title{Get all available roles}
+\title{Retrieve significant change records with region information}
 \usage{
-db_get_sig_change_w_region(conn)
+db_get_sig_change_w_region(db_get_query = utils_db_get_query)
+}
+\arguments{
+\item{db_get_query}{Function used to execute SQL queries.}
+}
+\value{
+A data frame of significant change records with region metadata.
 }
 \description{
-Get all available roles
+Returns all significant change records enriched with Government Office
+Region (GOR) information from the latest Edubase snapshot.
 }

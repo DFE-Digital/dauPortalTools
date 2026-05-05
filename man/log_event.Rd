@@ -7,22 +7,15 @@
 log_event(message)
 }
 \arguments{
-\item{message}{A character string containing the message to log.}
-
-\item{config}{A list containing logging configuration. Must include a \code{logging} sublist with:
-\describe{
-\item{enabled}{Logical. Whether logging is enabled.}
-\item{event_log_path}{Character. Path to the event log file.}
-\item{log_to_console}{Logical. Whether to also print the log message to the console.}
-}}
+\item{message}{Character string containing the message to log.}
 }
 \value{
-Invisibly returns \code{NULL}. Writes the log message to the specified file.
+Invisibly returns NULL.
 }
 \description{
-This function logs a simple timestamped message to a specified file and optionally to the console.
+Logs a timestamped message to a file and optionally to the console.
 }
-\examples{
-log_event("Process started")
-
+\details{
+Logging behaviour is controlled by the \code{logging} section of the
+configuration returned by \code{get_config()}.
 }
