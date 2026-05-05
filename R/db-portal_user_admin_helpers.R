@@ -1,12 +1,6 @@
-#' Fetch application users and their assigned roles
-#'
-#' @return A data frame of users and roles
+#' Fetch application users and their assigned role
 #' @export
-
-db_get_app_users <- function(
-  app_id,
-  db_get_query = utils_db_get_query
-) {
+db_get_app_users <- function() {
   log_event("Starting db_get_app_users")
 
   conn <- sql_manager("dit")
@@ -18,8 +12,7 @@ db_get_app_users <- function(
     add = TRUE
   )
 
-  app_id <- utils_get_app_id()
-
+  app_id <- resolve_app_id()
   schema <- utils_resolve_schema("db_schema_01a")
 
   query <- glue_sql(
@@ -41,7 +34,7 @@ db_get_app_users <- function(
     .con = conn
   )
 
-  db_get_query(conn, query)
+  utils_db_get_query(conn, query)
 }
 
 
