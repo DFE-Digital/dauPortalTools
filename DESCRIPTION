@@ -1,6 +1,6 @@
 Package: dauPortalTools
 Title: What the Package Does (One Line, Title Case)
-Version: 2026.3.2
+Version: 2026.5.0
 Authors@R: c(person("Ben","Smith",email="ben7.smith@education.gov.uk",role=c("aut","cre")),
              person("Ben","Clewarth",email="ben.clewarth@education.gov.uk",role="aut"),
              person("Mark","Horton",email="mark.horton@education.gov.uk",role="aut"))
