@@ -232,15 +232,17 @@ school_render_overview <- function(
     )
   ))
 
-  ui <- tags$div(
-    id = id,
+  ui <- shinyGovstyle::gov_layout(
     shinyGovstyle::heading_text(
       glue::glue("{summary_data$school_name} ({summary_data$urn})"),
       size = "l"
     ),
     tab_css,
-    tab_buttons,
-    tab_contents,
+    shiny::tags$div(
+      class = "govuk-!-margin-top-3",
+      tab_buttons,
+      tab_contents
+    ),
     tab_js
   )
 
