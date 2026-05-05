@@ -2,6 +2,8 @@
 
 #' Fetch application users and their assigned role
 #' @export
+#' Fetch application users and their assigned role
+#' @export
 db_get_app_users <- function(
   app_id,
   db_get_query = utils_db_get_query
@@ -17,6 +19,10 @@ db_get_app_users <- function(
     add = TRUE
   )
 
+  app_id <- as.integer(app_id)
+
+  schema <- utils_resolve_schema("db_schema_01a")
+
   query <- glue_sql(
     "
     SELECT
@@ -25,11 +31,11 @@ db_get_app_users <- function(
       u.email,
       ISNULL(r.role_name, 'User') AS role_name,
       ur.role_id
-    FROM {utils_resolve_schema('db_schema_01a')}.[users] u
-    LEFT JOIN {utils_resolve_schema('db_schema_01a')}.[user_roles] ur
+    FROM {schema}.[users] u
+    LEFT JOIN {schema}.[user_roles] ur
       ON ur.user_id = u.user_id
      AND ur.app_id  = {app_id}
-    LEFT JOIN {utils_resolve_schema('db_schema_01a')}.[roles] r
+    LEFT JOIN {schema}.[roles] r
       ON ur.role_id = r.role_id
     ORDER BY u.username;
     ",
