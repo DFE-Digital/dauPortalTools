@@ -63,7 +63,7 @@ db_get_roles <- function(
     .con = conn
   )
 
-  db_get_query(conn, query)
+  utils_db_get_query(conn, query)
 }
 
 
@@ -117,5 +117,5 @@ db_update_user_role <- function(
     .con = conn
   )
 
-  db_execute(conn, query)
+  utils_db_execute(conn, query)
 }
