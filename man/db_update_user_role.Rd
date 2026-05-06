@@ -4,13 +4,7 @@
 \alias{db_update_user_role}
 \title{Update user role}
 \usage{
-db_update_user_role(
-  user_id,
-  role_id,
-  app_id,
-  assigned_by,
-  db_execute = utils_db_execute
-)
+db_update_user_role(user_id, role_id, app_id, assigned_by)
 }
 \description{
 Update user role

@@ -4,7 +4,7 @@
 \alias{db_get_app_users}
 \title{Fetch application users and their assigned role}
 \usage{
-db_get_app_users(...)
+db_get_app_users()
 }
 \description{
 Fetch application users and their assigned role

@@ -4,7 +4,7 @@
 \alias{db_get_roles}
 \title{Retrieve roles}
 \usage{
-db_get_roles(db_get_query = utils_db_get_query)
+db_get_roles()
 }
 \description{
 Retrieve roles

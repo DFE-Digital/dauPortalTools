@@ -4,7 +4,7 @@
 \alias{school_render_overview}
 \title{Render school overview panel}
 \usage{
-school_render_overview(urn)
+school_render_overview(urn, id = paste0("school_overview_", urn))
 }
 \arguments{
 \item{urn}{Character string or numeric scalar representing the Unique
