@@ -1,6 +1,6 @@
 #' Fetch application users and their assigned role
 #' @export
-db_get_app_users <- function(...) {
+db_get_app_users <- function() {
   log_event("Starting db_get_app_users")
 
   conn <- sql_manager("dit")
@@ -40,9 +40,7 @@ db_get_app_users <- function(...) {
 
 #' Retrieve roles
 #' @export
-db_get_roles <- function(
-  db_get_query = utils_db_get_query
-) {
+db_get_roles <- function() {
   log_event("Starting db_get_roles")
 
   conn <- sql_manager("dit")
@@ -73,8 +71,7 @@ db_update_user_role <- function(
   user_id,
   role_id,
   app_id,
-  assigned_by,
-  db_execute = utils_db_execute
+  assigned_by
 ) {
   log_event("Starting db_update_user_role")
 
@@ -84,6 +81,7 @@ db_update_user_role <- function(
   assigned_by <- as.integer(assigned_by)
 
   conn <- sql_manager("dit")
+
   on.exit(
     {
       try(DBI::dbDisconnect(conn), silent = TRUE)
