@@ -49,11 +49,10 @@ server_portal_user_admin <- function(id) {
     app_id <- conf$app_details$app_id
 
     username <- get_user(session = session, fallback = "guest")
-    conn <- sql_manager("dit")
 
-    a_user_id <- get_user_id(conn, username)
+    a_user_id <- get_user_id(username)
 
-    users_data <- reactiveVal(db_get_app_users(conn, app_id))
+    users_data <- reactiveVal(db_get_app_users(app_id))
 
     output$user_table <- renderDT({
       datatable(
@@ -70,14 +69,13 @@ server_portal_user_admin <- function(id) {
 
       df <- users_data()
       selected <- df[click$row, ]
-      showModal(ui_role_edit_modal(ns, selected, conn))
+      showModal(ui_role_edit_modal(ns, selected))
     })
 
     observeEvent(input$apply_role_change, {
       req(input$selected_user_id, input$selected_role_id)
 
       db_update_user_role(
-        conn = conn,
         user_id = input$selected_user_id,
         role_id = input$selected_role_id,
         app_id = app_id,
@@ -85,7 +83,7 @@ server_portal_user_admin <- function(id) {
       )
 
       removeModal()
-      users_data(db_get_app_users(conn, app_id))
+      users_data(db_get_app_users(app_id))
     })
   })
 }
