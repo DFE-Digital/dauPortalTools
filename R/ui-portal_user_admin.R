@@ -1,22 +1,33 @@
-#' User access management UI
+#' User Administration Module UI
 #'
 #' Defines the user interface for the user and role administration module.
-#' This UI presents a table of application users and supports role management
-#' actions via server-side logic. The main components include a heading and
-#' a DataTable output for displaying users.
+#' This UI displays a table of application users and supports role management
+#' actions via server-side logic.
 #'
-#' @param id Character string; Shiny module namespace identifier.
-#'
-#' @return A Shiny \code{tagList} containing the UI elements for the
-#'   user administration module.
+#' @param id Character scalar. Shiny module namespace identifier.
 #'
 #' @details
-#' This UI is intended to be paired with the corresponding server module
-#' \code{server_portal_user_admin()}. The user table is rendered using
-#' \code{DTOutput()}, and role changes are handled via a modal dialog
-#' triggered by server-side observers.
+#' The UI consists of:
+#' \itemize{
+#'   \item A section heading
+#'   \item A `DT` table displaying application users
+#'   \item A placeholder UI element for rendering the role-edit modal
+#' }
 #'
-#' @seealso \code{\link{NS}}, \code{\link[DT]{DTOutput}}
+#' The table is rendered using [DT::DTOutput()], and role updates are handled
+#' via modal dialogs triggered by the corresponding server module.
+#'
+#' This UI is intended to be used with [server_portal_user_admin()].
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Generates Shiny UI components
+#'   \item Provides output slots used by server-side logic
+#' }
+#'
+#' @return A `shiny::tagList` containing UI elements for the module.
+#'
+#' @seealso [server_portal_user_admin()], [DT::DTOutput()]
 #'
 #' @export
 
