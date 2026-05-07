@@ -2,51 +2,53 @@
 % Please edit documentation in R/ui-show_news.R
 \name{ui_show_news}
 \alias{ui_show_news}
-\title{Render Portal News and Alerts Table}
+\title{Render Portal News and Alerts Feed}
 \usage{
 ui_show_news()
 }
 \value{
-A \code{DT::datatable} widget. If an error occurs, a fallback
-HTML message is returned instead.
+A \code{bslib::card} object containing a list of news items.
+If no data is found, returns a \code{shiny::tags$p} informative message.
 }
 \description{
-Displays a compact, expandable table of portal news and alerts,
-prioritised and visually highlighted for ease of scanning.
+Displays a vertical feed of portal news and alerts within a scrollable sidebar card.
+Messages are prioritized by severity and visually highlighted using DfE-consistent
+styling.
 }
 \details{
-The table includes the following features:
+This function generates a Zero-Dependency UI component using standard HTML5
+tags (\verb{<details>} and \verb{<summary>}). It is designed to fit into narrow layout
+columns (e.g., a width-4 sidebar) and includes:
 \itemize{
-\item Critical messages (lowest priority value) displayed first
-\item "NEW" badge applied to messages created within the last 48 hours
-\item Row highlighting based on message priority
-\item Expand/collapse behaviour to reveal full message content inline
-}
-
-Messages are retrieved via \code{\link[=db_get_portal_messages]{db_get_portal_messages()}} and transformed
-into a format suitable for display using \code{\link[DT:datatable]{DT::datatable()}}.
-
-The table is rendered with:
-\itemize{
-\item Inline HTML for badges and formatting
-\item Hidden columns for full message text and priority
-\item JavaScript callbacks to manage row expansion
+\item \strong{Priority Sorting:} Critical messages (Priority 1) appear at the top.
+\item \strong{Visual Cues:} Priority-based background colors (Red/Amber/White).
+\item \strong{Temporal Badges:} A "NEW" badge for messages posted within the last 48 hours.
+\item \strong{Smart Truncation:} Summary text is truncated for the sidebar view,
+with full content available on expansion.
+\item \strong{Contained Layout:} Uses \code{bslib::card} with \code{height = "fit-content"}
+to prevent vertical layout gaps.
 }
 }
 \section{Side Effects}{
 
 \itemize{
-\item Executes database queries via \code{\link[=db_get_portal_messages]{db_get_portal_messages()}}
-\item Writes log entries via \code{\link[=log_event]{log_event()}}
+\item Executes database queries via \code{\link[=db_get_portal_messages]{db_get_portal_messages()}}.
+\item Gracefully handles database connection errors by returning a fallback message.
 }
 }
 
 \examples{
 \dontrun{
-ui_show_news()
+# In UI:
+uiOutput("portal_news")
+
+# In Server:
+output$portal_news <- renderUI({
+  ui_show_news()
+})
 }
 
 }
 \seealso{
-\code{\link[=db_get_portal_messages]{db_get_portal_messages()}}, \code{\link[DT:datatable]{DT::datatable()}}
+\code{\link[=db_get_portal_messages]{db_get_portal_messages()}}
 }
