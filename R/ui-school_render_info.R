@@ -1,63 +1,51 @@
-#' Render school overview panel
+#' Render School Overview Panel#' Render School#'
+#' Generates a GOV.UK-styled tabbed UI panel displaying summary information
+#' for an individual school using the latest available Edubase snapshot.
 #'
-#' Generates a GOV.UK–styled tabbed UI layout displaying summary information
-#' for an individual school, using the latest available Edubase snapshot.
-#' The overview includes school details, trust details (if applicable),
-#' additional metadata, and a set of useful external links.
-#'
-#' The rendered UI is organised into tabs, typically including:
-#' \itemize{
-#'   \item \strong{School Details} – Local authority, region, phase, type,
-#'         opening and (if applicable) closing dates
-#'   \item \strong{Trust Details} – Trust reference and name (if the school
-#'         is part of a trust)
-#'   \item \strong{More Details} – Demographic and structural attributes
-#'         such as pupil numbers and FSM percentage
-#'   \item \strong{Important Links} – Links to SLIC, the school website,
-#'         Ofsted reports, GIAS, and (where applicable) trust GIAS pages
-#' }
-#'
-#' @param urn Character string or numeric scalar representing the Unique
-#'   Reference Number (URN) of the school to display.
-#'
-#' @return A \code{shiny.tag} UI object containing the school overview layout.
-#'   If no data is available for the supplied URN, a GOV.UK–styled message
-#'   indicating that no data was found is returned instead.
+#' @param urn Character or numeric scalar. Unique Reference Number (URN)
+#'   identifying the school.
+#' @param id Character scalar. Optional UI container ID used to namespace
+#'   tab interactions. Defaults to a value derived from `urn`.
 #'
 #' @details
-#' This function connects to the \code{dit} SQL Server database and queries
-#' the Edubase table using the most recent \code{DateStamp} to ensure a
-#' consistent snapshot view.
+#' The panel is organised into tabbed sections:
 #'
-#' Tabbed navigation is implemented using lightweight custom JavaScript and
-#' CSS to provide a GOV.UK–style experience without relying on Shiny tabsets.
-#' Summary content within each tab is rendered using
-#' \code{shinyGovstyle::gov_summary}.
+#' \itemize{
+#'   \item \strong{School Details} – Local authority, region, type, group,
+#'         and opening/closing information
+#'   \item \strong{Trust Details} – Trust reference and name (if applicable)
+#'   \item \strong{More Details} – Demographic and structural information,
+#'         including pupil numbers and FSM percentage
+#'   \item \strong{Important Links} – External links including SLIC,
+#'         school website, Ofsted reports, GIAS, and (if applicable)
+#'         trust-level GIAS pages
+#' }
 #'
-#' Database access and query execution are wrapped in error handling, and
-#' execution timing is logged for monitoring and performance diagnostics.
+#' Data is retrieved from the Edubase dataset using the most recent
+#' `DateStamp` to ensure a consistent snapshot.
+#'
+#' Tab navigation is implemented using lightweight custom JavaScript and CSS,
+#' providing a GOV.UK-style interface without relying on Shiny tabset components.
+#'
+#' Summary content is rendered using [shinyGovstyle::gov_summary()], and links
+#' are displayed as a GOV.UK-styled list using [make_shiny_link()].
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Opens a database connection via [sql_manager()]
+#'   \item Executes SQL queries using [DBI::dbGetQuery()]
+#'   \item Writes log entries via [log_event()]
+#' }
+#'
+#' @return A Shiny UI object. If no data is available for the supplied URN,
+#'   a GOV.UK-styled message is returned instead.
 #'
 #' @examples
 #' \dontrun{
-#' # Use within a Shiny app
-#' ui <- shiny::fluidPage(
-#'   shiny::uiOutput("school_overview")
-#' )
-#'
-#' server <- function(input, output, session) {
-#'   output$school_overview <- shiny::renderUI({
-#'     school_render_overview(urn = "123456")
-#'   })
+#' school_render_overview(urn = "123456")
 #' }
 #'
-#' shiny::shinyApp(ui, server)
-#' }
-#'
-#' @seealso
-#' \itemize{
-#'   \item \code{\link[shinyGovstyle]{gov_layout}}
-#'   \item \code{\link[shinyGovstyle]{gov_summary}}
-#' }
+#' @seealso [shinyGovstyle::gov_layout()], [shinyGovstyle::gov_summary()]
 #'
 #' @export
 
