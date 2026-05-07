@@ -2,14 +2,16 @@
 #'
 #' Constructs a URL to the Ofsted inspection report page for a given school URN.
 #'
-#' @param urn A character string representing the Unique Reference Number (URN) of a school.
+#' @param urn Character scalar. Unique Reference Number (URN) identifying a school.
 #'
-#' @return A character string containing the full URL to the Ofsted inspection report, or `NULL` if the URN is invalid.
+#' @return Character scalar containing the Ofsted report URL, or `NULL` if the
+#'   input is missing or invalid.
+#'
 #' @examples
 #' ofsted_url("123456")
-#' ofsted_url(NULL) # returns NULL
-#' @export
+#' ofsted_url(NULL)
 #'
+#' @export
 
 ofsted_url <- function(urn) {
   if (is.null(urn) || is.na(urn) || urn == "") {
@@ -23,16 +25,19 @@ ofsted_url <- function(urn) {
 
 #' Generate GIAS School URL
 #'
-#' Constructs a URL to the GIAS (Get Information About Schools) page for a given school URN.
+#' Generate the Get Information About Schools (GIAS) page for a given
+#' school URN.
 #'
-#' @param urn A character string representing the Unique Reference Number (URN) of a school.
+#' @param urn Character scalar. Unique Reference Number (URN) identifying a school.
 #'
-#' @return A character string containing the full URL to the GIAS school details page, or `NULL` if the URN is invalid.
+#' @return Character scalar containing the GIAS school URL, or `NULL` if the
+#'   input is missing or invalid.
+#'
 #' @examples
 #' gias_school_url("123456")
-#' gias_school_url("") # returns NULL
-#' @export
+#' gias_school_url("")
 #'
+#' @export
 
 gias_school_url <- function(urn) {
   if (is.null(urn) || is.na(urn) || urn == "") {
@@ -47,17 +52,19 @@ gias_school_url <- function(urn) {
 #' Generate GIAS Trust URL
 #'
 #' Constructs a URL to the GIAS page for a given trust reference number.
-#' Cleans the input by removing leading "tr" and zeroes.
+#' The input is normalised by removing any leading "TR" prefix and leading zeros.
 #'
-#' @param trust_ref A character string representing the trust reference number.
+#' @param trust_ref Character scalar. Trust reference identifier.
 #'
-#' @return A character string containing the full URL to the GIAS trust details page, or `NULL` if the reference is invalid.
+#' @return Character scalar containing the GIAS trust URL, or `NULL` if the
+#'   input is missing or invalid after cleaning.
+#'
 #' @examples
 #' gias_trust_url("TR01234")
 #' gias_trust_url("0001234")
-#' gias_trust_url("") # returns NULL
-#' @export
+#' gias_trust_url("")
 #'
+#' @export
 
 gias_trust_url <- function(trust_ref) {
   if (is.null(trust_ref) || is.na(trust_ref) || trust_ref == "") {
@@ -76,18 +83,21 @@ gias_trust_url <- function(trust_ref) {
   )
 }
 
-#' Generate Warning Notice URL for the warning notice portal
+#' Generate Warning Notice Portal URL
 #'
-#' Constructs a Warning Notice to our internal portal for a given twn_id.
+#' Constructs a URL to the internal warning notice portal for a given
+#' warning notice ID.
 #'
-#' @param twn_id. A character string representing the twn_id of a warning notice.
+#' @param twn_id Character scalar. Identifier for a warning notice record.
 #'
-#' @return A character string containing the full URL to the wn portal, or `NULL` if the twn_id is invalid.
+#' @return Character scalar containing the portal URL, or `NULL` if the
+#'   input is missing or invalid.
+#'
 #' @examples
 #' wnp_wn_url("1234")
-#' wnp_wn_url(NULL) # returns NULL
-#' @export
+#' wnp_wn_url(NULL)
 #'
+#' @export
 
 wnp_wn_url <- function(twn_id) {
   if (is.null(twn_id) || is.na(twn_id) || twn_id == "") {
@@ -99,18 +109,21 @@ wnp_wn_url <- function(twn_id) {
   )
 }
 
-#' Generate Sig Change URL for the sig change portal
+#' Generate Significant Change Portal URL
 #'
-#' Constructs a Sig Change URL to our internal portal for a given sigchange_id
+#' Constructs a URL to the internal significant change portal for a given
+#' significant change ID.
 #'
-#' @param sigchange_id A character string representing the sigchange_id of a sig change.
+#' @param sigchange_id Character scalar. Identifier for a significant change.
 #'
-#' @return A character string containing the full sig change id to the sc portal, or `NULL` if the sc id is invalid.
+#' @return Character scalar containing the portal URL, or `NULL` if the
+#'   input is missing or invalid.
+#'
 #' @examples
 #' scp_sc_url("1234")
-#' scp_sc_url(NULL) # returns NULL
-#' @export
+#' scp_sc_url(NULL)
 #'
+#' @export
 
 scp_sc_url <- function(sigchange_id) {
   if (is.null(sigchange_id) || is.na(sigchange_id) || sigchange_id == "") {
@@ -122,19 +135,21 @@ scp_sc_url <- function(sigchange_id) {
   )
 }
 
-#' Generate SLIC URL for the SLIC portal
+#' Generate SLIC Portal URLs
 #'
-#' Constructs a SLIC URL to our internal portal for a given URN (vectorised).
+#' Constructs URLs to the SLIC portal for one or more school URNs.
+#' This function is vectorised and returns one URL per input value.
 #'
-#' @param urn A character vector (or coercible to character) of URNs.
+#' @param urn Character vector (or coercible to character) of URNs.
 #'
-#' @return A character vector containing the full link(s) to the SLIC portal.
-#'         Invalid/missing inputs yield NA_character_.
+#' @return A character vector of SLIC URLs. Invalid or missing values
+#'   are returned as `NA_character_`.
+#'
 #' @examples
 #' slic_urn_url("1234")
 #' slic_urn_url(c("1234", NA, ""))
-#' @export
 #'
+#' @export
 
 slic_urn_url <- function(urn) {
   urn <- as.character(urn)
