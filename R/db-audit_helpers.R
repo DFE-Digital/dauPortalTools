@@ -62,7 +62,7 @@ db_record_download <- function(
   conn <- sql_manager("dit")
   on.exit(
     {
-      try(DBI::dbDisconnect(conn), silent = TRUE)
+      try(dbDisconnect(conn), silent = TRUE)
       log_event("Finished record_download")
     },
     add = TRUE
@@ -88,12 +88,12 @@ db_record_download <- function(
     .con = conn
   )
 
-  db_execute(conn, query)
+  utils_db_execute(conn, query)
 
   invisible(NULL)
 }
 
-
+#' @export
 record_download <- function(
   user = "Guest",
   page_name,
