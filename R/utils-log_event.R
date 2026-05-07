@@ -6,34 +6,75 @@
 #' @return Invisibly returns NULL.
 #' @export
 
-.log_con <- NULL
+.log_group_id <- NULL
+.log_last_time <- NULL
+.log_counter <- 0L
 
-log_event <- function(message) {
+log_event <- function(message, debug = FALSE) {
   cfg <- get_config()
+  log_cfg <- cfg$logging %||% list(enabled = FALSE)
 
-  log_cfg <- cfg$logging
   if (!isTRUE(log_cfg$enabled)) {
     return(invisible(NULL))
   }
 
-  log_path <- log_cfg$event_log_path
-  log_dir <- dirname(log_path)
-
-  if (!dir.exists(log_dir)) {
-    dir.create(log_dir, recursive = TRUE, showWarnings = FALSE)
+  if (isTRUE(debug) && !isTRUE(log_cfg$debug_toggle)) {
+    return(invisible(NULL))
   }
 
-  timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-  log_line <- sprintf("[%s] %s", timestamp, message)
+  now <- Sys.time()
 
-  con <- file(log_path, open = "a")
-  writeLines(log_line, con)
-  flush(con)
-  close(con)
+  new_group <- FALSE
+
+  if (is.null(.log_last_time)) {
+    new_group <- TRUE
+  } else {
+    diff <- as.numeric(difftime(now, .log_last_time, units = "secs"))
+    if (is.na(diff) || diff > 0.5) {
+      new_group <- TRUE
+    }
+  }
+
+  if (new_group) {
+    .log_counter <<- .log_counter + 1L
+
+    .log_group_id <<- paste0(
+      format(now, "%H%M%S"),
+      "-",
+      Sys.getpid(),
+      "-",
+      .log_counter
+    )
+  }
+
+  .log_last_time <<- now
+
+  timestamp <- format(now, "%Y-%m-%d %H:%M:%OS3")
+  level <- if (debug) "DEBUG" else "INFO"
+
+  log_line <- paste0(
+    "[",
+    timestamp,
+    "]",
+    "[",
+    level,
+    "]",
+    "[G:",
+    .log_group_id,
+    "] ",
+    message
+  )
+
+  log_path <- log_cfg$log_path %||% "logs/events.log"
+
+  if (!dir.exists(dirname(log_path))) {
+    dir.create(dirname(log_path), recursive = TRUE, showWarnings = FALSE)
+  }
+
+  write(log_line, file = log_path, append = TRUE)
 
   if (isTRUE(log_cfg$log_to_console)) {
     cat(log_line, "\n")
-    flush.console()
   }
 
   invisible(NULL)
