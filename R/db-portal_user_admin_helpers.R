@@ -6,7 +6,7 @@ db_get_app_users <- function() {
   conn <- sql_manager("dit")
   on.exit(
     {
-      try(DBI::dbDisconnect(conn), silent = TRUE)
+      try(dbDisconnect(conn), silent = TRUE)
       log_event("Finished db_get_app_users")
     },
     add = TRUE
@@ -46,7 +46,7 @@ db_get_roles <- function() {
   conn <- sql_manager("dit")
   on.exit(
     {
-      try(DBI::dbDisconnect(conn), silent = TRUE)
+      try(dbDisconnect(conn), silent = TRUE)
       log_event("Finished db_get_roles")
     },
     add = TRUE
@@ -84,7 +84,7 @@ db_update_user_role <- function(
 
   on.exit(
     {
-      try(DBI::dbDisconnect(conn), silent = TRUE)
+      try(dbDisconnect(conn), silent = TRUE)
       log_event("Finished db_update_user_role")
     },
     add = TRUE
