@@ -1,15 +1,50 @@
-#' Insert a New Quality Check Log Entry
+#' Insert a Quality Check Log Entry
 #'
-#' Logs the execution of a quality check, recording counts of live, new,
-#' and closed issues.
+#' Records the execution of a quality check by inserting a new row into the
+#' `quality_check_log` table. The entry captures the number of live, new, and
+#' closed issues at the time of execution.
 #'
-#' @param quality_check_id Integer scalar.
-#' @param live_issues Integer scalar or NULL/NA.
-#' @param new_issues Integer scalar or NULL/NA.
-#' @param closed_issues Integer scalar or NULL/NA.
-#' @param db_execute Function used to execute SQL (dependency injection).
+#' @param quality_check_id Integer scalar. Identifier for the quality check.
+#' @param live_issues Integer scalar or `NA`. Number of currently active issues.
+#'   Defaults to `0`. Missing or `NA` values are coerced to `0`.
+#' @param new_issues Integer scalar or `NA`. Number of newly identified issues.
+#'   Defaults to `0`. Missing or `NA` values are coerced to `0`.
+#' @param closed_issues Integer scalar or `NA`. Number of issues closed since
+#'   the previous run. Defaults to `0`. Missing or `NA` values are coerced to `0`.
 #'
-#' @return Invisibly returns number of rows affected.
+#' @details
+#' All count inputs are normalised to integer scalars. Values that are `NULL`,
+#' length-zero, or `NA` are converted to `0`.
+#'
+#' The database schema is resolved using [utils_resolve_schema()], and the
+#' query is executed using [utils_db_execute()]. The `last_run` timestamp is
+#' recorded using `SYSUTCDATETIME()` at the database level.
+#'
+#' Database connections are managed internally and safely closed using
+#' `on.exit()`. Logging is performed via [log_event()] at the start and
+#' end of execution.
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Inserts a new row into the database.
+#'   \item Opens and closes a database connection.
+#'   \item Writes log entries via [log_event()].
+#' }
+#'
+#' @return Invisible numeric scalar indicating the number of rows affected
+#'   (typically `1L`).
+#'
+#' @examples
+#' \dontrun{
+#' quality_add_log(
+#'   quality_check_id = 42,
+#'   live_issues = 10,
+#'   new_issues = 3,
+#'   closed_issues = 2
+#' )
+#' }
+#'
+#' @seealso [utils_db_execute()], [log_event()]
 #' @export
 quality_add_log <- function(
   quality_check_id,
