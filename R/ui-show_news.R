@@ -1,13 +1,45 @@
-#' Show portal news and alerts table (collapsible, prioritised)
+#' Render Portal News and Alerts Table
 #'
-#' Displays a compact table of portal news and alerts with:
-#' - Sticky critical messages at the top
-#' - "NEW" badge for messages < 48 hours old
-#' - Row highlighting by priority
-#' - Expand/collapse icon with inline full message
+#' Displays a compact, expandable table of portal news and alerts,
+#' prioritised and visually highlighted for ease of scanning.
 #'
-#' @return A DT datatable suitable for direct use in Shiny UI
+#' @details
+#' The table includes the following features:
+#' \itemize{
+#'   \item Critical messages (lowest priority value) displayed first
+#'   \item "NEW" badge applied to messages created within the last 48 hours
+#'   \item Row highlighting based on message priority
+#'   \item Expand/collapse behaviour to reveal full message content inline
+#' }
+#'
+#' Messages are retrieved via [db_get_portal_messages()] and transformed
+#' into a format suitable for display using [DT::datatable()].
+#'
+#' The table is rendered with:
+#' \itemize{
+#'   \item Inline HTML for badges and formatting
+#'   \item Hidden columns for full message text and priority
+#'   \item JavaScript callbacks to manage row expansion
+#' }
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Executes database queries via [db_get_portal_messages()]
+#'   \item Writes log entries via [log_event()]
+#' }
+#'
+#' @return A `DT::datatable` widget. If an error occurs, a fallback
+#'   HTML message is returned instead.
+#'
+#' @examples
+#' \dontrun{
+#' ui_show_news()
+#' }
+#'
+#' @seealso [db_get_portal_messages()], [DT::datatable()]
+#'
 #' @export
+
 ui_show_news <- function() {
   dauPortalTools::log_event("Starting ui_show_news")
 
