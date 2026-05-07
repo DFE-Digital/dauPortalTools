@@ -49,7 +49,13 @@ ui_show_news <- function() {
 
       if (is.null(df) || nrow(df) == 0) {
         dauPortalTools::log_event("ui_show_news: no messages found")
-        return(shiny::HTML("<em>No news or alerts available.</em>"))
+        return(
+          DT::datatable(
+            data.frame(Message = "No news or alerts available"),
+            rownames = FALSE,
+            options = list(dom = "t")
+          )
+        )
       }
 
       now_utc <- Sys.time()
@@ -164,8 +170,10 @@ ui_show_news <- function() {
         paste0("ui_show_news error: ", conditionMessage(e))
       )
 
-      shiny::HTML(
-        "<em>Unable to load news and alerts at this time.</em>"
+      DT::datatable(
+        data.frame(Message = "Unable to load news and alerts at this time"),
+        rownames = FALSE,
+        options = list(dom = "t")
       )
     }
   )
