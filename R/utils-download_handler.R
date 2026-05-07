@@ -19,7 +19,7 @@
 #'   \item Supports both reactive and static datasets
 #'   \item Registers a `downloadHandler()` within the active Shiny session
 #'   \item Infers the current page name from Shiny inputs where possible
-#'   \item Records download activity using [record_download()]
+#'   \item Records download activity using [db_record_download()]
 #' }
 #'
 #' Filenames are automatically sanitised to contain only lowercase
@@ -31,7 +31,7 @@
 #' \itemize{
 #'   \item Registers a download handler in the active Shiny session
 #'   \item Writes a CSV file to disk during download
-#'   \item Logs download events via [record_download()]
+#'   \item Logs download events via [db_record_download()]
 #' }
 #'
 #' @return A `shiny::downloadButton` UI element.
@@ -50,7 +50,7 @@
 #' )
 #' }
 #'
-#' @seealso [shiny::downloadHandler()], [record_download()]
+#' @seealso [shiny::downloadHandler()], [db_record_download()]
 #'
 #' @export
 
