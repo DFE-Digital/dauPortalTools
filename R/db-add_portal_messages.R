@@ -1,15 +1,60 @@
-#' Add a portal message
+#' Add a Portal Message
 #'
-#' Inserts a new message into the portal_messages table, either scoped to the
-#' current application or globally (catch‑all) if requested.
+#' Inserts a new message into the `portal_messages` table. The message can be
+#' scoped to the current application or applied globally ("catch-all") depending
+#' on the `force_catch_all` flag.
 #'
-#' @param message_text Character. Message body (HTML allowed).
-#' @param priority Integer. Lower numbers display first.
-#' @param ad_username Character. Username of the creator.
-#' @param force_catch_all Logical. If TRUE, message applies to all apps.
+#' Messages are stored with a priority value, where lower numbers indicate
+#' higher importance and are displayed first in the UI.
 #'
-#' @return TRUE on success.
+#' @param message_text Character scalar. The message body to display. HTML is
+#'   permitted and will be rendered in the UI.
+#' @param priority Integer scalar. Message priority, where lower values appear
+#'   first. Defaults to `1`.
+#' @param ad_username Character scalar. Username of the user creating the
+#'   message (typically Active Directory username).
+#' @param force_catch_all Logical scalar. If `TRUE`, the message is assigned to
+#'   the global application (`app_id = 1L`), making it visible across all
+#'   applications. If `FALSE`, the message is assigned to the current
+#'   application via [utils_get_app_id()].
+#'
+#' @details
+#' The function resolves the database schema using
+#' [utils_resolve_schema()] and writes directly to the
+#' `portal_messages` table.
+#'
+#' Database connections are managed internally and safely closed on exit
+#' using `on.exit()`. Logging is performed via [log_event()] at the start
+#' and end of execution.
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Writes a new record to the database.
+#'   \item Opens and closes a database connection.
+#'   \item Writes log entries via [log_event()].
+#' }
+#'
+#' @return Logical scalar. Returns `TRUE` invisibly on successful insertion.
+#'
+#' @examples
+#' \dontrun{
+#' db_add_portal_message(
+#'   message_text = "<b>System maintenance tonight</b>",
+#'   priority = 1,
+#'   ad_username = "BSMITH7"
+#' )
+#'
+#' db_add_portal_message(
+#'   message_text = "Global announcement",
+#'   priority = 2,
+#'   ad_username = "ADMIN",
+#'   force_catch_all = TRUE
+#' )
+#' }
+#'
+#' @seealso [db_get_portal_messages()], [utils_get_app_id()]
 #' @export
+
 db_add_portal_message <- function(
   message_text,
   priority = 1,
