@@ -1,18 +1,58 @@
-#' Unified download button helper for Shiny apps
+#' Create a Shiny Download Button with Handler
 #'
-#' Creates a consistent GOV.UK-styled download button with safe IDs,
-#' safe filenames, and support for both reactive and static data. Also
-#' records download analytics via `record_download()` including auto-
-#' inferred page name.
+#' Generates a GOV.UK-styled download button and registers an associated
+#' `downloadHandler()` within the current Shiny session. The handler supports
+#' both static and reactive data sources and records download activity.
 #'
-#' @param df Data frame or reactive expression returning a data frame.
-#' @param file_label1 Main filename label (required).
-#' @param file_label2 Optional secondary filename label.
+#' @param df A `data.frame`, or a reactive expression/function returning a
+#'   `data.frame`.
+#' @param file_label1 Character scalar. Primary label used to construct the
+#'   output filename.
+#' @param file_label2 Character scalar or `NULL`. Optional secondary label
+#'   appended to the filename.
 #'
-#' @return A Shiny downloadButton with server-side downloadHandler.
+#' @details
+#' The function:
+#' \itemize{
+#'   \item Generates a unique output ID for the download control
+#'   \item Builds a safe, normalised filename from the supplied labels
+#'   \item Supports both reactive and static datasets
+#'   \item Registers a `downloadHandler()` within the active Shiny session
+#'   \item Infers the current page name from Shiny inputs where possible
+#'   \item Records download activity using [record_download()]
+#' }
+#'
+#' Filenames are automatically sanitised to contain only lowercase
+#' alphanumeric characters and underscores.
+#'
+#' A progress indicator is shown while the file is being generated.
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Registers a download handler in the active Shiny session
+#'   \item Writes a CSV file to disk during download
+#'   \item Logs download events via [record_download()]
+#' }
+#'
+#' @return A `shiny::downloadButton` UI element.
+#'
+#' @examples
+#' \dontrun{
+#' download_handler(
+#'   df = my_data,
+#'   file_label1 = "quality_data"
+#' )
+#'
+#' download_handler(
+#'   df = reactive(filtered_data()),
+#'   file_label1 = "records",
+#'   file_label2 = "north_west"
+#' )
+#' }
+#'
+#' @seealso [shiny::downloadHandler()], [record_download()]
 #'
 #' @export
-#'
 
 download_handler <- function(
   df,
