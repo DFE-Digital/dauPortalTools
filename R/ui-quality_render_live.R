@@ -1,50 +1,53 @@
-#' Render Quality Test Results for an Application
+#' Render Live Quality Issue Panel
 #'
-#' Generates a GOV.UK-styled UI panel summarising the latest quality‑check
-#' results for one or more applications. The function queries SQL Server for
-#' each quality check, retrieves the most recent run (via `OUTER APPLY`), and
-#' displays results in a searchable, sortable `DT::datatable`.
+#' Generates a GOV.UK-styled UI panel displaying active quality issues for one or
+#' more applications. Results are rendered as an interactive table with optional
+#' filtering and a download option.
 #'
-#' This function is designed to be used inside Shiny, typically within
-#' `uiOutput()` / `renderUI()`. It also attaches a download handler for exporting
-#' the full quality‑check dataset.
-#'
-#' @param app_id Integer or `NULL`.
-#'   Optional filter restricting results to a single application.
-#'   If `NULL`, results for all applications are returned.
-#'   If provided, it is safely interpolated into the SQL using
-#'   `glue::glue_sql()`.
-#'
-#' @return A `shiny.tag` object (UI fragment) containing:
-#'   - a GOV.UK‑styled layout,
-#'   - a download link, and
-#'   - a `DT::datatable` widget showing quality‑check results.
+#' @param user Character scalar or `NULL`. Optional filter for a specific user.
+#' @param with_rcs Logical or `NULL`. Optional filter indicating whether the
+#'   record is associated with RCS.
+#' @param region Character scalar or `NULL`. Optional filter for region.
+#' @param app_id Integer or `NULL`. Optional filter restricting results to a
+#'   single application.
 #'
 #' @details
 #' The function:
-#' - Opens a database connection via `sql_manager("dit")`.
-#' - Constructs a parameterised SQL query using `glue_sql()`.
-#' - Retrieves the most recent quality‑check log entry for each test using
-#'   `OUTER APPLY`.
-#' - Renders the results into a `DT::datatable`.
-#' - Generates a unique ID for a CSV download handler bound to the user's
-#'   session.
+#' \itemize{
+#'   \item Queries the `quality_list` table for active issues (`check_active = 1`)
+#'   \item Applies optional filters for application, user, region, and RCS status
+#'   \item Joins application and quality metadata from `app_list` and
+#'         `quality_check`
+#'   \item Builds contextual links for records where applicable
+#'   \item Renders results using [DT::datatable()]
+#'   \item Provides a download option for exporting the dataset
+#' }
 #'
-#' A GOV.UK‑themed layout is produced via `shinyGovstyle::gov_layout()`.
+#' SQL queries are constructed using [glue::glue_sql()] to ensure safe
+#' interpolation of input parameters.
 #'
-#' @seealso
-#'   \code{\link[shinyGovstyle]{gov_layout}},
-#'   \code{\link[DT]{datatable}},
-#'   \code{\link[glue]{glue_sql}}
+#' The UI is wrapped using [shinyGovstyle::gov_layout()].
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Opens a database connection via [sql_manager()]
+#'   \item Executes SQL queries using [DBI::dbGetQuery()]
+#'   \item Writes log entries via [log_event()]
+#' }
+#'
+#' @return A Shiny UI object. The returned object includes an attribute
+#'   `"data"` containing the underlying `data.frame` used to populate the table.
 #'
 #' @examples
 #' \dontrun{
-#' # Render for a specific app
-#' ui <- quality_render_tests(app_id = 12)
+#' quality_render_live()
 #'
-#' # Render for all apps
-#' ui <- quality_render_tests()
+#' quality_render_live(app_id = 3)
+#'
+#' quality_render_live(user = "BSMITH7", region = "North West")
 #' }
+#'
+#' @seealso [quality_get_data()], [db_add_portal_message()]
 #'
 #' @export
 
