@@ -33,7 +33,7 @@
 #' @export
 
 make_shiny_link <- function(url, text, target = "_blank") {
-  if (is.null(url) || is.na(url) || url == "") {
+  if (is.null(url) || is.na(url) || !nzchar(trimws(url))) {
     return(NULL)
   }
 
@@ -41,25 +41,16 @@ make_shiny_link <- function(url, text, target = "_blank") {
     url <- paste0("http://", url)
   }
 
-  external_note <- if (
-    !grepl("\\.gov\\.uk", url) &&
-      !grepl("rsconnect-pp/rsc|rsconnect/rsc/", url)
-  ) {
-    " (external)"
-  } else {
-    ""
-  }
+  is_external <- !grepl("\\.gov\\.uk", url) &&
+    !grepl("rsconnect(-pp)?/rsc", url)
 
-  shiny::HTML(paste0(
-    "<a href='",
-    url,
-    "' target='",
-    target,
-    "'>",
-    text,
-    external_note,
-    "</a>"
-  ))
+  external_note <- if (is_external) " (external)" else ""
+
+  htmltools::tags$a(
+    href = url,
+    target = target,
+    paste0(text, external_note)
+  )
 }
 
 #' Create Multiple Shiny HTML Links#'#' Generates a named list of Shiny HTML anchor tags from a named vector of URLs.
