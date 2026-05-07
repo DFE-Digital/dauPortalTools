@@ -157,7 +157,7 @@ ui_show_news <- function() {
         glue::glue("Finished ui_show_news ({nrow(df)} messages available)")
       )
 
-      htmltools::div(dt)
+      dt
     },
     error = function(e) {
       dauPortalTools::log_event(
