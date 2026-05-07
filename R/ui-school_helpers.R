@@ -1,4 +1,5 @@
-#' Render School Overview Panel#' Render School#'
+#' Render School Overview Panel
+#'
 #' Generates a GOV.UK-styled tabbed UI panel displaying summary information
 #' for an individual school using the latest available Edubase snapshot.
 #'
@@ -59,6 +60,14 @@ school_render_overview <- function(
   ))
 
   conn <- sql_manager("dit")
+
+  on.exit(
+    {
+      try(DBI::dbDisconnect(conn), silent = TRUE)
+    },
+    add = TRUE
+  )
+
   schema <- utils_resolve_schema("db_schema_00c")
 
   sql_command <- glue::glue_sql(
@@ -123,7 +132,7 @@ school_render_overview <- function(
     "Opened" = format(as.Date(summary_data$open_date), "%d-%m-%Y")
   )
 
-  if (!is.na(summary_data$close_date)) {
+  if (!is.na(summary_data$close_date[1])) {
     tabs[["School Details"]] <- c(
       tabs[["School Details"]],
       "Closed" = format(as.Date(summary_data$close_date), "%d-%m-%Y"),
@@ -131,7 +140,7 @@ school_render_overview <- function(
     )
   }
 
-  if (!is.na(summary_data$trust_ref)) {
+  if (!is.na(summary_data$trust_ref[1])) {
     tabs[["Trust Details"]] <- list(
       "Trust Ref" = summary_data$trust_ref,
       "Trust Name" = summary_data$trust_name
@@ -148,10 +157,10 @@ school_render_overview <- function(
   )
 
   links <- c(
-    slic_urn_url(summary_data$urn),
-    summary_data$school_website,
-    ofsted_url(summary_data$urn),
-    gias_school_url(summary_data$urn)
+    slic_urn_url(summary_data$urn[1]),
+    summary_data$school_website[1],
+    ofsted_url(summary_data$urn[1]),
+    gias_school_url(summary_data$urn[1])
   )
 
   link_names <- c(
@@ -170,7 +179,7 @@ school_render_overview <- function(
   ) {
     links <- c(
       links,
-      gias_trust_url(summary_data$trust_ref)
+      gias_trust_url(summary_data$trust_ref[1])
     )
 
     link_names <- c(
@@ -213,6 +222,19 @@ school_render_overview <- function(
   tab_contents <- tags$div(
     class = "custom-tabs-contents",
     lapply(names(tabs), function(tab) {
+      content <- tabs[[tab]]
+
+      if (tab == "Important Links") {
+        body <- content
+      } else {
+        body <- shinyGovstyle::gov_summary(
+          inputId = paste0(id, "_", gsub(" ", "_", tolower(tab))),
+          headers = names(content),
+          info = unname(content),
+          border = TRUE
+        )
+      }
+
       tags$div(
         class = if (tab == names(tabs)[1]) {
           "custom-tab-content active"
@@ -220,12 +242,7 @@ school_render_overview <- function(
           "custom-tab-content"
         },
         `data-tab` = tab,
-        shinyGovstyle::gov_summary(
-          inputId = paste0(id, "_", gsub(" ", "_", tolower(tab))),
-          headers = names(tabs[[tab]]),
-          info = unname(tabs[[tab]]),
-          border = TRUE
-        )
+        body
       )
     })
   )
