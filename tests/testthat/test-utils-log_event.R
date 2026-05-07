@@ -7,8 +7,9 @@ test_that("log_event writes nothing when logging disabled", {
         list(
           logging = list(
             enabled = FALSE,
-            event_log_path = tempfile(),
-            log_to_console = FALSE
+            log_path = tempfile(),
+            log_to_console = FALSE,
+            debug_toggle = FALSE
           )
         )
       }
@@ -22,6 +23,7 @@ test_that("log_event creates directory and writes log entry", {
   with_real_function("log_event", {
     tmp_dir <- tempfile()
     dir.create(tmp_dir)
+
     tmp_file <- file.path(tmp_dir, "events.log")
 
     mockery::stub(
@@ -31,8 +33,9 @@ test_that("log_event creates directory and writes log entry", {
         list(
           logging = list(
             enabled = TRUE,
-            event_log_path = tmp_file,
-            log_to_console = FALSE
+            log_path = tmp_file,
+            log_to_console = FALSE,
+            debug_toggle = FALSE
           )
         )
       }
@@ -41,7 +44,7 @@ test_that("log_event creates directory and writes log entry", {
     log_event("Test message")
 
     expect_true(file.exists(tmp_file))
-    expect_match(readLines(tmp_file), "Test message")
+    expect_true(any(grepl("Test message", readLines(tmp_file))))
   })
 })
 
@@ -54,14 +57,15 @@ test_that("log_event prints to console when enabled", {
         list(
           logging = list(
             enabled = TRUE,
-            event_log_path = tempfile(),
-            log_to_console = TRUE
+            log_path = tempfile(),
+            log_to_console = TRUE,
+            debug_toggle = FALSE
           )
         )
       }
     )
 
-    expect_message(
+    expect_output(
       log_event("Console message"),
       "Console message"
     )
