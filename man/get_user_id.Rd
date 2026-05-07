@@ -4,12 +4,12 @@
 \alias{get_user_id}
 \title{Retrieve User ID from Username#' Retrieve User ID from Username user's numeric \code{user_id} in the AIDT users table.}
 \usage{
-get_user_id(conn, username)
+get_user_id(username)
 }
 \arguments{
-\item{conn}{A \code{DBIConnection} object created by \code{\link[=sql_manager]{sql_manager()}}.}
-
 \item{username}{Character scalar. Username to look up.}
+
+\item{conn}{A \code{DBIConnection} object created by \code{\link[=sql_manager]{sql_manager()}}.}
 }
 \value{
 Integer scalar \code{user_id}, or \code{NA_integer_} if the user is not found

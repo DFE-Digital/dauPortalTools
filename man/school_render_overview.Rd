@@ -2,9 +2,7 @@
 % Please edit documentation in R/ui-school_helpers.R
 \name{school_render_overview}
 \alias{school_render_overview}
-\title{Render School Overview Panel#' Render School#'
-Generates a GOV.UK-styled tabbed UI panel displaying summary information
-for an individual school using the latest available Edubase snapshot.}
+\title{Render School Overview Panel}
 \usage{
 school_render_overview(urn, id = paste0("school_overview_", urn))
 }
@@ -20,7 +18,6 @@ A Shiny UI object. If no data is available for the supplied URN,
 a GOV.UK-styled message is returned instead.
 }
 \description{
-Render School Overview Panel#' Render School#'
 Generates a GOV.UK-styled tabbed UI panel displaying summary information
 for an individual school using the latest available Edubase snapshot.
 }
