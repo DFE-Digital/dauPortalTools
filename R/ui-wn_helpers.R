@@ -1,78 +1,56 @@
 #' Render Warning Notice Summary Panel
 #'
-#' Creates a GOV.UK-styled summary panel displaying three key metrics:
-#' - Total live TWN records
-#' - Records updated in the last 30 days
-#' - Open quality issues
+#' Generates a GOV.UK-styled summary panel displaying key warning notice
+#' metrics. The panel presents three headline figures:
 #'
-#' This UI fragment can be inserted anywhere in a Shiny app (e.g., inside
-#' `uiOutput()` / `renderUI()`).
+#' \itemize{
+#'   \item Total live records (excluding removed notices)
+#'   \item Records updated in the last 30 days
+#'   \item Open quality issues
+#' }
 #'
-#' @param region Character scalar or `NULL`. If provided, metrics are filtered
-#'   to this region. If `NULL`, metrics are unfiltered. Region values must match
-#'   the database column values used in the SQL.
-#'
-#' @return A `shiny.tag` object representing a GOV.UK-styled table suitable for
-#'   use in `renderUI()`.
+#' @param region Character scalar or `NULL`. Optional filter restricting
+#'   results to a specific region. If `NULL`, metrics are calculated across
+#'   all regions.
 #'
 #' @details
-#' The function queries database using `DBI::dbGetQuery()` and a
-#' connection from `sql_manager()`. It uses `glue_sql()` for
-#' safe SQL interpolation. If the query fails, the UI will display `NA` values.
+#' The function:
+#' \itemize{
+#'   \item Queries warning notice and related tables to compute summary metrics
+#'   \item Excludes records with `twn_status_id = 7`
+#'   \item Applies an optional region filter to relevant tables
+#'   \item Calculates:
+#'   \itemize{
+#'     \item Total live records
+#'     \item Records updated in the last 30 days
+#'     \item Open quality issues (`quality_status = 0`)
+#'   }
+#' }
 #'
-#' Styling is provided by `shinyGovstyle` components (`gov_layout()`,
-#' `heading_text()`, `govTable()`).
+#' SQL is constructed using [glue::glue_sql()] for safe parameter interpolation.
+#'
+#' Results are displayed using [shinyGovstyle::gov_layout()] and card-based
+#' components for a GOV.UK-style presentation.
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Opens a database connection via [sql_manager()]
+#'   \item Executes SQL queries using [DBI::dbGetQuery()]
+#'   \item Writes log entries via [log_event()]
+#' }
+#'
+#' @return A Shiny UI object containing summary metric cards.
 #'
 #' @examples
 #' \dontrun{
-#' # --- Minimal Shiny example (no region filter) -------------------
-#' if (interactive()) {
-#'   library(shiny)
-#'   library(shinyGovstyle)
+#' wn_render_summary()
 #'
-#'   ui <- fluidPage(
-#'     uiOutput("summary_metrics")
-#'   )
-#'
-#'   server <- function(input, output, session) {
-#'     output$summary_metrics <- renderUI({
-#'       wn_render_summary()  # No region filter
-#'     })
-#'   }
-#'
-#'   shinyApp(ui, server)
+#' wn_render_summary(region = "North West")
 #' }
 #'
-#' # --- Example with region filter -------------------------------
-#' if (interactive()) {
-#'   library(shiny)
-#'   library(shinyGovstyle)
+#' @seealso [wn_render_status_type_charts()], [DBI::dbGetQuery()]
 #'
-#'   ui <- fluidPage(
-#'     shinyGovstyle::label_hint("region_hint", "Choose a region (leave blank for all regions)"),
-#'     shinyGovstyle::select_Input(
-#'       inputId      = "region",
-#'       label        = "Select Region",
-#'       select_text  = c("", "North West", "North East", "London"),
-#'       select_value = c("", "North West", "North East", "London")
-#'     ),
-#'     uiOutput("summary_metrics")
-#'   )
-#'
-#'   server <- function(input, output, session) {
-#'     output$summary_metrics <- renderUI({
-#'       selected <- if (is.null(input$region) || input$region == "") NULL else input$region
-#'       wn_render_summary(region = selected)
-#'     })
-#'   }
-#'
-#'   shinyApp(ui, server)
-#' }
-#' }
-#'
-#' @seealso \code{\link[shinyGovstyle]{govTable}}, \code{\link[shinyGovstyle]{select_Input}}
 #' @export
-#'
 
 wn_render_summary <- function(region = NULL) {
   start_time <- Sys.time()
@@ -160,54 +138,66 @@ wn_render_summary <- function(region = NULL) {
   ui
 }
 
-#' Render Warning Notice Status & Type Charts
+#' Render Warning Notice Status and Type Charts
 #'
-#' This function generates a GOV.UK-styled UI component for displaying
-#' warning notice data by status and type. It retrieves data from SQL Server,
-#' processes it, and renders interactive Plotly bar charts, download buttons,
-#' and a table of underlying records.
+#' Generates a GOV.UK-styled Shiny UI panel displaying warning notices
+#' summarised by status and type. The panel includes interactive charts,
+#' summary tables, downloadable data, and a table of underlying records.
 #'
-#' @param region Character string or `NULL`. Optional filter for school region.
-#'   If `NULL`, charts are stacked by region; if provided, charts are filtered
-#'   for that region only.
-#'
-#' @return A Shiny UI element containing:
-#'   - Heading and descriptive hint
-#'   - Download buttons for records and summaries
-#'   - Two Plotly bar charts (status and type)
-#'   - A table of underlying records (DT or GOV.UK table)
+#' @param region Character scalar or `NULL`. Optional filter restricting
+#'   results to a specific school region. If `NULL`, all regions are included
+#'   and charts are displayed using colour-coded grouping by region.
 #'
 #' @details
-#' - Connects to SQL Server using `sql_manager("dit")`.
-#' - Queries `[twn_all_notices]` joined with status and type config tables.
-#' - Excludes records where `twn_status_id = 7`.
-#' - Handles missing values by replacing with "(Unknown)".
+#' The function:
+#' \itemize{
+#'   \item Retrieves warning notice records from the database
+#'   \item Joins status and type configuration tables
+#'   \item Excludes records with `twn_status_id = 7`
+#'   \item Applies optional region filtering
+#'   \item Cleans and prepares data for display
+#'   \item Aggregates results by status and type
+#'   \item Generates interactive Plotly charts using `ggplot2`
+#'   \item Creates summary tables for both status and type
+#'   \item Renders a table of underlying records with portal links
+#'   \item Registers a download handler for exporting the dataset
+#' }
+#'
+#' Visualisations include:
+#' \itemize{
+#'   \item A status distribution chart (stacked by region when unfiltered)
+#'   \item A type distribution chart (horizontal orientation)
+#'   \item Corresponding summary tables
+#' }
+#'
+#' The UI is structured using `tabsetPanel()` with tabs for:
+#' \itemize{
+#'   \item Status Chart
+#'   \item Type Chart
+#'   \item Underlying Data
+#' }
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Opens a database connection via [sql_manager()]
+#'   \item Executes SQL queries using [DBI::dbGetQuery()]
+#'   \item Registers Shiny download handlers within the active session
+#'   \item Writes log entries via [log_event()]
+#' }
+#'
+#' @return A Shiny UI object containing charts, summary tables,
+#'   download options, and underlying data.
 #'
 #' @examples
 #' \dontrun{
-#' # Render charts for all regions
+#' wn_render_status_type_charts()
 #'
-#'ui <- shiny::fluidPage(
-#'  shiny::uiOutput("school_overview")
-#')
-#'
-#'server <- function(input, output, session) {
-#'  output$school_overview <- shiny::renderUI({
-#'    wn_render_status_type_charts()
-#'  })
-#'}
-#'
-#'shiny::shinyApp(ui, server)
-#'
-#'
-#' # Render charts for a specific region
-#' wn_render_status_type_charts(region = "East Midlands")
+#' wn_render_status_type_charts(region = "North West")
 #' }
 #'
-#' @import plotly forcats
+#' @seealso [plotly::ggplotly()], [DT::datatable()]
 #'
 #' @export
-#'
 
 wn_render_status_type_charts <- function(region = NULL) {
   start_time <- Sys.time()
