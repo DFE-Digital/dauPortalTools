@@ -159,6 +159,54 @@ school_render_overview <- function(
     "% FSM" = summary_data$perc_fsm
   )
 
+  links <- c(
+    slic_urn_url(summary_data$urn),
+    summary_data$school_website,
+    ofsted_url(summary_data$urn),
+    gias_school_url(summary_data$urn)
+  )
+
+  link_names <- c(
+    "SLIC",
+    "Website",
+    "Ofsted Reports",
+    "GIAS"
+  )
+
+  # Add Trust link if available
+  if (
+    !is.na(summary_data$trust_ref) &&
+      summary_data$trust_ref != "" &&
+      !is.na(summary_data$trust_name) &&
+      summary_data$trust_name != ""
+  ) {
+    links <- c(
+      links,
+      gias_trust_url(summary_data$trust_ref)
+    )
+
+    link_names <- c(
+      link_names,
+      paste(summary_data$trust_name, "GIAS Trust")
+    )
+  }
+
+  names(links) <- link_names
+
+  link_tags <- htmltools::tags$ul(
+    class = "govuk-list govuk-list--spaced",
+    lapply(seq_along(links), function(i) {
+      url <- links[[i]]
+      label <- names(links)[i]
+
+      htmltools::tags$li(
+        make_shiny_link(url, label)
+      )
+    })
+  )
+
+  tabs[["Important Links"]] <- link_tags
+
   tab_buttons <- tags$div(
     class = "custom-tabs-buttons",
     lapply(names(tabs), function(tab) {
