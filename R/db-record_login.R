@@ -1,13 +1,42 @@
-#' Record User Login Activity
+#' Record a User Login Event
+#' Inserts a record into the `tools_analytics` table to track when a user
+#' accesses the application.
 #'
-#' Logs a user's visit to the application by inserting a record into the
-#' tools_analytics table.
+#' @param user Character scalar. Username of the user performing the login.
+#'   Defaults to `"Guest"`.
 #'
-#' @param user Character. The username to record. Defaults to "Guest".
-#' @param db_execute Function used to execute SQL (dependency injection).
+#' @details
+#' The current application ID is resolved using [utils_get_app_id()]. The
+#' event is recorded with an `action_type` of `"Load"` and a fixed
+#' `action_sub_type` of `"Initial Load"` to indicate the initial entry
+#' point into the application.
 #'
-#' @return Invisibly returns NULL.
+#' The database schema is resolved using [utils_resolve_schema()], and the
+#' query is executed using [utils_db_execute()].
+#'
+#' The timestamp is generated using `SYSUTCDATETIME()` at the database level.
+#'
+#' Database connections are managed internally and safely closed using
+#' `on.exit()`. Logging is performed via [log_event()] at the start and
+#' end of execution.
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Inserts a new row into the database.
+#'   \item Opens and closes a database connection.
+#'   \item Writes log entries via [log_event()].
+#' }
+#'
+#' @return `NULL`, invisibly.
+#'
+#' @examples
+#' \dontrun{
+#' db_record_login(user = "BSMITH7")
+#' }
+#'
+#' @seealso [db_record_download()]
 #' @export
+
 db_record_login <- function(
   user = "Guest",
   db_execute = utils_db_execute
@@ -25,7 +54,7 @@ db_record_login <- function(
   conn <- sql_manager("dit")
   on.exit(
     {
-      try(DBI::dbDisconnect(conn), silent = TRUE)
+      try(dbDisconnect(conn), silent = TRUE)
       log_event("Finished db_record_login")
     },
     add = TRUE
@@ -51,7 +80,7 @@ db_record_login <- function(
     .con = conn
   )
 
-  db_execute(conn, query)
+  utils_db_execute(conn, query)
 
   invisible(NULL)
 }
