@@ -2,20 +2,23 @@
 % Please edit documentation in R/utils-generate_url.R
 \name{scp_sc_url}
 \alias{scp_sc_url}
-\title{Generate Sig Change URL for the sig change portal}
+\title{Generate Significant Change Portal URL}
 \usage{
 scp_sc_url(sigchange_id)
 }
 \arguments{
-\item{sigchange_id}{A character string representing the sigchange_id of a sig change.}
+\item{sigchange_id}{Character scalar. Identifier for a significant change.}
 }
 \value{
-A character string containing the full sig change id to the sc portal, or \code{NULL} if the sc id is invalid.
+Character scalar containing the portal URL, or \code{NULL} if the
+input is missing or invalid.
 }
 \description{
-Constructs a Sig Change URL to our internal portal for a given sigchange_id
+Constructs a URL to the internal significant change portal for a given
+significant change ID.
 }
 \examples{
 scp_sc_url("1234")
-scp_sc_url(NULL) # returns NULL
+scp_sc_url(NULL)
+
 }

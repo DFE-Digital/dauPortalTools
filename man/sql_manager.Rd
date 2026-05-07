@@ -2,18 +2,48 @@
 % Please edit documentation in R/utils-sql_manager.R
 \name{sql_manager}
 \alias{sql_manager}
-\title{Create a SQL Server Connection Using a Named Service Configuration}
+\title{Create a SQL Server Connection}
 \usage{
 sql_manager(service, config_file = "./config.yml")
 }
 \arguments{
-\item{service}{Character name of the config section (e.g. "prod", "dev").}
+\item{service}{Character scalar. Name of the configuration section to use
+(e.g. \code{"prod"}, \code{"dev"}).}
 
-\item{config_file}{Path to the config YAML file.}
+\item{config_file}{Character scalar. Path to the configuration file.
+Defaults to \code{"./config.yml"}.}
 }
 \value{
-A DBI connection object.
+A \code{DBIConnection} object.
 }
 \description{
-Creates an ODBC connection using credentials stored in a config file.
+Creates a database connection using configuration values stored in a
+YAML configuration file.
+}
+\details{
+The function reads connection details using \code{\link[config:get]{config::get()}} and validates
+that the required fields are present before creating the connection.
+
+Required fields:
+\itemize{
+\item \code{driver}
+\item \code{server}
+\item \code{database}
+\item \code{uid}
+\item \code{pwd}
+\item \code{trusted}
+}
+
+An error is thrown if any required configuration values are missing.
+}
+\section{Side Effects}{
+
+\itemize{
+\item Reads configuration from disk via \code{\link[config:get]{config::get()}}
+\item Establishes a live database connection via \code{\link[DBI:dbConnect]{DBI::dbConnect()}}
+}
+}
+
+\seealso{
+\code{\link[DBI:dbConnect]{DBI::dbConnect()}}, \code{\link[config:get]{config::get()}}
 }

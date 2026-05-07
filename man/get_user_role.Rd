@@ -2,53 +2,50 @@
 % Please edit documentation in R/utils-user_context.R
 \name{get_user_role}
 \alias{get_user_role}
-\title{Retrieve a User's Role for the Current Application}
+\title{Retrieve User Role for Current Application}
 \usage{
 get_user_role(username)
 }
 \arguments{
-\item{username}{A character string representing the username whose role
-should be retrieved. This should match the \code{username} field in the
-\verb{[01_AIDT].[users]} table.}
+\item{username}{Character scalar. Username to retrieve the role for.}
 }
 \value{
-A character string containing the user's role name (e.g., \code{"admin"}),
-or \code{NULL} if the user has no assigned role for the configured application.
+Character scalar containing the user's role name, or \code{NULL}
+if no role is found.
 }
 \description{
-Looks up the role assigned to a given username for the application
-identified by \code{app_id} in the package's configuration file. The function
-automatically creates and closes a database connection using \code{sql_manager()},
-queries the user/role mapping tables, and returns the associated role name.
+Looks up the role assigned to a user for the current application.
 }
 \details{
-This function expects the package configuration (\code{config.yml}) to contain
-an \code{app} block with an \code{app_id} value, for example:
+The function:
+\itemize{
+\item Retrieves \code{app_id} from configuration via \code{\link[=get_config]{get_config()}}
+\item Creates a database connection using \code{\link[=sql_manager]{sql_manager()}}
+\item Queries user, role, and mapping tables
+}
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{app_details:
-  app_id: 1
-}\if{html}{\out{</div>}}
-
-The role lookup is performed by joining:
+The lookup joins:
 \itemize{
 \item \verb{[01_AIDT].[users]}
 \item \verb{[01_AIDT].[user_roles]}
 \item \verb{[01_AIDT].[roles]}
 }
 
-Only one role per user per application is permitted due to the database
-constraint \code{uq_user_role_app (user_id, role_id, app_id)}.
-
-A database connection is created internally via \code{sql_manager()}, and is
-automatically closed when the function exits.
+The database connection is automatically closed on exit.
 }
+\section{Side Effects}{
+
+\itemize{
+\item Opens and closes a database connection via \code{\link[=sql_manager]{sql_manager()}}
+}
+}
+
 \examples{
 \dontrun{
-# Returns the role for a given user
 get_user_role("bsmith7")
-
-# Typical output:
-# [1] "admin"
 }
 
+}
+\seealso{
+\code{\link[=get_config]{get_config()}}, \code{\link[=sql_manager]{sql_manager()}}
 }

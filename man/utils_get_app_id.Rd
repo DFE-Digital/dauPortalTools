@@ -2,13 +2,34 @@
 % Please edit documentation in R/utils-get_app_id.R
 \name{utils_get_app_id}
 \alias{utils_get_app_id}
-\title{Get current application ID}
+\title{Retrieve Application ID from Configuration}
 \usage{
 utils_get_app_id()
 }
 \value{
-Integer app_id
+Integer scalar representing the application ID.
 }
 \description{
-Retrieves the app_id from configuration.
+Returns the application identifier (\code{app_id}) from the loaded configuration.
+}
+\details{
+The value is read from \code{app_details$app_id} within the configuration object
+returned by \code{\link[=get_config]{get_config()}}. An error is thrown if the value is missing.
+}
+\section{Side Effects}{
+
+\itemize{
+\item Reads configuration via \code{\link[=get_config]{get_config()}}
+\item Writes log entries via \code{\link[=log_event]{log_event()}}
+}
+}
+
+\examples{
+\dontrun{
+utils_get_app_id()
+}
+
+}
+\seealso{
+\code{\link[=get_config]{get_config()}}
 }

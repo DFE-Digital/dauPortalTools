@@ -2,11 +2,31 @@
 % Please edit documentation in R/utils-dbi.R
 \name{utils_db_execute}
 \alias{utils_db_execute}
-\title{Execute a database command}
+\title{Execute a Database Command#' Execute a#'
+Thin wrapper around \code{\link[DBI:dbExecute]{DBI::dbExecute()}}, used to execute SQL statements
+that modify data (e.g. \code{INSERT}, \code{UPDATE}, \code{DELETE}).}
 \usage{
 utils_db_execute(conn, query)
 }
+\arguments{
+\item{conn}{A \code{DBIConnection} object.}
+
+\item{query}{A character string or SQL object representing the command
+to execute.}
+}
+\value{
+Numeric scalar indicating the number of rows affected.
+}
 \description{
-Thin wrapper around DBI::dbExecute().
-Required to safely unit-test DB code.
+Execute a Database Command#' Execute a#'
+Thin wrapper around \code{\link[DBI:dbExecute]{DBI::dbExecute()}}, used to execute SQL statements
+that modify data (e.g. \code{INSERT}, \code{UPDATE}, \code{DELETE}).
+}
+\details{
+This wrapper standardises write operations across the package and enables
+safe mocking during unit testing without requiring changes to function
+signatures.
+}
+\seealso{
+\code{\link[DBI:dbExecute]{DBI::dbExecute()}}
 }

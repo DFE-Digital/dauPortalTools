@@ -2,59 +2,66 @@
 % Please edit documentation in R/ui-sc_render_overview_chart.R
 \name{sc_render_status_type_charts}
 \alias{sc_render_status_type_charts}
-\title{Render warning notice status and type charts with downloads}
+\title{Render Warning Notice Status and Type Charts}
 \usage{
 sc_render_status_type_charts(region = NULL)
 }
 \arguments{
-\item{region}{Character scalar or \code{NULL}. If provided, filters
-records to the specified \code{school_region}. If \code{NULL},
-all regions are included and results are stacked by region.}
+\item{region}{Character scalar or \code{NULL}. Optional filter restricting
+results to a single school region. If \code{NULL}, all regions are included
+and charts are displayed as stacked by region. If provided, charts are
+filtered and displayed without stacking.}
 }
 \value{
-A \code{shiny.tag} UI fragment suitable for use within
-\code{renderUI()} or directly in a Shiny UI definition.
+A Shiny UI object containing charts, download buttons,
+and a table of records.
 }
 \description{
-Generates a GOV.UK–styled UI fragment containing two side-by-side Plotly
-bar charts summarising warning notices by status and by type, along with
-CSV download options and a table of underlying records.
+Generates a GOV.UK-styled Shiny UI panel displaying warning notices by
+status and type. The panel includes interactive bar charts, download
+options, and a table of underlying records.
 }
 \details{
-When \code{region} is \code{NULL}, both charts display stacked bars by
-school region. When a region is provided, the data are filtered to that
-region and the bars are shown unstacked.
-
-Warning notices with status ID 7 ("removed") are always excluded.
-
-Included components:
+The function:
 \itemize{
-\item Status summary bar chart
-\item Type summary bar chart
-\item Download buttons for:
+\item Retrieves warning notice data from the database
+\item Excludes records with status ID 7 ("removed")
+\item Applies an optional region filter
+\item Aggregates data by status and type
+\item Builds Plotly bar charts for status and type summaries
+\item Generates download handlers for:
 \itemize{
-\item Full records CSV
-\item Status summary CSV
-\item Type summary CSV
+\item Full records dataset
+\item Status summary
+\item Type summary
 }
-\item Table of underlying records with direct links to the portal
+\item Renders a table of underlying records with portal links
 }
 
-Data are retrieved from the warning notice tables and joined to status
-and type configuration tables. Aggregations are performed in-memory to
-support both stacked and filtered chart views.
+Charts are:
+\itemize{
+\item Stacked by \code{school_region} when \code{region} is \code{NULL}
+\item Single-series when filtered to a specific region
+}
+}
+\section{Side Effects}{
 
-Download handlers are registered dynamically using the current Shiny
-session and are uniquely namespaced to allow multiple instances of the
-component to coexist on the same page.
+\itemize{
+\item Opens a database connection via \code{\link[=sql_manager]{sql_manager()}}
+\item Executes SQL queries using \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}
+\item Registers Shiny download handlers within the active session
+\item Writes log entries via \code{\link[=log_event]{log_event()}}
+}
+}
 
-The underlying records table falls back to a GOV.UK–styled static table
-if the DT package is not available.
+\examples{
+\dontrun{
+sc_render_status_type_charts()
+
+sc_render_status_type_charts(region = "North West")
+}
+
 }
 \seealso{
-\itemize{
-\item \code{\link[plotly]{plot_ly}}
-\item \code{\link[shiny]{downloadHandler}}
-\item \code{\link[DT]{datatable}}
-}
+\code{\link[plotly:plot_ly]{plotly::plot_ly()}}, \code{\link[DT:datatable]{DT::datatable()}}
 }

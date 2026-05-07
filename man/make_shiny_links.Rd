@@ -2,19 +2,30 @@
 % Please edit documentation in R/ui-make_shiny_link.R
 \name{make_shiny_links}
 \alias{make_shiny_links}
-\title{Create Multiple Shiny HTML Links}
+\title{Create Multiple Shiny HTML Links#'#' Generates a named list of Shiny HTML anchor tags from a named vector of URLs.}
 \usage{
 make_shiny_links(urls)
 }
 \arguments{
-\item{urls}{A named character vector where names are link texts and values are URLs.}
+\item{urls}{Named character vector. Names represent the link text, and
+values represent the URLs.}
 }
 \value{
-A named list of Shiny HTML anchor tags.
+A named list of \code{shiny::HTML} objects.
 }
 \description{
-Generates a named list of Shiny HTML anchor tags from a named vector of URLs.
+Create Multiple Shiny HTML Links#'#' Generates a named list of Shiny HTML anchor tags from a named vector of URLs.
+}
+\details{
+Each element of \code{urls} is passed to \code{\link[=make_shiny_link]{make_shiny_link()}}. The output
+preserves the original names.
 }
 \examples{
-make_shiny_links(c("DfE" = "https://www.gov.uk/government/organisations/department-for-education"))
+make_shiny_links(
+  c("DfE" = "https://www.gov.uk/government/organisations/department-for-education")
+)
+
+}
+\seealso{
+\code{\link[=make_shiny_link]{make_shiny_link()}}
 }

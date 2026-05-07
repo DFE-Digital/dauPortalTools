@@ -7,15 +7,17 @@
 ofsted_url(urn)
 }
 \arguments{
-\item{urn}{A character string representing the Unique Reference Number (URN) of a school.}
+\item{urn}{Character scalar. Unique Reference Number (URN) identifying a school.}
 }
 \value{
-A character string containing the full URL to the Ofsted inspection report, or \code{NULL} if the URN is invalid.
+Character scalar containing the Ofsted report URL, or \code{NULL} if the
+input is missing or invalid.
 }
 \description{
 Constructs a URL to the Ofsted inspection report page for a given school URN.
 }
 \examples{
 ofsted_url("123456")
-ofsted_url(NULL) # returns NULL
+ofsted_url(NULL)
+
 }

@@ -7,17 +7,19 @@
 gias_trust_url(trust_ref)
 }
 \arguments{
-\item{trust_ref}{A character string representing the trust reference number.}
+\item{trust_ref}{Character scalar. Trust reference identifier.}
 }
 \value{
-A character string containing the full URL to the GIAS trust details page, or \code{NULL} if the reference is invalid.
+Character scalar containing the GIAS trust URL, or \code{NULL} if the
+input is missing or invalid after cleaning.
 }
 \description{
 Constructs a URL to the GIAS page for a given trust reference number.
-Cleans the input by removing leading "tr" and zeroes.
+The input is normalised by removing any leading "TR" prefix and leading zeros.
 }
 \examples{
 gias_trust_url("TR01234")
 gias_trust_url("0001234")
-gias_trust_url("") # returns NULL
+gias_trust_url("")
+
 }

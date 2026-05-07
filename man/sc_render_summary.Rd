@@ -2,86 +2,63 @@
 % Please edit documentation in R/ui-sc_render_summary.R
 \name{sc_render_summary}
 \alias{sc_render_summary}
-\title{Render Warning Notice Summary Panel}
+\title{Render Significant Change Summary Panel}
 \usage{
 sc_render_summary(user = NULL)
 }
 \arguments{
-\item{region}{Character scalar or \code{NULL}. If provided, metrics are filtered
-to this region. If \code{NULL}, metrics are unfiltered. Region values must match
-the database column values used in the SQL.}
+\item{user}{Character scalar or \code{NULL}. Optional filter restricting results
+to cases where the user is either \code{delivery_lead} or \code{RSCContact}.
+If \code{NULL}, no user-level filtering is applied.}
 }
 \value{
-A \code{shiny.tag} object representing a GOV.UK-styled table suitable for
-use in \code{renderUI()}.
+A Shiny UI object containing summary cards.
 }
 \description{
-Creates a GOV.UK-styled summary panel displaying three key metrics:
+Generates a GOV.UK-styled Shiny UI panel displaying key metrics for
+significant change records. The panel presents three headline figures:
+}
+\details{
 \itemize{
-\item Total live TWN records
+\item Total live records
 \item Records updated in the last 30 days
 \item Open quality issues
 }
-}
-\details{
-This UI fragment can be inserted anywhere in a Shiny app (e.g., inside
-\code{uiOutput()} / \code{renderUI()}).
 
-The function queries database using \code{DBI::dbGetQuery()} and a
-connection from \code{sql_manager()}. It uses \code{glue_sql()} for
-safe SQL interpolation. If the query fails, the UI will display \code{NA} values.
-
-Styling is provided by \code{shinyGovstyle} components (\code{gov_layout()},
-\code{heading_text()}, \code{govTable()}).
+The function:
+\itemize{
+\item Queries the tracker and quality tables to compute summary metrics
+\item Applies optional filtering for user ownership
+\item Calculates:
+\itemize{
+\item Total live records (\verb{all_actions_completed <> 1})
+\item Records updated within the last 30 days
+\item Open quality issues (\code{quality_status = 0})
 }
+}
+
+SQL is constructed using \code{\link[glue:glue_sql]{glue::glue_sql()}} to safely interpolate inputs.
+
+Results are rendered as a GOV.UK-styled layout using
+\code{\link[shinyGovstyle:gov_layout]{shinyGovstyle::gov_layout()}} and card components.
+}
+\section{Side Effects}{
+
+\itemize{
+\item Opens a database connection via \code{\link[=sql_manager]{sql_manager()}}
+\item Executes SQL queries using \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}
+\item Writes log entries via \code{\link[=log_event]{log_event()}}
+}
+}
+
 \examples{
 \dontrun{
-# --- Minimal Shiny example (no region filter) -------------------
-if (interactive()) {
-  library(shiny)
-  library(shinyGovstyle)
+sc_render_summary()
 
-  ui <- fluidPage(
-    uiOutput("summary_metrics")
-  )
-
-  server <- function(input, output, session) {
-    output$summary_metrics <- renderUI({
-      wn_render_summary()  # No region filter
-    })
-  }
-
-  shinyApp(ui, server)
-}
-
-# --- Example with region filter -------------------------------
-if (interactive()) {
-  library(shiny)
-  library(shinyGovstyle)
-
-  ui <- fluidPage(
-    shinyGovstyle::label_hint("region_hint", "Choose a region (leave blank for all regions)"),
-    shinyGovstyle::select_Input(
-      inputId      = "region",
-      label        = "Select Region",
-      select_text  = c("", "North West", "North East", "London"),
-      select_value = c("", "North West", "North East", "London")
-    ),
-    uiOutput("summary_metrics")
-  )
-
-  server <- function(input, output, session) {
-    output$summary_metrics <- renderUI({
-      selected <- if (is.null(input$region) || input$region == "") NULL else input$region
-      wn_render_summary(region = selected)
-    })
-  }
-
-  shinyApp(ui, server)
-}
+sc_render_summary(user = "BSMITH7")
 }
 
 }
 \seealso{
-\code{\link[shinyGovstyle]{govTable}}, \code{\link[shinyGovstyle]{select_Input}}
+\code{\link[=sc_render_status_type_charts]{sc_render_status_type_charts()}}, \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}
 }

@@ -2,11 +2,30 @@
 % Please edit documentation in R/utils-dbi.R
 \name{utils_db_get_query}
 \alias{utils_db_get_query}
-\title{Execute a database query and return results}
+\title{Execute a Database Query#' Execute a#'
+Thin wrapper around \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}, used to execute a SQL query
+and return the results as a data frame.}
 \usage{
 utils_db_get_query(conn, query)
 }
+\arguments{
+\item{conn}{A \code{DBIConnection} object.}
+
+\item{query}{A character string or SQL object representing the query
+to execute.}
+}
+\value{
+A \code{data.frame} containing the query results.
+}
 \description{
-Thin wrapper around DBI::dbGetQuery().
-Required to safely unit-test DB code.
+Execute a Database Query#' Execute a#'
+Thin wrapper around \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}, used to execute a SQL query
+and return the results as a data frame.
+}
+\details{
+This wrapper provides a consistent interface for executing read queries
+within the package and enables safe mocking during unit testing.
+}
+\seealso{
+\code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}
 }

@@ -2,21 +2,44 @@
 % Please edit documentation in R/utils-resolve_schema.R
 \name{utils_resolve_schema}
 \alias{utils_resolve_schema}
-\title{Resolve a logical schema key to a SQL-safe identifier}
+\title{Resolve Schema Key to SQL Identifier}
 \usage{
 utils_resolve_schema(key)
 }
 \arguments{
-\item{key}{Character scalar. Logical schema key (e.g. "01a").}
+\item{key}{Character scalar. Schema key used to look up the configured
+schema name (e.g. \code{"db_schema_01a"}).}
 }
 \value{
-A \code{DBI::SQL} object suitable for use in \code{glue_sql()}.
+A \code{DBI::SQL} object representing the resolved schema name.
 }
 \description{
-Converts an internal schema key (e.g. "01a", "01s") into a
-SQL-safe identifier using the configuration-defined mapping.
+Converts a logical schema key into a SQL-safe identifier using the
+configuration-defined schema mapping.
 }
 \details{
-This function is the ONLY permitted way to introduce a schema
-identifier into SQL.
+The function retrieves schema mappings from the configuration returned
+by \code{\link[=get_config]{get_config()}} and returns a \code{DBI::SQL} object suitable for use in
+\code{\link[glue:glue_sql]{glue::glue_sql()}}.
+
+An error is thrown if:
+\itemize{
+\item \code{key} is not a valid character scalar
+\item The configuration is missing a \code{schemas} section
+\item The supplied key is not present in the configuration
+}
+
+This function should be used whenever schema identifiers are inserted
+into SQL queries to ensure consistency and safety.
+}
+\section{Side Effects}{
+
+\itemize{
+\item Reads configuration via \code{\link[=get_config]{get_config()}}
+\item Writes log entries via \code{\link[=log_event]{log_event()}}
+}
+}
+
+\seealso{
+\code{\link[=get_config]{get_config()}}, \code{\link[glue:glue_sql]{glue::glue_sql()}}
 }

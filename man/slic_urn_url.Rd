@@ -2,21 +2,23 @@
 % Please edit documentation in R/utils-generate_url.R
 \name{slic_urn_url}
 \alias{slic_urn_url}
-\title{Generate SLIC URL for the SLIC portal}
+\title{Generate SLIC Portal URLs}
 \usage{
 slic_urn_url(urn)
 }
 \arguments{
-\item{urn}{A character vector (or coercible to character) of URNs.}
+\item{urn}{Character vector (or coercible to character) of URNs.}
 }
 \value{
-A character vector containing the full link(s) to the SLIC portal.
-Invalid/missing inputs yield NA_character_.
+A character vector of SLIC URLs. Invalid or missing values
+are returned as \code{NA_character_}.
 }
 \description{
-Constructs a SLIC URL to our internal portal for a given URN (vectorised).
+Constructs URLs to the SLIC portal for one or more school URNs.
+This function is vectorised and returns one URL per input value.
 }
 \examples{
 slic_urn_url("1234")
 slic_urn_url(c("1234", NA, ""))
+
 }

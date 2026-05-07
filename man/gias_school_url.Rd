@@ -7,15 +7,18 @@
 gias_school_url(urn)
 }
 \arguments{
-\item{urn}{A character string representing the Unique Reference Number (URN) of a school.}
+\item{urn}{Character scalar. Unique Reference Number (URN) identifying a school.}
 }
 \value{
-A character string containing the full URL to the GIAS school details page, or \code{NULL} if the URN is invalid.
+Character scalar containing the GIAS school URL, or \code{NULL} if the
+input is missing or invalid.
 }
 \description{
-Constructs a URL to the GIAS (Get Information About Schools) page for a given school URN.
+Generate the Get Information About Schools (GIAS) page for a given
+school URN.
 }
 \examples{
 gias_school_url("123456")
-gias_school_url("") # returns NULL
+gias_school_url("")
+
 }

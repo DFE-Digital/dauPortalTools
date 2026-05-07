@@ -2,18 +2,40 @@
 % Please edit documentation in R/utils-user_context.R
 \name{get_user_id}
 \alias{get_user_id}
-\title{Get user_id from username}
+\title{Retrieve User ID from Username#' Retrieve User ID from Username user's numeric \code{user_id} in the AIDT users table.}
 \usage{
 get_user_id(conn, username)
 }
 \arguments{
-\item{conn}{A DBI connection from sql_manager("dit")}
+\item{conn}{A \code{DBIConnection} object created by \code{\link[=sql_manager]{sql_manager()}}.}
 
-\item{username}{A character string (e.g., "bsmith7")}
+\item{username}{Character scalar. Username to look up.}
 }
 \value{
-Integer user_id, or NA_integer_ if not found
+Integer scalar \code{user_id}, or \code{NA_integer_} if the user is not found
+or the input is invalid.
 }
 \description{
-Looks up a user's numeric user_id in the AIDT users table.
+Retrieve User ID from Username#' Retrieve User ID from Username user's numeric \code{user_id} in the AIDT users table.
+}
+\details{
+The function queries the \verb{[01_AIDT].[users]} table and returns the
+corresponding \code{user_id} if found.
+}
+\section{Side Effects}{
+
+\itemize{
+\item Executes a database query via \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}
+}
+}
+
+\examples{
+\dontrun{
+conn <- sql_manager("dit")
+get_user_id(conn, "bsmith7")
+}
+
+}
+\seealso{
+\code{\link[=sql_manager]{sql_manager()}}
 }

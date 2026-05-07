@@ -7,19 +7,40 @@
 make_shiny_link(url, text, target = "_blank")
 }
 \arguments{
-\item{url}{A character string representing the URL to link to.}
+\item{url}{Character scalar. The URL to link to. If the URL is missing,
+empty, or \code{NA}, the function returns \code{NULL}.}
 
-\item{text}{A character string representing the link text to display.}
+\item{text}{Character scalar. The text to display for the link.}
 
-\item{target}{A character string specifying the target attribute (e.g., "_blank" to open in a new tab). Defaults to "_blank".}
+\item{target}{Character scalar. Value for the \code{target} attribute
+(e.g. \code{"_blank"} to open in a new tab). Defaults to \code{"_blank"}.}
 }
 \value{
-A Shiny HTML object containing the anchor tag, or \code{NULL} if the URL is invalid.
+A \code{shiny::HTML} object containing an anchor tag, or \code{NULL}
+if the URL is invalid.
 }
 \description{
-Generates an HTML anchor tag for use in Shiny UI, marking external links.
+Generates an HTML anchor tag for use in Shiny UI. External links are
+automatically identified and annotated with a visual "(external)" suffix.
 }
+\details{
+If the supplied \code{url} does not include a scheme (\verb{http://} or \verb{https://}),
+\verb{http://} is prepended automatically.
+
+Links that do not point to a \code{.gov.uk} domain or recognised internal
+RStudio Connect paths are labelled as external by appending
+\code{" (external)"} to the display text.
+}
+\section{Side Effects}{
+
+\itemize{
+\item Returns HTML content intended for rendering in a Shiny UI.
+\item Does not perform validation beyond basic string checks.
+}
+}
+
 \examples{
-make_shiny_link("https://www.gov.uk", "Gov.uk")
+make_shiny_link("https://www.gov.uk", "GOV.UK")
 make_shiny_link("example.com", "Example Site")
+
 }

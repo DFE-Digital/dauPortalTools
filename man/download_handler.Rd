@@ -2,23 +2,68 @@
 % Please edit documentation in R/utils-download_handler.R
 \name{download_handler}
 \alias{download_handler}
-\title{Unified download button helper for Shiny apps}
+\title{Create a Shiny Download Button with Handler}
 \usage{
 download_handler(df, file_label1, file_label2 = NULL)
 }
 \arguments{
-\item{df}{Data frame or reactive expression returning a data frame.}
+\item{df}{A \code{data.frame}, or a reactive expression/function returning a
+\code{data.frame}.}
 
-\item{file_label1}{Main filename label (required).}
+\item{file_label1}{Character scalar. Primary label used to construct the
+output filename.}
 
-\item{file_label2}{Optional secondary filename label.}
+\item{file_label2}{Character scalar or \code{NULL}. Optional secondary label
+appended to the filename.}
 }
 \value{
-A Shiny downloadButton with server-side downloadHandler.
+A \code{shiny::downloadButton} UI element.
 }
 \description{
-Creates a consistent GOV.UK-styled download button with safe IDs,
-safe filenames, and support for both reactive and static data. Also
-records download analytics via \code{record_download()} including auto-
-inferred page name.
+Generates a GOV.UK-styled download button and registers an associated
+\code{downloadHandler()} within the current Shiny session. The handler supports
+both static and reactive data sources and records download activity.
+}
+\details{
+The function:
+\itemize{
+\item Generates a unique output ID for the download control
+\item Builds a safe, normalised filename from the supplied labels
+\item Supports both reactive and static datasets
+\item Registers a \code{downloadHandler()} within the active Shiny session
+\item Infers the current page name from Shiny inputs where possible
+\item Records download activity using \code{\link[=db_record_download]{db_record_download()}}
+}
+
+Filenames are automatically sanitised to contain only lowercase
+alphanumeric characters and underscores.
+
+A progress indicator is shown while the file is being generated.
+}
+\section{Side Effects}{
+
+\itemize{
+\item Registers a download handler in the active Shiny session
+\item Writes a CSV file to disk during download
+\item Logs download events via \code{\link[=db_record_download]{db_record_download()}}
+}
+}
+
+\examples{
+\dontrun{
+download_handler(
+  df = my_data,
+  file_label1 = "quality_data"
+)
+
+download_handler(
+  df = reactive(filtered_data()),
+  file_label1 = "records",
+  file_label2 = "north_west"
+)
+}
+
+}
+\seealso{
+\code{\link[shiny:downloadHandler]{shiny::downloadHandler()}}, \code{\link[=db_record_download]{db_record_download()}}
 }

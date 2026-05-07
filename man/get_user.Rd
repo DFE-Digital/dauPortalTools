@@ -2,19 +2,35 @@
 % Please edit documentation in R/utils-user_context.R
 \name{get_user}
 \alias{get_user}
-\title{Get the current portal username}
+\title{Get Current Portal Username}
 \usage{
 get_user(session = NULL, fallback = "Guest")
 }
 \arguments{
-\item{session}{Optional shiny session; if NULL, we try to detect it.}
+\item{session}{Optional Shiny session object. If \code{NULL}, the function
+attempts to detect the current session automatically.}
 
-\item{fallback}{Local-testing fallback username (default "admin").}
+\item{fallback}{Character scalar. Username to return if no session or
+emulated user is available. Defaults to \code{"Guest"}.}
 }
 \value{
-Character scalar username.
+Character scalar representing the resolved username.
 }
 \description{
-Fetches the username from the active Shiny/Posit session. If the session
-has no user (e.g., local dev), falls back to "admin".
+Retrieves the username from the active Shiny (or Posit Connect) session.
+If unavailable (e.g. local development), falls back to a configured or
+provided default value.
+}
+\details{
+The function resolves the username in the following order:
+\itemize{
+\item \code{session$user}, if available
+\item \code{config::get("emulate_user")}, if defined
+\item \code{fallback}
+}
+
+This allows consistent behaviour across production and local development.
+}
+\seealso{
+\code{\link[config:get]{config::get()}}
 }

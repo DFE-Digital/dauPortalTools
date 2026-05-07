@@ -2,20 +2,23 @@
 % Please edit documentation in R/utils-generate_url.R
 \name{wnp_wn_url}
 \alias{wnp_wn_url}
-\title{Generate Warning Notice URL for the warning notice portal}
+\title{Generate Warning Notice Portal URL}
 \usage{
 wnp_wn_url(twn_id)
 }
 \arguments{
-\item{twn_id.}{A character string representing the twn_id of a warning notice.}
+\item{twn_id}{Character scalar. Identifier for a warning notice record.}
 }
 \value{
-A character string containing the full URL to the wn portal, or \code{NULL} if the twn_id is invalid.
+Character scalar containing the portal URL, or \code{NULL} if the
+input is missing or invalid.
 }
 \description{
-Constructs a Warning Notice to our internal portal for a given twn_id.
+Constructs a URL to the internal warning notice portal for a given
+warning notice ID.
 }
 \examples{
 wnp_wn_url("1234")
-wnp_wn_url(NULL) # returns NULL
+wnp_wn_url(NULL)
+
 }
