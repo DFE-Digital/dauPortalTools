@@ -100,7 +100,8 @@ record_download <- function(
   file_name
 ) {
   .Deprecated(
-    "db_record_download",
+    new = "db_record_download",
+    package = "dauPortalTools",
     msg = "record_download() is deprecated; use db_record_download() instead"
   )
 
@@ -201,7 +202,8 @@ db_record_login <- function(
 #' @export
 record_login <- function(user = "Guest") {
   .Deprecated(
-    "db_record_login",
+    new = "db_record_login",
+    package = "dauPortalTools",
     msg = "record_login() is deprecated; use db_record_login() instead"
   )
 
