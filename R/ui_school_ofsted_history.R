@@ -1,121 +1,68 @@
 #' Render Ofsted Inspection Panel
 #'
-#' Generates a standalone GOV.UK-styled Ofsted inspection panel for a given URN.
-#' The panel contains its own tabset and mirrors the structure of the new Ofsted
-#' report‑card model, including coloured grade pills, an accessible safeguarding
-#' panel, and an expandable “Our grades explained” section.
+#' Generates a GOV.UK-styled Ofsted inspection panel for a given URN.
+#' The panel includes summary information for the latest inspection and
+#' a tabbed view of historical inspection data.
 #'
-#' This function produces **two tabs**:
-#'
-#' \strong{1. Latest Inspection}
-#' \itemize{
-#'   \item Attempts to load the most recent post–September 2025 inspection from
-#'     \code{[ofsted_weekly_graded]}.
-#'   \item If no new‑framework inspection exists, the function falls back to the
-#'     most recent record in
-#'     \code{[ofsted_weekly_graded_pre0925]}.
-#'   \item Displays:
-#'     \itemize{
-#'       \item Inspection date
-#'       \item New‑framework 5‑point grades (or legacy 4‑grade set, if falling back)
-#'       \item Coloured, ARIA‑labelled grade pills
-#'       \item Safeguarding status presented in an ARIA‑labelled panel
-#'       \item An expandable “Our grades explained” section aligned to the
-#'             new report‑card model
-#'     }
-#' }
-#'
-#' \strong{2. Inspection History}
-#' \itemize{
-#'   \item Includes two tables:
-#'     \enumerate{
-#'       \item All post–Sep 2025 inspections for the URN from
-#'             \code{ofsted_weekly_graded}, with a placeholder
-#'             \code{category_of_concern = "coming soon"}.
-#'       \item All pre–Sep 2025 inspections for the URN from
-#'             \code{ofsted_weekly_graded_pre0925}, including the legacy grade
-#'             judgements, category of concern, and safeguarding effectiveness.
-#'     }
-#'   \item Tables are rendered using \code{DT::datatable()}.
-#' }
-#'
-#' @param urn A length‑1 numeric or character Unique Reference Number (URN) for
-#'   the school whose Ofsted inspection data should be displayed.
-#'
-#' @return A Shiny UI object containing the complete GOV.UK-styled Ofsted panel.
-#'   If no inspection data is found for the given URN, a user‑friendly message is
-#'   returned instead.
+#' @param urn Character or numeric scalar. Unique Reference Number (URN)
+#'   identifying the school.
 #'
 #' @details
-#' \strong{Data sources}
+#' The component renders two tabs:
+#'
+#' \strong{Latest Inspection}
 #' \itemize{
-#'   \item \emph{New framework (post–September 2025)}:
-#'         \code{[ofsted_weekly_graded]}
-#'   \item \emph{Previous framework (pre–September 2025)}:
-#'         \code{[ofsted_weekly_graded_pre0925]}
+#'   \item Attempts to load the most recent inspection under the
+#'         post–September 2025 framework.
+#'   \item Falls back to the latest pre–September 2025 inspection if no
+#'         new-framework data exists.
+#'   \item Displays inspection date, graded judgements, and safeguarding
+#'         status.
 #' }
 #'
-#' \strong{Logic}
-#' \enumerate{
-#'   \item Attempt to select the latest inspection under the new framework
-#'         (inspection_date ≥ \code{2025‑09‑01}).
-#'   \item If not present, fall back to the most recent previous‑framework record.
-#'   \item Construct the history tab from:
-#'         \itemize{
-#'           \item All new‑framework rows for the URN (plus placeholder category).
-#'           \item All previous‑framework rows for the URN.
-#'         }
+#' \strong{Inspection History}
+#' \itemize{
+#'   \item Displays all inspection records for the URN under both
+#'         frameworks.
+#'   \item Uses `gt::gt()` tables for presentation.
 #' }
 #'
-#' \strong{Presentation}
+#' @section Data Sources:
 #' \itemize{
-#'   \item New‑framework grades are mapped to the five-category model
-#'         (\emph{Exceptional}, \emph{Strong standard},
-#'         \emph{Expected standard}, \emph{Needs attention},
-#'         \emph{Urgent improvement}).
-#'   \item Previous‑framework grades (Outstanding, Good, Requires Improvement,
-#'         Inadequate) are displayed with a separate pill‑colour scheme.
-#'   \item Safeguarding status is displayed as “Met” or “Not met” in a dedicated
-#'         panel.
+#'   \item `ofsted_weekly_graded` (post–Sep 2025 framework)
+#'   \item `ofsted_weekly_graded_pre0925` (legacy framework)
+#' }
+#'
+#' @section Presentation:
+#' \itemize{
+#'   \item New-framework grades use a five-level model (Exceptional → Urgent improvement).
+#'   \item Legacy grades use the four-level model (Outstanding → Inadequate).
+#'   \item Safeguarding status is shown in a dedicated panel.
+#'   \item Tab navigation is implemented using custom HTML, CSS, and JavaScript.
 #' }
 #'
 #' @section Accessibility:
-#' This function includes some accessibility enhancements:
 #' \itemize{
-#'   \item Grade pills include \code{role="text"} and an \code{aria-label}
-#'         describing the grade to screen readers.
-#'   \item The safeguarding panel uses \code{role="group"} and an
-#'         \code{aria-label} announcing the safeguarding status.
-#'   \item All table headers use appropriate \code{scope="row"} and
-#'         \code{scope="col"} attributes for improved screen‑reader navigation.
+#'   \item Grade indicators include ARIA labels for screen readers.
+#'   \item Safeguarding panel uses semantic grouping.
+#'   \item Table headers include appropriate scope attributes.
 #' }
 #'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Opens database connections via [sql_manager()].
+#'   \item Performs database queries using [DBI::dbGetQuery()].
+#'   \item Writes log entries via [log_event()].
+#' }
 #'
-#' @section Dependencies:
-#' Requires an active SQL Server connection via \code{sql_manager("dit")}.
-#' Uses \code{shinyGovstyle} for layout and \code{DT} for data tables.
-#'
-#' @seealso
-#' \code{\link{school_render_overview}} for the main school summary panel that
-#' accompanies this Ofsted view.
+#' @return A Shiny UI object. If no inspection data is available, a message is returned instead.
 #'
 #' @examples
 #' \dontrun{
-#' if (interactive()) {
-#'   ui <- fluidPage(
-#'     uiOutput("ofsted_panel")
-#'   )
-#'
-#'   server <- function(input, output, session) {
-#'     output$ofsted_panel <- renderUI({
-#'       ui_school_ofsted_history(urn = 123456)  # Replace with a valid URN
-#'     })
-#'   }
-#'
-#'   shinyApp(ui, server)
-#' }
+#' ui_school_ofsted_history(urn = 123456)
 #' }
 #'
+#' @seealso [school_render_overview()]
 #' @export
 
 ui_school_ofsted_history <- function(urn) {
