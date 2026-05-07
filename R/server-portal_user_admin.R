@@ -1,44 +1,56 @@
-#' Server-side logic for the user administration module
+#' Server Logic for User Administration Module
 #'
-#' This Shiny module provides server logic for administering application users.
-#' It displays a table of users associated with the current application,
-#' allows an administrator to select a user, and presents a modal dialog
-#' to update that user's role. Changes are persisted to the database and
-#' the user table is refreshed after each update.
+#' Provides server-side logic for a Shiny module that manages application users.
+#' The module displays users associated with the current application and allows
+#' administrators to update user roles via a modal interaction.
 #'
-#' The module:
-#' \itemize{
-#'   \item Retrieves application configuration and current user details
-#'   \item Fetches application users from the database
-#'   \item Renders a selectable DataTable of users
-#'   \item Opens a role-edit modal on row selection
-#'   \item Applies role changes and reloads user data
-#' }
-#'
-#' @param id Character string; Shiny module namespace identifier.
-#'
-#' @return None. This function is called for its side effects
-#'   (registering observers and outputs within a Shiny application).
+#' @param id Character scalar. Shiny module namespace identifier.
 #'
 #' @details
-#' This module relies on several helper functions and database utilities
-#' being available in the calling environment, including:
+#' The module performs the following operations:
 #' \itemize{
-#'   \item \code{get_config()}
-#'   \item \code{get_user()}
-#'   \item \code{sql_manager()}
-#'   \item \code{get_user_id()}
-#'   \item \code{db_get_app_users()}
-#'   \item \code{db_update_user_role()}
-#'   \item \code{ui_role_edit_modal()}
+#'   \item Retrieves application configuration and the current user
+#'   \item Loads user and role data via [db_get_app_users()]
+#'   \item Renders a selectable user table using `DT`
+#'   \item Opens a role-edit modal upon row interaction
+#'   \item Persists role updates using [db_update_user_role()]
+#'   \item Refreshes the user dataset after updates
 #' }
 #'
-#' It also assumes that modal UI inputs such as \code{apply_role_change},
-#' \code{selected_user_id}, and \code{selected_role_id} are correctly
-#' namespaced within the corresponding UI module.
+#' User interaction follows a simple flow:
+#' \enumerate{
+#'   \item User selects a row in the table
+#'   \item A role-edit modal is presented
+#'   \item Role changes are submitted and written to the database
+#'   \item The table is refreshed to reflect changes
+#' }
 #'
-#' @seealso \code{\link{moduleServer}}, \code{\link[DT]{renderDT}}
+#' @section Dependencies:
+#' This module expects the following functions to be available:
+#' \itemize{
+#'   \item [get_config()]
+#'   \item [get_user()]
+#'   \item [get_user_id()]
+#'   \item [sql_manager()]
+#'   \item [db_get_app_users()]
+#'   \item [db_update_user_role()]
+#'   \item [ui_role_edit_modal()]
+#' }
 #'
+#' It also assumes that modal input values such as `apply_role_change`,
+#' `selected_user_id`, and `selected_role_id` are correctly namespaced
+#' within the corresponding UI module.
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Registers reactive expressions, observers, and outputs
+#'   \item Performs database read and write operations
+#'   \item Displays modal dialogs within the Shiny session
+#' }
+#'
+#' @return Invisibly returns `NULL`, called for its side effects.
+#'
+#' @seealso [moduleServer()], [DT::renderDT()]
 #' @export
 
 server_portal_user_admin <- function(id) {
@@ -52,7 +64,7 @@ server_portal_user_admin <- function(id) {
 
     a_user_id <- get_user_id(username)
 
-    users_data <- reactiveVal(db_get_app_users(app_id))
+    users_data <- reactiveVal(db_get_app_users())
 
     output$user_table <- renderDT({
       datatable(
@@ -83,7 +95,7 @@ server_portal_user_admin <- function(id) {
       )
 
       removeModal()
-      users_data(db_get_app_users(app_id))
+      users_data(db_get_app_users())
     })
   })
 }
