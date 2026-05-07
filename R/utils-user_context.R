@@ -1,11 +1,28 @@
-#' Get the current portal username
+#' Get Current Portal Username
 #'
-#' Fetches the username from the active Shiny/Posit session. If the session
-#' has no user (e.g., local dev), falls back to "admin".
+#' Retrieves the username from the active Shiny (or Posit Connect) session.
+#' If unavailable (e.g. local development), falls back to a configured or
+#' provided default value.
 #'
-#' @param session Optional shiny session; if NULL, we try to detect it.
-#' @param fallback Local-testing fallback username (default "admin").
-#' @return Character scalar username.
+#' @param session Optional Shiny session object. If `NULL`, the function
+#'   attempts to detect the current session automatically.
+#' @param fallback Character scalar. Username to return if no session or
+#'   emulated user is available. Defaults to `"Guest"`.
+#'
+#' @details
+#' The function resolves the username in the following order:
+#' \itemize{
+#'   \item `session$user`, if available
+#'   \item `config::get("emulate_user")`, if defined
+#'   \item `fallback`
+#' }
+#'
+#' This allows consistent behaviour across production and local development.
+#'
+#' @return Character scalar representing the resolved username.
+#'
+#' @seealso [config::get()]
+#'
 #' @export
 
 get_user <- function(session = NULL, fallback = "Guest") {
@@ -32,49 +49,43 @@ get_user <- function(session = NULL, fallback = "Guest") {
   fallback
 }
 
-#' Retrieve a User's Role for the Current Application
+#' Retrieve User Role for Current Application
 #'
-#' Looks up the role assigned to a given username for the application
-#' identified by `app_id` in the package's configuration file. The function
-#' automatically creates and closes a database connection using `sql_manager()`,
-#' queries the user/role mapping tables, and returns the associated role name.
+#' Looks up the role assigned to a user for the current application.
 #'
-#' @param username A character string representing the username whose role
-#'   should be retrieved. This should match the `username` field in the
-#'   `[01_AIDT].[users]` table.
-#'
-#' @return A character string containing the user's role name (e.g., `"admin"`),
-#'   or `NULL` if the user has no assigned role for the configured application.
+#' @param username Character scalar. Username to retrieve the role for.
 #'
 #' @details
-#' This function expects the package configuration (`config.yml`) to contain
-#' an `app` block with an `app_id` value, for example:
+#' The function:
+#' \itemize{
+#'   \item Retrieves `app_id` from configuration via [get_config()]
+#'   \item Creates a database connection using [sql_manager()]
+#'   \item Queries user, role, and mapping tables
+#' }
 #'
-#' ```
-#' app_details:
-#'   app_id: 1
-#' ```
+#' The lookup joins:
+#' \itemize{
+#'   \item `[01_AIDT].[users]`
+#'   \item `[01_AIDT].[user_roles]`
+#'   \item `[01_AIDT].[roles]`
+#' }
 #'
-#' The role lookup is performed by joining:
+#' The database connection is automatically closed on exit.
 #'
-#' * `[01_AIDT].[users]`
-#' * `[01_AIDT].[user_roles]`
-#' * `[01_AIDT].[roles]`
+#' @return Character scalar containing the user's role name, or `NULL`
+#'   if no role is found.
 #'
-#' Only one role per user per application is permitted due to the database
-#' constraint `uq_user_role_app (user_id, role_id, app_id)`.
-#'
-#' A database connection is created internally via `sql_manager()`, and is
-#' automatically closed when the function exits.
+#' @section Side Effects:
+#' \itemize{
+#'   \item Opens and closes a database connection via [sql_manager()]
+#' }
 #'
 #' @examples
 #' \dontrun{
-#' # Returns the role for a given user
 #' get_user_role("bsmith7")
-#'
-#' # Typical output:
-#' # [1] "admin"
 #' }
+#'
+#' @seealso [get_config()], [sql_manager()]
 #'
 #' @export
 
@@ -110,14 +121,31 @@ get_user_role <- function(username) {
   res$role_name[[1]]
 }
 
-#' Get user_id from username
+#' Retrieve User ID from Username#' Retrieve User ID from Username user's numeric `user_id` in the AIDT users table.
 #'
-#' Looks up a user's numeric user_id in the AIDT users table.
+#' @param conn A `DBIConnection` object created by [sql_manager()].
+#' @param username Character scalar. Username to look up.
 #'
-#' @param conn A DBI connection from sql_manager("dit")
-#' @param username A character string (e.g., "bsmith7")
+#' @details
+#' The function queries the `[01_AIDT].[users]` table and returns the
+#' corresponding `user_id` if found.
 #'
-#' @return Integer user_id, or NA_integer_ if not found
+#' @return Integer scalar `user_id`, or `NA_integer_` if the user is not found
+#'   or the input is invalid.
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Executes a database query via [DBI::dbGetQuery()]
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' conn <- sql_manager("dit")
+#' get_user_id(conn, "bsmith7")
+#' }
+#'
+#' @seealso [sql_manager()]
+#'
 #' @export
 
 get_user_id <- function(conn, username) {
