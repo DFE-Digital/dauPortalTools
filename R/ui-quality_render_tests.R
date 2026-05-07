@@ -1,51 +1,49 @@
-#' Render Quality Test Results for an Application
+#' Render Quality Test Results Panel
 #'
-#' Generates a GOV.UK-styled UI panel summarising the latest quality‑check
-#' results for one or more applications. The function queries SQL Server for
-#' each quality check, retrieves the most recent run (via `OUTER APPLY`), and
-#' displays results in a searchable, sortable `DT::datatable`.
+#' Generates a GOV.UK-styled Shiny UI panel displaying the most recent
+#' quality test results for one or more applications.
 #'
-#' This function is designed to be used inside Shiny, typically within
-#' `uiOutput()` / `renderUI()`. It also attaches a download handler for exporting
-#' the full quality‑check dataset.
-#'
-#' @param app_id Integer or `NULL`.
-#'   Optional filter restricting results to a single application.
-#'   If `NULL`, results for all applications are returned.
-#'   If provided, it is safely interpolated into the SQL using
-#'   `glue::glue_sql()`.
-#'
-#' @return A `shiny.tag` object (UI fragment) containing:
-#'   - a GOV.UK‑styled layout,
-#'   - a download link, and
-#'   - a `DT::datatable` widget showing quality‑check results.
+#' @param app_id Integer scalar or `NULL`. Optional filter to restrict
+#'   results to a single application. If `NULL`, results for all
+#'   applications are returned.
 #'
 #' @details
 #' The function:
-#' - Opens a database connection via `sql_manager("dit")`.
-#' - Constructs a parameterised SQL query using `glue_sql()`.
-#' - Retrieves the most recent quality‑check log entry for each test using
-#'   `OUTER APPLY`.
-#' - Renders the results into a `DT::datatable`.
-#' - Generates a unique ID for a CSV download handler bound to the user's
-#'   session.
+#' \itemize{
+#'   \item Retrieves quality check definitions from `quality_check`
+#'   \item Joins application context from `app_list`
+#'   \item Uses `OUTER APPLY` to retrieve the most recent log entry
+#'         from `quality_check_log` for each check
+#'   \item Filters to active checks (`check_active = 1`)
+#'   \item Applies an optional application filter
+#'   \item Renders results as a `DT::datatable()`
+#'   \item Provides a download option for exporting the dataset
+#' }
 #'
+#' SQL is constructed using [glue::glue_sql()] to safely interpolate
+#' parameters.
 #'
-#' A GOV.UK‑themed layout is produced via `shinyGovstyle::gov_layout()`.
+#' The UI is wrapped using [shinyGovstyle::gov_layout()].
 #'
-#' @seealso
-#'   \code{\link[shinyGovstyle]{gov_layout}},
-#'   \code{\link[DT]{datatable}},
-#'   \code{\link[glue]{glue_sql}}
+#' @section Side Effects:
+#' \itemize{
+#'   \item Opens a database connection via [sql_manager()]
+#'   \item Executes SQL queries using [DBI::dbGetQuery()]
+#'   \item Registers a Shiny download handler when executed within a session
+#'   \item Writes log entries via [log_event()]
+#' }
+#'
+#' @return A Shiny UI object containing a GOV.UK-styled layout and an
+#'   interactive data table.
 #'
 #' @examples
 #' \dontrun{
-#' # Render for a specific app
-#' ui <- quality_render_tests(app_id = 12)
+#' quality_render_tests()
 #'
-#' # Render for all apps
-#' ui <- quality_render_tests()
+#' quality_render_tests(app_id = 12)
 #' }
+#'
+#' @seealso [quality_render_live()], [DT::datatable()]
 #'
 #' @export
 
