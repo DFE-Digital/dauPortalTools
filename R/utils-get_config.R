@@ -1,11 +1,31 @@
-#' Load portal configuration from YAML
+#' Load application configuration from YAML
 #'
-#' Reads a YAML config file and returns a validated configuration list.
+#' Reads a YAML configuration file and returns a validated configuration list.
 #'
-#' @param path Path to config YAML file.
+#' @param path Character scalar. Path to the configuration YAML file.
 #'
-#' @return A structured configuration list.
+#' @details
+#' The function reads the configuration using [yaml::read_yaml()] and
+#' performs basic validation checks.
+#'
+#' The following fields must be present:
+#' \itemize{
+#'   \item \code{app_details$app_id}
+#'   \item \code{logging}
+#' }
+#'
+#' An error is thrown if:
+#' \itemize{
+#'   \item The file does not exist
+#'   \item Required configuration fields are missing
+#' }
+#'
+#' @return A list containing structured configuration values.
+#'
+#' @seealso \code{\link{utils_get_app_id}}
+#'
 #' @export
+
 get_config <- function(path = "./config.yml") {
   if (!file.exists(path)) {
     stop("Config file not found: ", path, call. = FALSE)
