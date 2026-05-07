@@ -148,10 +148,13 @@ get_user_role <- function(username) {
 #'
 #' @export
 
-get_user_id <- function(conn, username) {
+get_user_id <- function(username) {
   if (is.null(username) || is.na(username) || username == "") {
     return(NA_integer_)
   }
+
+  conn <- sql_manager("dit")
+  on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
   result <- DBI::dbGetQuery(
     conn,
@@ -167,5 +170,5 @@ get_user_id <- function(conn, username) {
     return(NA_integer_)
   }
 
-  return(as.integer(result$user_id[1]))
+  as.integer(result$user_id[1])
 }
