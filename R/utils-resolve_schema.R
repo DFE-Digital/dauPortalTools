@@ -1,16 +1,38 @@
-#' Resolve a logical schema key to a SQL-safe identifier
+#' Resolve Schema Key to SQL Identifier
 #'
-#' Converts an internal schema key (e.g. "01a", "01s") into a
-#' SQL-safe identifier using the configuration-defined mapping.
+#' Converts a logical schema key into a SQL-safe identifier using the
+#' configuration-defined schema mapping.
 #'
-#' This function is the ONLY permitted way to introduce a schema
-#' identifier into SQL.
+#' @param key Character scalar. Schema key used to look up the configured
+#'   schema name (e.g. `"db_schema_01a"`).
 #'
-#' @param key Character scalar. Logical schema key (e.g. "01a").
+#' @details
+#' The function retrieves schema mappings from the configuration returned
+#' by [get_config()] and returns a `DBI::SQL` object suitable for use in
+#' [glue::glue_sql()].
 #'
-#' @return A \code{DBI::SQL} object suitable for use in \code{glue_sql()}.
+#' An error is thrown if:
+#' \itemize{
+#'   \item \code{key} is not a valid character scalar
+#'   \item The configuration is missing a \code{schemas} section
+#'   \item The supplied key is not present in the configuration
+#' }
+#'
+#' This function should be used whenever schema identifiers are inserted
+#' into SQL queries to ensure consistency and safety.
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Reads configuration via [get_config()]
+#'   \item Writes log entries via [log_event()]
+#' }
+#'
+#' @return A `DBI::SQL` object representing the resolved schema name.
+#'
+#' @seealso [get_config()], [glue::glue_sql()]
 #'
 #' @export
+
 utils_resolve_schema <- function(key) {
   log_event("Starting utils_resolve_schema")
 
