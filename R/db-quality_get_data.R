@@ -1,12 +1,55 @@
-#' Retrieve Quality Issue Records from AIDT Tables
+#' Retrieve Active Quality Issue Records
 #'
-#' Retrieves unresolved quality issues for the current application,
-#' optionally filtered by a specific record ID.
+#' Returns unresolved quality issues for the current application, with an
+#' optional filter for a specific record ID.
 #'
-#' @param record Optional integer. Record ID to filter results.
-#' @param db_get_query Function used to execute SQL queries.
+#' @param record Integer scalar or `NULL`. Optional record ID used to filter
+#'   results. If `NULL` (default), all matching records are returned.
 #'
-#' @return A data frame of quality issue records.
+#' @details
+#' The current application ID is resolved using [utils_get_app_id()]. Only
+#' records with `quality_status = 0` (i.e. unresolved issues) are retrieved.
+#'
+#' When a `record` value is supplied, results are further restricted to that
+#' specific record ID.
+#'
+#' The query joins:
+#' \itemize{
+#'   \item `quality_list` (issue instances)
+#'   \item `quality_check` (issue definitions)
+#' }
+#'
+#' The database schema is resolved using [utils_resolve_schema()], and the
+#' query is executed using [utils_db_get_query()].
+#'
+#' Database connections are managed internally and safely closed using
+#' `on.exit()`. Logging is performed via [log_event()] at the start and
+#' end of execution.
+#'
+#' @section Side Effects:
+#' \itemize{
+#'   \item Opens and closes a database connection.
+#'   \item Writes log entries via [log_event()].
+#' }
+#'
+#' @return A [`data.frame`] with the following columns:
+#' \describe{
+#'   \item{Quality Concern}{Character name of the quality issue.}
+#'   \item{Description}{Character description of the issue.}
+#'   \item{Date Identified}{Datetime the issue was created.}
+#'   \item{Last Reviewed}{Datetime the issue was last checked.}
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # All unresolved issues
+#' issues <- quality_get_data()
+#'
+#' # Filter for specific record
+#' issues <- quality_get_data(record = 1234)
+#' }
+#'
+#' @seealso [quality_add_log()]
 #' @export
 quality_get_data <- function(
   record = NULL,
