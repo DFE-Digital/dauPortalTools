@@ -80,7 +80,7 @@ quality_render_live <- function(
 
   conn <- sql_manager("dit")
 
-  app_id <- if (!is.null(app_id)) {
+  app_filter <- if (!is.null(app_id)) {
     glue::glue_sql(" AND ql.app_id = {app_id}", .con = conn)
   } else {
     DBI::SQL("")
@@ -123,7 +123,7 @@ SELECT al.app_id,
   LEFT JOIN {schema_01a}.[quality_check] qc 
         ON qc.quality_check_id = ql.error_id
     WHERE check_active = 1
-    {app_id}
+    {app_filter}
     {user}
     {with_rcs}
     {region};",
@@ -132,22 +132,33 @@ SELECT al.app_id,
 
   summary_data <- DBI::dbGetQuery(conn, sql_command)
 
-  summary_data$link <- mapply(
-    function(app_id, record_id) {
-      if (is.na(app_id) || is.na(record_id)) {
+  summary_data$link <- vapply(
+    seq_len(nrow(summary_data)),
+    function(i) {
+      row_app_id <- summary_data$app_id[i]
+      row_record_id <- summary_data$record_id[i]
+
+      if (is.na(row_app_id) || is.na(row_record_id)) {
         return(NA_character_)
       }
 
-      if (app_id == 1) {
-        url_link(wnp_wn_url, record_id, "View Warning Notice")
-      } else if (app_id == 3) {
-        url_link(scp_sc_url, record_id, "View Sig Change")
-      } else {
-        NA_character_
+      if (row_app_id == 1) {
+        return(as.character(make_shiny_link(
+          wnp_wn_url(row_record_id),
+          "View Warning Notice"
+        )))
       }
+
+      if (row_app_id == 3) {
+        return(as.character(make_shiny_link(
+          scp_sc_url(row_record_id),
+          "View Sig Change"
+        )))
+      }
+
+      NA_character_
     },
-    summary_data$app_id,
-    summary_data$record_id
+    character(1)
   )
 
   summary_data <- summary_data |> dplyr::select(-app_id, -record_id)
@@ -245,10 +256,10 @@ quality_render_tests <- function(app_id = NULL) {
   log_event(glue::glue(
     "Starting quality_render_tests with app_id: {app_id}"
   ))
-
+  conf <- get_config()
   conn <- sql_manager("dit")
 
-  app_id <- if (!is.null(app_id)) {
+  app_filter <- if (!is.null(app_id)) {
     glue::glue_sql(" AND al.app_id = {app_id}", .con = conn)
   } else {
     DBI::SQL("")
@@ -278,7 +289,7 @@ OUTER APPLY (
     ORDER BY qcl.last_run DESC, qcl.quality_check_log_id DESC
     ) AS qcl_latest
     WHERE check_active = 1
-    {app_id};",
+    {app_filter};",
     .con = conn
   )
 
