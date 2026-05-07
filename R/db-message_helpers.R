@@ -77,7 +77,7 @@ db_get_portal_messages <- function() {
     FROM {utils_resolve_schema('db_schema_01sr')}.[portal_messages]
     WHERE
       is_active = 1
-      AND app_id IN (1, {app_id})
+      AND app_id IN (0, {app_id})
     ORDER BY
       priority ASC,
       message_date DESC
