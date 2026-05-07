@@ -47,6 +47,11 @@ ui_show_news <- function() {
     {
       df <- db_get_portal_messages()
 
+      if (is.null(df) || nrow(df) == 0) {
+        dauPortalTools::log_event("ui_show_news: no messages found")
+        return(shiny::HTML("<em>No news or alerts available.</em>"))
+      }
+
       now_utc <- Sys.time()
 
       df$is_new <- difftime(
