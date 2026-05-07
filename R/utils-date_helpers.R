@@ -202,3 +202,66 @@ input_to_date <- function(field, input) {
 
   return(res)
 }
+
+#' Vectorized conversion to Date with multiple common formats
+#'
+#' Attempts to convert various inputs (`Date`, `POSIXt`, `character`, `factor`)
+#' to `Date`. Supports ISO (`YYYY-mm-dd`), ISO datetime, UK (`dd/mm/YYYY`),
+#' and UK datetime formats, with fallbacks.
+#'
+#' @param x A vector of dates in mixed classes or formats.
+#' @return A `Date` vector of the same length as `x`, with `NA` where parsing failed.
+#' @examples
+#' as_Date_vec(c("2024-01-01", "01/02/2024 12:00:00"))
+#' as_Date_vec(Sys.time())
+#' @seealso [as.Date()], [as.POSIXct()]
+#' @export
+as_Date_vec <- function(x) {
+  if (inherits(x, "Date")) {
+    return(x)
+  }
+
+  if (is.factor(x)) {
+    x <- as.character(x)
+  }
+
+  if (inherits(x, c("POSIXct", "POSIXlt"))) {
+    return(as.Date(x, tz = "UTC"))
+  }
+
+  if (is.character(x)) {
+    suppressWarnings({
+      pc <- as.POSIXct(
+        x,
+        tz = "UTC",
+        tryFormats = c(
+          "%Y-%m-%d",
+          "%Y-%m-%d %H:%M:%S",
+          "%d/%m/%Y",
+          "%d/%m/%Y %H:%M:%S"
+        )
+      )
+    })
+    d <- as.Date(pc, tz = "UTC")
+
+    still_na <- is.na(d)
+    if (any(still_na)) {
+      d2 <- suppressWarnings(as.Date(x[still_na], format = "%Y-%m-%d"))
+      d[still_na] <- d2
+    }
+    still_na <- is.na(d)
+    if (any(still_na)) {
+      d2 <- suppressWarnings(as.Date(x[still_na], format = "%d/%m/%Y"))
+      d[still_na] <- d2
+    }
+    still_na <- is.na(d)
+    if (any(still_na)) {
+      d2 <- suppressWarnings(as.Date(x[still_na]))
+      d[still_na] <- d2
+    }
+
+    return(d)
+  }
+
+  rep(as.Date(NA), length(x))
+}
