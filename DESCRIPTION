@@ -30,3 +30,5 @@ Imports:
 Suggests:
     RSQLite,
     testthat
+Remotes:
+    dfe-analytical-services/shinyGovstyle

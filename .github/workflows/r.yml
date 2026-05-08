@@ -1,0 +1,58 @@
+name: R-Build-Check-and-Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    # Runs at 05:00 UTC every Monday to check for "silent" environment failures
+    - cron: '0 5 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest # Using macOS as it's often smoother for R builds in Actions
+    strategy:
+      matrix:
+        r-version: ['release'] # Always tests against the current stable R version
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up R ${{ matrix.r-version }}
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r-version }}
+          use-public-rspm: true # Speeds up Linux/Mac installs significantly
+
+      - name: Set up renv
+        uses: r-lib/actions/setup-renv@v2
+        with:
+          cache-version: 1 # Increment this if you ever need to force a fresh install
+
+      - name: Install System Dependencies
+        run: |
+          # Ensuring system-level libraries for DB connections are present
+          brew install libgit2
+        shell: bash
+
+      - name: Check Package
+        run: |
+          # This runs rcmdcheck which installs the package and runs all tests
+          # It will fail the build if any error occurs
+          install.packages("rcmdcheck")
+          rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
+        shell: Rscript {0}
+
+      - name: Run Stability Tests
+        run: |
+          # Explicitly running your 70+ tests via testthat
+          # This ensures that even if the check passes, logic failures catch our eye
+          install.packages("testthat")
+          testthat::test_local()
+        shell: Rscript {0}
+        
