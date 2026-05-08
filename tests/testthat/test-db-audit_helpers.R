@@ -6,7 +6,7 @@ test_that("db_record_login executes analytics insert", {
       executed <<- TRUE
       invisible(1L)
     },
-    sql_manager = function(...) structure(list(), class = "fake_conn"),
+    sql_manager = function(...) DBI::ANSI(),
     {
       db_record_login(user = "ben.smith")
     }
@@ -25,7 +25,7 @@ test_that("db_record_login executes analytics insert", {
       executed <<- TRUE
       invisible(1L)
     },
-    sql_manager = function(...) structure(list(), class = "fake_conn"),
+    sql_manager = function(...) DBI::ANSI(),
     {
       db_record_login(user = "ben.smith")
     }

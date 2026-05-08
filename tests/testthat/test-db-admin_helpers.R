@@ -14,7 +14,8 @@ test_that("db_get_app_users returns user-role data", {
     utils_db_get_query = function(conn, query) fake_df,
     utils_get_app_id = function() 7,
     utils_resolve_schema = function(...) "dbo",
-    sql_manager = function(...) structure(list(), class = "fake_conn"),
+    # FIX: Just call the function to get the real S4 object
+    sql_manager = function(...) DBI::ANSI(),
     {
       out <- db_get_app_users()
 
@@ -36,7 +37,8 @@ test_that("db_get_roles returns roles", {
   testthat::with_mocked_bindings(
     utils_db_get_query = function(conn, query) fake_df,
     utils_resolve_schema = function(...) "dbo",
-    sql_manager = function(...) structure(list(), class = "fake_conn"),
+    # FIX: Just call the function
+    sql_manager = function(...) DBI::ANSI(),
     {
       out <- db_get_roles()
 
@@ -56,7 +58,8 @@ test_that("db_update_user_role executes update", {
       invisible(1L)
     },
     utils_resolve_schema = function(...) "dbo",
-    sql_manager = function(...) structure(list(), class = "fake_conn"),
+    # FIX: Just call the function
+    sql_manager = function(...) DBI::ANSI(),
     {
       db_update_user_role(
         user_id = 1,

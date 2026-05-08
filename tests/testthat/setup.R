@@ -35,7 +35,7 @@ assignInNamespace(
 assignInNamespace(
   "sql_manager",
   function(...) {
-    list(.fake = TRUE)
+    DBI::ANSI()
   },
   ns = "dauPortalTools"
 )

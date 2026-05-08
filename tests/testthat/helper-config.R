@@ -1,14 +1,6 @@
 # tests/testthat/helper-config.R
 # Config override helpers for targeted tests
 
-stub_get_config <- function(fn, new_config) {
-  mockery::stub(
-    fn,
-    "get_config",
-    function(...) new_config
-  )
-}
-
 stub_missing_schemas <- function(fn) {
   mockery::stub(
     fn,
