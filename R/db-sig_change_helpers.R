@@ -25,14 +25,14 @@ db_get_sig_change_w_region <- function(
     "
     WITH LatestDate AS (
       SELECT MAX(DateStamp) AS MaxDate
-      FROM {utils_resolve_schema('00c')}.[Edubase]
+      FROM {utils_resolve_schema('db_schema_00c')}.[Edubase]
     ),
     LatestEdubase AS (
       SELECT
         e.[URN],
         e.[GOR (name)],
         e.[DateStamp]
-      FROM {utils_resolve_schema('00c')}.[Edubase] e
+      FROM {utils_resolve_schema('db_schema_00c')}.[Edubase] e
       JOIN LatestDate d
         ON e.DateStamp = d.MaxDate
     )
