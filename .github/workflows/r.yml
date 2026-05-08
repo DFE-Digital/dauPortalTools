@@ -10,36 +10,33 @@ on:
 
 jobs:
   build-and-test:
-    # Switching to ubuntu-latest is often safer/faster for CI unless you NEED Mac
-    runs-on: ubuntu-latest 
-    strategy:
-      matrix:
-        # Use 'release' to stay on the safe, binary-supported version
-        r-version: ['release'] 
-
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
         with:
-          r-version: ${{ matrix.r-version }}
-          # Use Public RSPM (Posit Package Manager) for lightning-fast binaries
-          use-public-rspm: true 
-
-      - name: Set up renv
-        uses: r-lib/actions/setup-renv@v2
+          r-version: 'devel' # This matches your 4.5.x environment
+          use-public-rspm: true
 
       - name: Install System Dependencies
         run: |
-          # Linux equivalents for common R dependencies
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libgit2-dev
         shell: bash
 
+      - name: Setup renv
+        uses: r-lib/actions/setup-renv@v2
+        with:
+          cache-version: 1
+        env:
+          # This stops renv from dying if the minor version (4.5.3 vs 4.5.0) differs
+          RENV_CONFIG_CHECK_GOOD_R_VERSION: false
+
       - name: Check and Test
         run: |
+          # Force install rcmdcheck before running the full check
           install.packages("rcmdcheck")
           rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
         shell: Rscript {0}
