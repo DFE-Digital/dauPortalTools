@@ -1,10 +1,10 @@
 Package: dauPortalTools
-Title: What the Package Does (One Line, Title Case)
+Title: Data Analysis Unit Portal Tools
 Version: 2026.5.0
 Authors@R: c(person("Ben","Smith",email="ben7.smith@education.gov.uk",role=c("aut","cre")),
              person("Ben","Clewarth",email="ben.clewarth@education.gov.uk",role="aut"),
              person("Mark","Horton",email="mark.horton@education.gov.uk",role="aut"))
-Description: What the package does (one paragraph).
+Description: Utility functions and UI components for RG DAUs Portals.
 License: Proprietary
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -30,4 +30,3 @@ Imports:
 Suggests:
     RSQLite,
     testthat
-    
