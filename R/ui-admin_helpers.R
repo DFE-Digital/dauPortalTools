@@ -95,12 +95,6 @@ ui_role_edit_modal <- function(ns, selected) {
     easyClose = TRUE,
     footer = NULL,
     shiny::tagList(
-      shiny::tags$input(
-        id = ns("selected_user_id"),
-        type = "hidden",
-        value = selected$user_id
-      ),
-
       shiny::selectInput(
         ns("selected_role_id"),
         "Role:",
