@@ -127,21 +127,25 @@ server_quality_record_table <- function(id, record_id) {
 
 #' Quality Table Module Server (Dashboard View)
 #'
-#' Orchestrates fetching, filtering, column pruning, and deep-linking layout configuration
-#' for the active quality issues dashboard view.
+#' Orchestrates fetching, reactive in-memory filtering, and cross-application
+#' deep-linking layout configuration for the global quality issues view.
 #'
 #' @param id Character scalar. Shiny module ID.
-#' @param app_id Character scalar. The application identifier.
+#' @param app_id Character scalar. The application identifier used for contextual initialization.
 #' @export
 server_quality_wrapper <- function(id, app_id) {
   shiny::moduleServer(id, function(input, output, session) {
+    # Hold data separately from UI
     df <- shiny::reactiveVal(NULL)
 
+    # Load data dynamically using the clean new database function
     shiny::observeEvent(
       TRUE,
       {
-        raw_ui <- quality_render_live(app_id = app_id)
-        df(attr(raw_ui, "data"))
+        issues_df <- quality_get_dashboard_records(
+          app_id = app_id
+        )
+        df(issues_df)
       },
       once = TRUE
     )
@@ -150,58 +154,44 @@ server_quality_wrapper <- function(id, app_id) {
       shiny::req(df())
       x <- df()
 
+      # 1. Apply UI Filters instantly in local R session memory
       if (
         !is.null(input$region_filter) &&
           input$region_filter != "All" &&
-          "Region" %in% names(x)
+          "region" %in% names(x)
       ) {
-        x <- x[x$Region == input$region_filter, , drop = FALSE]
+        x <- x[x$region == input$region_filter, , drop = FALSE]
       }
 
       if (
         !is.null(input$with_rcs_filter) &&
           input$with_rcs_filter != "All" &&
-          "With RCS?" %in% names(x)
+          "with_rcs" %in% names(x)
       ) {
-        x <- x[
-          x$`With RCS?` == as.numeric(input$with_rcs_filter),
-          ,
-          drop = FALSE
-        ]
+        x <- x[x$with_rcs == as.numeric(input$with_rcs_filter), , drop = FALSE]
       }
 
       shiny::req(nrow(x) > 0)
 
-      id_col <- intersect(
-        names(x),
-        c("sig_change_id", "Significant Change ID", "Record ID", "id")
-      )[1]
-      urn_col <- intersect(names(x), c("URN", "urn"))[1]
-      issue_col <- intersect(
-        names(x),
-        c("Issue", "Quality Issue", "Description", "Steps to Fix", "issue")
-      )[1]
+      # 2. Map cross-application URLs dynamically based on target app_id properties
+      links <- sapply(seq_len(nrow(x)), function(i) {
+        row_app <- x$app_id[i]
+        row_rec <- x$record_id[i]
 
-      if (is.na(id_col)) {
-        x$sig_change_id <- "N/A"
-        id_col <- "sig_change_id"
-      }
-      if (is.na(urn_col)) {
-        x$URN <- "N/A"
-        urn_col <- "URN"
-      }
-      if (is.na(issue_col)) {
-        x$Issue <- "N/A"
-        issue_col <- "Issue"
-      }
-
-      links <- sapply(x[[id_col]], function(id) {
-        if (is.na(id) || id == "N/A" || !nzchar(id)) {
+        if (is.na(row_app) || is.na(row_rec)) {
           return("#")
         }
-        scp_sc_url(id)
+
+        if (row_app == 1) {
+          return(wnp_wn_url(row_rec)) # Warning Notices Router
+        } else if (row_app == 3) {
+          return(scp_sc_url(row_rec)) # Significant Changes Router
+        }
+
+        return("#")
       })
 
+      # 3. Splice target anchor links and copy-to-clipboard buttons together
       x$Actions <- sprintf(
         "<div class='govuk-button-group' style='margin:0; display:flex; gap:12px; align-items:center;'>
            <a href='%s' class='govuk-link' style='font-weight:700; white-space:nowrap;'>View Record</a>
@@ -211,16 +201,15 @@ server_quality_wrapper <- function(id, app_id) {
         links
       )
 
-      clean_df <- data.frame(
-        `URN` = x[[urn_col]],
-        `Significant Change ID` = x[[id_col]],
-        `Quality Issue` = x[[issue_col]],
+      # 4. Strip out relational attributes and return clean, explicitly requested columns
+      data.frame(
+        `URN` = x$urn,
+        `Region` = x$region,
+        `Quality Issue` = x$quality_issue,
         `Actions / Sharing` = x$Actions,
         check.names = FALSE,
         stringsAsFactors = FALSE
       )
-
-      clean_df
     })
 
     output$filtered_table <- DT::renderDT({
@@ -228,16 +217,17 @@ server_quality_wrapper <- function(id, app_id) {
 
       DT::datatable(
         filtered(),
-        escape = FALSE,
+        escape = FALSE, # Required to execute dynamic HTML button scripts
         rownames = FALSE,
         options = list(
           pageLength = 15,
           autoWidth = TRUE,
           columnDefs = list(
             list(className = 'dt-left', targets = "_all"),
-            list(width = '180px', targets = 3)
+            list(width = '240px', targets = 3) # Fixes column size constraints
           )
         ),
+        # Automated click intercept binding script for fast copy clipboard routines
         callback = DT::JS(
           "table.on('click', '.dt-copy-btn', function(e) {
              e.preventDefault();
