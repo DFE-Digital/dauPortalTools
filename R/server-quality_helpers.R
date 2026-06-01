@@ -8,10 +8,8 @@
 #' @export
 server_quality_wrapper <- function(id, app_id) {
   shiny::moduleServer(id, function(input, output, session) {
-    # Hold data separately from UI
     df <- shiny::reactiveVal(NULL)
 
-    # Load data AFTER session initialisation
     shiny::observeEvent(
       TRUE,
       {
@@ -45,6 +43,21 @@ server_quality_wrapper <- function(id, app_id) {
         ]
       }
 
+      if ("Description" %in% names(x)) {
+        names(x)[names(x) == "Description"] <- "Steps to Fix"
+      }
+
+      for (col in c("Date Identified", "Last Reviewed")) {
+        if (col %in% names(x)) {
+          parsed <- tryCatch(as.Date(x[[col]]), error = function(e) NULL)
+          if (!is.null(parsed)) {
+            formatted <- format(parsed, "%d/%m/%Y")
+            formatted[is.na(parsed)] <- ""
+            x[[col]] <- formatted
+          }
+        }
+      }
+
       x
     })
 
@@ -70,13 +83,29 @@ server_quality_wrapper <- function(id, app_id) {
 #' @export
 server_quality_record_table <- function(id, record_id) {
   shiny::moduleServer(id, function(input, output, session) {
-    # Dynamic reactive dataset tied specifically to the record passed in
     record_issues <- shiny::reactive({
       r_id <- if (shiny::is.reactive(record_id)) record_id() else record_id
       shiny::req(r_id)
 
-      # Calls your centralized DB helper function
-      dauPortalTools::quality_get_data(record = r_id)
+      x <- quality_get_data(record = r_id)
+      shiny::req(x)
+
+      if ("Description" %in% names(x)) {
+        names(x)[names(x) == "Description"] <- "Steps to Fix"
+      }
+
+      for (col in c("Date Identified", "Last Reviewed")) {
+        if (col %in% names(x)) {
+          parsed <- tryCatch(as.Date(x[[col]]), error = function(e) NULL)
+          if (!is.null(parsed)) {
+            formatted <- format(parsed, "%d/%m/%Y")
+            formatted[is.na(parsed)] <- ""
+            x[[col]] <- formatted
+          }
+        }
+      }
+
+      x
     })
 
     output$quality_table <- DT::renderDT({
@@ -88,7 +117,7 @@ server_quality_record_table <- function(id, record_id) {
         rownames = FALSE,
         options = list(
           pageLength = 5,
-          dom = 't', # ONLY show the raw table block without empty search fields
+          dom = 't',
           autoWidth = TRUE
         )
       )
