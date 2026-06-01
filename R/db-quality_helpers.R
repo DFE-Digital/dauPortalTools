@@ -204,3 +204,73 @@ quality_add_log <- function(
 
   db_execute(conn, query)
 }
+
+#' Retrieve Quality Issues for Dashboard Display
+#'
+#' Fetches active, unresolved quality issues from the database including URN,
+#' regional property contexts, and application IDs to support global dashboard
+#' filtering and dynamic deep-linking.
+#'
+#' @param app_id Integer scalar or `NULL`. Optional application identifier to filter results.
+#' @param db_get_query Function. Centralized database query executor. Defaults to [utils_db_get_query()].
+#'
+#' @details
+#' Only records with `quality_status = 0` (unresolved issues) are retrieved.
+#' The function retains raw identification columns (`app_id`, `record_id`) in memory
+#' so the user interface can generate shareable contextual hyperlinks.
+#'
+#' @return A [`data.frame`] containing the raw database results with columns:
+#' \itemize{
+#'   \item `urn` - The unique school reference number.
+#'   \item `region` - The target geographic region.
+#'   \item `quality_issue` - The textual description of the quality concern.
+#'   \item `app_id` - The originating application context ID.
+#'   \item `record_id` - The internal record serial primary key.
+#'   \item `with_rcs` - Numeric indicator for RCS status assignment (0 or 1).
+#' }
+#' @export
+quality_get_dashboard_records <- function(
+  app_id = NULL,
+  db_get_query = utils_db_get_query
+) {
+  log_event("Starting quality_get_dashboard_records")
+
+  conn <- sql_manager("dit")
+  on.exit(
+    {
+      try(DBI::dbDisconnect(conn), silent = TRUE)
+      log_event(glue::glue(
+        "Finished quality_get_dashboard_records (rows_returned = {nrow(result)})"
+      ))
+    },
+    add = TRUE
+  )
+
+  # Dynamic application filter clause builder
+  app_filter <- if (!is.null(app_id)) {
+    glue_sql("AND l.app_id = {app_id}", .con = conn)
+  } else {
+    DBI::SQL("")
+  }
+
+  query <- glue_sql(
+    "
+    SELECT
+      l.urn                 AS [urn],
+      l.region              AS [region],
+      c.quality_description AS [quality_issue],
+      l.app_id              AS [app_id],
+      l.record_id           AS [record_id],
+      l.with_rcs            AS [with_rcs]
+    FROM {utils_resolve_schema('db_schema_01a')}.[quality_list] l
+    LEFT JOIN {utils_resolve_schema('db_schema_01a')}.[quality_check] c
+           ON c.quality_check_id = l.error_id
+    WHERE l.quality_status = 0
+    {app_filter}
+    ",
+    .con = conn
+  )
+
+  result <- db_get_query(conn, query)
+  result
+}
