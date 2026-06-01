@@ -341,3 +341,63 @@ ui_quality_record_table <- function(id) {
   ns <- shiny::NS(id)
   DT::DTOutput(ns("quality_table"))
 }
+
+#' Quality Table Module UI (Dashboard View)
+#'
+#' @param id Character scalar. Shiny module ID.
+#' @export
+ui_quality_wrapper <- function(id) {
+  ns <- shiny::NS(id)
+
+  shiny::tagList(
+    shiny::h3("Global Quality Issues Dashboard"),
+    shiny::p(
+      class = "govuk-body",
+      "Monitor and resolve open quality data issues across all active application records."
+    ),
+
+    # Streamlined filters side-by-side
+    shiny::fluidRow(
+      shiny::column(
+        width = 4,
+        shiny::selectInput(
+          ns("region_filter"),
+          "Filter by Region:",
+          choices = c(
+            "All",
+            "East Midlands",
+            "East of England",
+            "London",
+            "North East",
+            "North West",
+            "South East",
+            "South West",
+            "West Midlands",
+            "Yorkshire and the Humber"
+          ),
+          selected = "All",
+          width = "100%"
+        )
+      ),
+      shiny::column(
+        width = 4,
+        shiny::selectInput(
+          ns("with_rcs_filter"),
+          "Filter by RCS Status:",
+          choices = c("All", "With RCS" = 1, "Without RCS" = 0),
+          selected = "All",
+          width = "100%"
+        )
+      )
+    ),
+
+    shiny::br(),
+
+    # Accessible and clean DataTables output wrapper region
+    shiny::div(
+      role = "region",
+      `aria-label` = "Active Quality Issues Data Table",
+      DT::DTOutput(ns("filtered_table"))
+    )
+  )
+}
