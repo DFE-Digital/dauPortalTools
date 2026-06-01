@@ -2,7 +2,7 @@
 % Please edit documentation in R/server-quality_helpers.R
 \name{server_quality_wrapper}
 \alias{server_quality_wrapper}
-\title{Quality Table Module Server}
+\title{Quality Table Module Server (Dashboard View)}
 \usage{
 server_quality_wrapper(id, app_id)
 }
@@ -12,5 +12,6 @@ server_quality_wrapper(id, app_id)
 \item{app_id}{Character scalar. The application identifier.}
 }
 \description{
-Quality Table Module Server
+Orchestrates fetching and filtering the full suite of live quality issues
+across the application dashboard.
 }
