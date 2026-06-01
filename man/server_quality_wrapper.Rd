@@ -11,12 +11,12 @@ server_quality_wrapper(id, app_id)
 \arguments{
 \item{id}{Character scalar. Shiny module ID.}
 
-\item{app_id}{Character scalar. The application identifier.}
+\item{app_id}{Character scalar. The application identifier used for contextual initialization.}
 }
 \description{
 Orchestrates fetching and filtering the full suite of live quality issues
 across the application dashboard.
 
-Orchestrates fetching, filtering, column pruning, and deep-linking layout configuration
-for the active quality issues dashboard view.
+Orchestrates fetching, reactive in-memory filtering, and cross-application
+deep-linking layout configuration for the global quality issues view.
 }
