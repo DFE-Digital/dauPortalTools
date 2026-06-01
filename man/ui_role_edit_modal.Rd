@@ -39,7 +39,7 @@ The modal includes:
 \item An action button (\code{apply_role_change}) to submit the update
 }
 
-This component is intended to be used with \code{\link[shiny:showModal]{shiny::showModal()}} and expects
+This component is intended to be used with \code{\link[shiny:showModal]{showModal()}} and expects
 corresponding server-side observers to handle the role update logic.
 }
 \section{Side Effects}{

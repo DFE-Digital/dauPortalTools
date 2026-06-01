@@ -42,7 +42,6 @@ The UI is wrapped using \code{\link[shinyGovstyle:gov_layout]{shinyGovstyle::gov
 \itemize{
 \item Opens a database connection via \code{\link[=sql_manager]{sql_manager()}}
 \item Executes SQL queries using \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}
-\item Registers a Shiny download handler when executed within a session
 \item Writes log entries via \code{\link[=log_event]{log_event()}}
 }
 }

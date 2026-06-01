@@ -28,7 +28,7 @@ belonging either to the current application or to the global scope
 
 The current application ID is resolved using \code{\link[=utils_get_app_id]{utils_get_app_id()}}.
 The database schema is resolved via \code{\link[=utils_resolve_schema]{utils_resolve_schema()}}, and the
-query is executed using \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}.
+query is executed using \code{\link[DBI:dbGetQuery]{dbGetQuery()}}.
 
 Results are ordered by:
 \itemize{

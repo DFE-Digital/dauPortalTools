@@ -25,7 +25,7 @@ The UI consists of:
 \item A placeholder UI element for rendering the role-edit modal
 }
 
-The table is rendered using \code{\link[DT:dataTableOutput]{DT::DTOutput()}}, and role updates are handled
+The table is rendered using \code{\link[DT:DTOutput]{DT::DTOutput()}}, and role updates are handled
 via modal dialogs triggered by the corresponding server module.
 
 This UI is intended to be used with \code{\link[=server_portal_user_admin]{server_portal_user_admin()}}.
@@ -39,5 +39,5 @@ This UI is intended to be used with \code{\link[=server_portal_user_admin]{serve
 }
 
 \seealso{
-\code{\link[=server_portal_user_admin]{server_portal_user_admin()}}, \code{\link[DT:dataTableOutput]{DT::DTOutput()}}
+\code{\link[=server_portal_user_admin]{server_portal_user_admin()}}, \code{\link[DT:DTOutput]{DT::DTOutput()}}
 }

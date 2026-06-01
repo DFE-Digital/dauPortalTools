@@ -64,5 +64,5 @@ within the corresponding UI module.
 }
 
 \seealso{
-\code{\link[shiny:moduleServer]{shiny::moduleServer()}}, \code{\link[DT:dataTableOutput]{DT::renderDT()}}
+\code{\link[shiny:moduleServer]{moduleServer()}}, \code{\link[DT:renderDT]{DT::renderDT()}}
 }

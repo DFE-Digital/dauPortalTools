@@ -18,6 +18,7 @@ Provides tools for building Shiny applications, including:
 
 Authors:
 \itemize{
+  \item Ben Smith \email{ben7.smith@education.gov.uk}
   \item Ben Clewarth \email{ben.clewarth@education.gov.uk}
   \item Mark Horton \email{mark.horton@education.gov.uk}
 }

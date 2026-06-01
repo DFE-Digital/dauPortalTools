@@ -63,5 +63,5 @@ quality_render_live(user = "BSMITH7", region = "North West")
 
 }
 \seealso{
-\code{\link[=quality_get_data]{quality_get_data()}}, \code{\link[=db_add_portal_message]{db_add_portal_message()}}
+\code{\link[=quality_get_data]{quality_get_data()}}
 }
