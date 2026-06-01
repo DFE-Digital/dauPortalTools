@@ -5,6 +5,8 @@
 \title{Quality Table Module Server (Dashboard View)}
 \usage{
 server_quality_wrapper(id, app_id)
+
+server_quality_wrapper(id, app_id)
 }
 \arguments{
 \item{id}{Character scalar. Shiny module ID.}
@@ -14,4 +16,7 @@ server_quality_wrapper(id, app_id)
 \description{
 Orchestrates fetching and filtering the full suite of live quality issues
 across the application dashboard.
+
+Orchestrates fetching, filtering, column pruning, and deep-linking layout configuration
+for the active quality issues dashboard view.
 }
