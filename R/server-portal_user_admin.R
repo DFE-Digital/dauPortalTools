@@ -53,6 +53,12 @@
 #' @seealso [moduleServer()], [DT::renderDT()]
 #' @export
 
+#' Server Logic for User Administration Module
+#'
+#' Provides server-side logic for a Shiny module that manages application users.
+#'
+#' @param id Character scalar. Shiny module namespace identifier.
+#' @export
 server_portal_user_admin <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -61,10 +67,11 @@ server_portal_user_admin <- function(id) {
     app_id <- conf$app_details$app_id
 
     username <- get_user(session = session, fallback = "guest")
-
     a_user_id <- get_user_id(username)
 
     users_data <- reactiveVal(db_get_app_users())
+
+    active_selected_user <- reactiveVal(NULL)
 
     output$user_table <- renderDT({
       datatable(
@@ -81,20 +88,27 @@ server_portal_user_admin <- function(id) {
 
       df <- users_data()
       selected <- df[click$row, ]
+
+      active_selected_user(selected)
+
       showModal(ui_role_edit_modal(ns, selected))
     })
 
     observeEvent(input$apply_role_change, {
-      req(input$selected_user_id, input$selected_role_id)
+      req(active_selected_user(), input$selected_role_id)
+
+      user_info <- active_selected_user()
 
       db_update_user_role(
-        user_id = input$selected_user_id,
+        user_id = user_info$user_id,
         role_id = input$selected_role_id,
         app_id = app_id,
         assigned_by = a_user_id
       )
 
       removeModal()
+
+      active_selected_user(NULL)
       users_data(db_get_app_users())
     })
   })
