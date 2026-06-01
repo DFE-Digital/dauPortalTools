@@ -13,7 +13,7 @@ server_quality_wrapper <- function(id, app_id) {
     shiny::observeEvent(
       TRUE,
       {
-        raw_ui <- dauPortalTools::quality_render_live(app_id = app_id)
+        raw_ui <- quality_render_live(app_id = app_id)
         df(attr(raw_ui, "data"))
       },
       once = TRUE
