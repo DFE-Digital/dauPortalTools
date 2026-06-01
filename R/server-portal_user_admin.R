@@ -17,14 +17,6 @@
 #'   \item Refreshes the user dataset after updates
 #' }
 #'
-#' User interaction follows a simple flow:
-#' \enumerate{
-#'   \item User selects a row in the table
-#'   \item A role-edit modal is presented
-#'   \item Role changes are submitted and written to the database
-#'   \item The table is refreshed to reflect changes
-#' }
-#'
 #' @section Dependencies:
 #' This module expects the following functions to be available:
 #' \itemize{
@@ -37,27 +29,9 @@
 #'   \item [ui_role_edit_modal()]
 #' }
 #'
-#' It also assumes that modal input values such as `apply_role_change`,
-#' `selected_user_id`, and `selected_role_id` are correctly namespaced
-#' within the corresponding UI module.
-#'
-#' @section Side Effects:
-#' \itemize{
-#'   \item Registers reactive expressions, observers, and outputs
-#'   \item Performs database read and write operations
-#'   \item Displays modal dialogs within the Shiny session
-#' }
-#'
 #' @return Invisibly returns `NULL`, called for its side effects.
 #'
 #' @seealso [moduleServer()], [DT::renderDT()]
-#' @export
-
-#' Server Logic for User Administration Module
-#'
-#' Provides server-side logic for a Shiny module that manages application users.
-#'
-#' @param id Character scalar. Shiny module namespace identifier.
 #' @export
 server_portal_user_admin <- function(id) {
   moduleServer(id, function(input, output, session) {
