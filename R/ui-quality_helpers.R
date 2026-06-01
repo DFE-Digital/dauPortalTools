@@ -47,10 +47,9 @@
 #' quality_render_live(user = "BSMITH7", region = "North West")
 #' }
 #'
-#' @seealso [quality_get_data()], [db_add_portal_message()]
+#' @seealso [quality_get_data()]
 #'
 #' @export
-
 quality_render_live <- function(
   user = NULL,
   with_rcs = NULL,
@@ -108,25 +107,25 @@ quality_render_live <- function(
 
   sql_command <- glue::glue_sql(
     "
-SELECT al.app_id,
-  al.app_name AS 'App Name',
-  ql.record_id,
-  qc.quality_description  AS 'Quality Concern',
-  ql.username AS 'User',
-  ql.region AS 'Region',
-  ql.with_rcs AS 'With RCS?',
-  ql.date_created AS 'Date Identified',
-  ql.last_checked AS 'Last Reviewed'              
-  FROM {schema_01a}.[quality_list] ql
-  LEFT JOIN {schema_01a}.[app_list] al
-        ON ql.app_id = al.app_id
-  LEFT JOIN {schema_01a}.[quality_check] qc 
-        ON qc.quality_check_id = ql.error_id
-    WHERE check_active = 1
-    {app_filter}
-    {user}
-    {with_rcs}
-    {region};",
+    SELECT al.app_id,
+      al.app_name AS 'App Name',
+      ql.record_id,
+      qc.quality_description  AS 'Quality Concern',
+      ql.username AS 'User',
+      ql.region AS 'Region',
+      ql.with_rcs AS 'With RCS?',
+      ql.date_created AS 'Date Identified',
+      ql.last_checked AS 'Last Reviewed'              
+      FROM {schema_01a}.[quality_list] ql
+      LEFT JOIN {schema_01a}.[app_list] al
+            ON ql.app_id = al.app_id
+      LEFT JOIN {schema_01a}.[quality_check] qc 
+            ON qc.quality_check_id = ql.error_id
+        WHERE check_active = 1
+        {app_filter}
+        {user}
+        {with_rcs}
+        {region};",
     .con = conn
   )
 
@@ -162,8 +161,6 @@ SELECT al.app_id,
   )
 
   summary_data <- summary_data |> dplyr::select(-app_id, -record_id)
-
-  # Download
 
   table_widget <- DT::datatable(
     summary_data,
@@ -233,7 +230,6 @@ SELECT al.app_id,
 #' \itemize{
 #'   \item Opens a database connection via [sql_manager()]
 #'   \item Executes SQL queries using [DBI::dbGetQuery()]
-#'   \item Registers a Shiny download handler when executed within a session
 #'   \item Writes log entries via [log_event()]
 #' }
 #'
@@ -250,7 +246,6 @@ SELECT al.app_id,
 #' @seealso [quality_render_live()], [DT::datatable()]
 #'
 #' @export
-
 quality_render_tests <- function(app_id = NULL) {
   start_time <- Sys.time()
   log_event(glue::glue(
@@ -269,53 +264,34 @@ quality_render_tests <- function(app_id = NULL) {
 
   sql_command <- glue::glue_sql(
     "
-SELECT
-    al.app_name,
-    qc.quality_name,
-    qc.quality_check_justification,
-    qcl_latest.last_run,
-    qcl_latest.new_issues,
-    qcl_latest.closed_issues
-FROM {schema_01a}.[quality_check] AS qc
-LEFT JOIN {schema_01a}.[app_list] AS al ON al.app_id = qc.app_id
-OUTER APPLY (
-    SELECT TOP (1)
-        qcl.quality_check_log_id,
-        qcl.last_run,
-        qcl.live_issues,
-        qcl.closed_issues
-    FROM {schema_01a}.[quality_check_log] AS qcl
-    WHERE qcl.quality_check_id = qc.quality_check_id
-    ORDER BY qcl.last_run DESC, qcl.quality_check_log_id DESC
-    ) AS qcl_latest
-    WHERE check_active = 1
-    {app_filter};",
+    SELECT
+        al.app_name,
+        qc.quality_name,
+        qc.quality_check_justification,
+        qcl_latest.last_run,
+        qcl_latest.new_issues,
+        qcl_latest.closed_issues
+    FROM {schema_01a}.[quality_check] AS qc
+    LEFT JOIN {schema_01a}.[app_list] AS al ON al.app_id = qc.app_id
+    OUTER APPLY (
+        SELECT TOP (1)
+            qcl.quality_check_log_id,
+            qcl.last_run,
+            qcl.live_issues,
+            qcl.closed_issues
+        FROM {schema_01a}.[quality_check_log] AS qcl
+        WHERE qcl.quality_check_id = qc.quality_check_id
+        ORDER BY qcl.last_run DESC, qcl.quality_check_log_id DESC
+        ) AS qcl_latest
+        WHERE check_active = 1
+        {app_filter};",
     .con = conn
   )
 
   summary_data <- DBI::dbGetQuery(conn, sql_command)
 
-  rand_id <- paste0(sample(c(letters, 0:9), 6, TRUE), collapse = "")
-  dl_tests_id <- paste0("wn_dl_records_csv_", rand_id)
-
-  # Download
-  session <- shiny::getDefaultReactiveDomain()
-  if (!is.null(session)) {
-    session$output[[dl_tests_id]] <- shiny::downloadHandler(
-      filename = function() {
-        suffix <- if (is.null(region)) {
-          "all_regions"
-        } else {
-          gsub("\\s+", "_", region)
-        }
-        paste0("wn_records_", suffix, "_", format(Sys.Date(), "%Y%m%d"), ".csv")
-      },
-      content = function(file) {
-        utils::write.csv(records_df, file, row.names = FALSE, na = "")
-      }
-    )
-  }
-
+  # Fixed DT order index to 3 (0-indexed base for the 4th column 'last_run')
+  # to prevent JS array out of bounds execution crashes.
   table_widget <- DT::datatable(
     summary_data,
     escape = FALSE,
@@ -323,7 +299,7 @@ OUTER APPLY (
     options = list(
       pageLength = 10,
       autoWidth = TRUE,
-      order = list(list(6, "desc"))
+      order = list(list(3, "desc"))
     )
   )
 
@@ -334,7 +310,10 @@ OUTER APPLY (
         htmltools::div(
           style = "margin: 0.5rem 0;",
           htmltools::tags$strong("Download all records: "),
-          download_handler(table_widget)
+          download_handler(
+            df = summary_data,
+            file_label1 = "quality_test_results"
+          )
         ),
         table_widget
       )
@@ -347,4 +326,18 @@ OUTER APPLY (
   ))
 
   ui
+}
+
+#' Quality Issues Table for a Specific Record
+#'
+#' Module UI to display a clean table of unresolved quality issues for a given record.
+#'
+#' @param id Character scalar. Shiny module ID.
+#'
+#' @return A `shiny.tag.list` containing the targeted DataTable framework.
+#'
+#' @export
+ui_quality_record_table <- function(id) {
+  ns <- shiny::NS(id)
+  DT::DTOutput(ns("quality_table"))
 }
