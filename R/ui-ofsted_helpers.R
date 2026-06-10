@@ -80,7 +80,7 @@ ui_school_ofsted_history <- function(urn) {
              [curriculum_and_teaching],
              [achievement],
              [attendance_and_behaviour],
-             [personal_development_and_well_being],
+             [personal_development_and_wellbeing],
              [leadership_and_governance],
              [safeguarding_standards],
              [ay],
@@ -209,7 +209,7 @@ ui_school_ofsted_history <- function(urn) {
       "Curriculum & teaching" = row$curriculum_and_teaching,
       "Achievement" = row$achievement,
       "Attendance & behaviour" = row$attendance_and_behaviour,
-      "Personal development & well-being" = row$personal_development_and_well_being,
+      "Personal development & well-being" = row$personal_development_and_wellbeing,
       "Leadership & governance" = row$leadership_and_governance
     )
 
@@ -393,7 +393,7 @@ ui_school_ofsted_history <- function(urn) {
     curriculum_and_teaching,
     achievement,
     attendance_and_behaviour,
-    personal_development_and_well_being,
+    personal_development_and_wellbeing,
     leadership_and_governance,
     safeguarding_standards,
     'coming soon' AS category_of_concern
