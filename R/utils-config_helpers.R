@@ -34,11 +34,11 @@ get_config <- function(path = "./config.yml") {
 
   conf <- config::get(file = path)
 
-  if (is.null(conf$default$app_details$app_id)) {
+  if (is.null(conf$app_details$app_id)) {
     stop("Configuration is missing: app_details$app_id", call. = FALSE)
   }
 
-  if (is.null(conf$default$logging)) {
+  if (is.null(conf$logging)) {
     stop("Configuration is missing: logging section", call. = FALSE)
   }
 
