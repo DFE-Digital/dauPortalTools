@@ -32,7 +32,10 @@ get_config <- function(path = "./config.yml") {
     stop("Config file not found: ", path, call. = FALSE)
   }
 
-  conf <- config::get(file = path)
+  conf <- config::merge(
+    config::get(file = path, config = "R_CONFIG_ACTIVE"),
+    config::get(file = path, config = "global")
+  )
 
   if (is.null(conf$app_details$app_id)) {
     stop("Configuration is missing: app_details$app_id", call. = FALSE)
