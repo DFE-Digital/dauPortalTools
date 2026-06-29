@@ -258,36 +258,23 @@ db_ru_get_event_actions <- function(ruevt_id = 0, ruesv_id = 0) {
 db_ru_add_event_action <- function(
   event_type_id,
   action_name,
-  description = NULL,
-  rule_type,
+  description = "",
+  rule_type = "Character",
   is_required = 0,
-  user_id,
-  db_get_query = utils_db_get_query
+  ruesv_id = 0,
+  user_id = NULL
 ) {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  desc_val <- if (is.null(description) || !nzchar(trimws(description))) {
-    DBI::SQL("NULL")
-  } else {
-    description
-  }
-
   query <- glue_sql(
-    "
-    INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_event_actions] (
-      [ruevt_id], [rueva_name], [rueva_description], [rueva_rule_type], [rueva_required], [date_created], [user_id_created]
-    )
-    OUTPUT INSERTED.[rueva_id]
-    VALUES (
-      {as.integer(event_type_id)}, {action_name}, {desc_val}, {rule_type}, {as.integer(is_required)}, SYSUTCDATETIME(), {user_id}
-    );
-    ",
+    "INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_event_actions]
+     ([ruevt_id], [ruesv_id], [rueva_name], [rueva_description], [rueva_rule_type], [rueva_required], [user_id_created])
+     VALUES ({as.integer(event_type_id)}, {as.integer(ruesv_id)}, {action_name}, {description}, {rule_type}, {as.integer(is_required)}, {user_id});",
     .con = conn
   )
 
-  res <- db_get_query(conn, query)
-  as.integer(res[[1]])
+  utils_db_execute(conn, query)
 }
 
 
