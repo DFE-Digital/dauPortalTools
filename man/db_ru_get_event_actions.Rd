@@ -4,11 +4,7 @@
 \alias{db_ru_get_event_actions}
 \title{Get Pre-Configured Custom Event Fields Blueprint Definitions}
 \usage{
-db_ru_get_event_actions(
-  ruevt_id = NULL,
-  rueva_id = NULL,
-  db_get_query = utils_db_get_query
-)
+db_ru_get_event_actions(ruevt_id = 0, ruesv_id = 0)
 }
 \description{
 Get Pre-Configured Custom Event Fields Blueprint Definitions

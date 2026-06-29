@@ -6,13 +6,12 @@
 \usage{
 db_ru_add_event(
   event_type_id,
+  event_sub_variety_id = 0,
   entity_id,
   entity_type,
   event_date,
-  is_completed = 1,
   summary_notes = NULL,
-  user_id,
-  db_get_query = utils_db_get_query
+  user_id = NULL
 )
 }
 \description{
