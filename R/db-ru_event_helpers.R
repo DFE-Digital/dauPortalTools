@@ -388,3 +388,58 @@ db_ru_save_event_action_response <- function(
   db_get_query(conn, query)
   invisible(TRUE)
 }
+
+#' Fetch Registered Sub-Varieties for an Event Type
+#'
+#' @param ruevt_id Integer scalar. Filter by parent type (optional).
+#' @export
+db_ru_get_event_sub_varieties <- function(ruevt_id = NULL) {
+  conn <- sql_manager("dit")
+  on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+
+  base_query <- "SELECT [ruesv_id], [ruevt_id], [ruesv_name], [ruesv_description], [date_created], [user_id_created] 
+                 FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_sub_varieties]"
+
+  if (!is.null(ruevt_id)) {
+    query <- glue_sql(
+      paste(
+        base_query,
+        "WHERE [ruevt_id] = {as.integer(ruevt_id)} ORDER BY [ruesv_name] ASC;"
+      ),
+      .con = conn
+    )
+  } else {
+    query <- glue_sql(
+      paste(base_query, "ORDER BY [ruesv_name] ASC;"),
+      .con = conn
+    )
+  }
+
+  DBI::dbGetQuery(conn, query)
+}
+
+#' Add a New Event Sub-Variety Entry
+#'
+#' @param ruevt_id Integer scalar. Parent event type ID.
+#' @param name Character scalar. Name of the sub-cohort/variety.
+#' @param description Character scalar. Context notes.
+#' @param user_id Character scalar. Active auditor logging the row.
+#' @export
+db_ru_add_event_sub_variety <- function(
+  ruevt_id,
+  name,
+  description = NULL,
+  user_id = NULL
+) {
+  conn <- sql_manager("dit")
+  on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+
+  query <- glue_sql(
+    "INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_event_sub_varieties]
+     ([ruevt_id], [ruesv_name], [ruesv_description], [user_id_created])
+     VALUES ({as.integer(ruevt_id)}, {name}, {description}, {user_id});",
+    .con = conn
+  )
+
+  utils_db_execute(conn, query)
+}
