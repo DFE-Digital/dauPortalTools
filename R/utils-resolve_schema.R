@@ -65,5 +65,5 @@ utils_resolve_schema <- function(key) {
     "'"
   ))
 
-  SQL(value)
+  DBI::SQL(value)
 }
