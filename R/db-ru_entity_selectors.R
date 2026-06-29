@@ -7,44 +7,32 @@
 #' @param db_get_query Function used to execute the query (default: `utils_db_get_query`).
 #' @return A `data.frame` containing columns matching the friendly headers configured in the DB.
 #' @export
+
 db_get_search_entities <- function(
   selected_type,
   db_get_query = utils_db_get_query
 ) {
-  log_event(glue::glue(
-    "Starting db_get_search_entities for type: {selected_type}"
-  ))
-
   conn <- sql_manager("dit")
-  on.exit(
-    {
-      try(DBI::dbDisconnect(conn), silent = TRUE)
-      log_event(glue::glue(
-        "Finished db_get_search_entities for type: {selected_type}"
-      ))
-    },
-    add = TRUE
-  )
+  on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  meta_query <- glue_sql(
-    "SELECT [ruet_source_table] 
-     FROM {utils_resolve_schema('db_schema_01r')}.[ru_entity_types] 
-     WHERE [ruet_type] = {selected_type};",
-    .con = conn
+  meta <- db_get_query(
+    conn,
+    glue_sql(
+      "SELECT [ruet_source_table] FROM {utils_resolve_schema('db_schema_01r')}.[ru_entity_types] WHERE [ruet_type] = {selected_type};",
+      .con = conn
+    )
   )
-  meta <- db_get_query(conn, meta_query)
   if (nrow(meta) == 0) {
     return(data.frame())
   }
 
-  cols_query <- glue_sql(
-    "SELECT [ruec_db_column], [ruec_friendly_name] 
-     FROM {utils_resolve_schema('db_schema_01r')}.[ru_entity_columns] 
-     WHERE [ruec_entity_type] = {selected_type} 
-     ORDER BY [ruec_column_id] ASC;",
-    .con = conn
+  cols_df <- db_get_query(
+    conn,
+    glue_sql(
+      "SELECT [ruec_db_column], [ruec_friendly_name] FROM {utils_resolve_schema('db_schema_01r')}.[ru_entity_columns] WHERE [ruec_entity_type] = {selected_type} ORDER BY [ruec_column_id] ASC;",
+      .con = conn
+    )
   )
-  cols_df <- db_get_query(conn, cols_query)
   if (nrow(cols_df) == 0) {
     return(data.frame())
   }
@@ -54,6 +42,7 @@ db_get_search_entities <- function(
     collapse = ", "
   )
 
+  # Plain, fast select directly from the local view
   query <- glue_sql(
     "
     SELECT {DBI::SQL(select_clause)}
@@ -64,6 +53,7 @@ db_get_search_entities <- function(
 
   db_get_query(conn, query)
 }
+
 
 #' Resolve the Unique Primary Identifier Label for a Selection
 #'
