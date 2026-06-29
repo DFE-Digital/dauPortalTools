@@ -73,33 +73,23 @@ db_ru_add_event_type <- function(
 db_ru_update_event_type <- function(
   ruevt_id,
   name,
-  description = NULL,
-  user_id
+  description,
+  user_id = NULL
 ) {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  desc_val <- if (is.null(description) || !nzchar(trimws(description))) {
-    DBI::SQL("NULL")
-  } else {
-    description
-  }
-
   query <- glue_sql(
-    "
-    UPDATE {utils_resolve_schema('db_schema_01r')}.[ru_event_types]
-    SET [ruevt_name]        = {name},
-        [ruevt_description] = {desc_val},
-        [date_edited]       = SYSUTCDATETIME(),
-        [user_id_edited]    = {user_id}
-    WHERE [ruevt_id]        = {as.integer(ruevt_id)};
-    ",
+    "UPDATE {utils_resolve_schema('db_schema_01r')}.[ru_event_types]
+     SET [ruevt_name] = {name},
+         [ruevt_description] = {description},
+         [date_edited] = GETDATE(),
+         [user_id_edited] = {user_id}
+     WHERE [ruevt_id] = {as.integer(ruevt_id)};",
     .con = conn
   )
-
-  DBI::dbExecute(conn, query)
+  utils_db_execute(conn, query)
 }
-
 
 # =================================================================================
 # 2. CORE EVENT RECORDS (POLYMORPHIC INTERACTION INSTANCES)
