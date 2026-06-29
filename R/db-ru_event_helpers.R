@@ -244,10 +244,9 @@ db_ru_get_event_actions <- function(ruevt_id = 0, ruesv_id = 0) {
 
   query <- glue_sql(
     "SELECT * FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_actions]
-     WHERE ([ruevt_id] = {ruevt_id} AND [ruesv_id] = {ruesv_id})
-        OR ([ruevt_id] = 0 AND [ruesv_id] = 0)
-        OR ([ruevt_id] = {ruevt_id} AND [ruesv_id] = 0)
-        OR ([ruevt_id] = 0 AND [ruesv_id] = {ruesv_id});",
+     WHERE ([ruevt_id] = {as.integer(ruevt_id)} AND [ruesv_id] = {as.integer(ruesv_id)})
+        OR ([ruevt_id] = 0 AND [ruesv_id] = 0) 
+        OR ([ruevt_id] = {as.integer(ruevt_id)} AND [ruesv_id] = 0);",
     .con = conn
   )
   DBI::dbGetQuery(conn, query)
