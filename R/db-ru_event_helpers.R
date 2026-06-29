@@ -174,40 +174,25 @@ db_ru_get_events <- function(
 #' @export
 db_ru_add_event <- function(
   event_type_id,
+  event_sub_variety_id = 0,
   entity_id,
   entity_type,
   event_date,
-  is_completed = 1,
   summary_notes = NULL,
-  user_id,
-  db_get_query = utils_db_get_query
+  user_id = NULL
 ) {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  notes_val <- if (is.null(summary_notes) || !nzchar(trimws(summary_notes))) {
-    DBI::SQL("NULL")
-  } else {
-    summary_notes
-  }
-
   query <- glue_sql(
-    "
-    INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_events] (
-      [ruevt_id], [ruev_entity_type], [ruev_entity_id], 
-      [ruev_date], [ruev_completed], [ruev_summary_notes], [date_created], [user_id_created]
-    )
-    OUTPUT INSERTED.[ruev_id]
-    VALUES (
-      {as.integer(event_type_id)}, {entity_type}, {as.integer(entity_id)},
-      {event_date}, {as.integer(is_completed)}, {notes_val}, SYSUTCDATETIME(), {user_id}
-    );
-    ",
+    "INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_events] 
+     ([ruevt_id], [ruesv_id], [ruev_entity_id], [ruev_entity_type], [ruev_date], [ruev_summary_notes], [user_id_created])
+     OUTPUT INSERTED.[ruev_id]
+     VALUES ({event_type_id}, {event_sub_variety_id}, {entity_id}, {entity_type}, {event_date}, {summary_notes}, {user_id});",
     .con = conn
   )
 
-  res <- db_get_query(conn, query)
-  as.integer(res[[1]])
+  DBI::dbGetQuery(conn, query)$ruev_id[1]
 }
 
 #' Update an Operational Event Record
@@ -253,51 +238,19 @@ db_ru_update_event <- function(
 #' Get Pre-Configured Custom Event Fields Blueprint Definitions
 #'
 #' @export
-db_ru_get_event_actions <- function(
-  ruevt_id = NULL,
-  rueva_id = NULL,
-  db_get_query = utils_db_get_query
-) {
+db_ru_get_event_actions <- function(ruevt_id = 0, ruesv_id = 0) {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  conditions <- character()
-  if (!is.null(ruevt_id)) {
-    conditions <- c(
-      conditions,
-      glue_sql("a.[ruevt_id] = {ruevt_id}", .con = conn)
-    )
-  }
-  if (!is.null(rueva_id)) {
-    conditions <- c(
-      conditions,
-      glue_sql("a.[rueva_id] = {rueva_id}", .con = conn)
-    )
-  }
-
-  where_clause <- if (length(conditions) > 0) {
-    glue_sql(
-      "WHERE {DBI::SQL(paste(conditions, collapse = ' AND '))}",
-      .con = conn
-    )
-  } else {
-    DBI::SQL("")
-  }
-
   query <- glue_sql(
-    "
-    SELECT a.[rueva_id], a.[ruevt_id], t.[ruevt_name] AS [event_type_name],
-           a.[rueva_name], a.[rueva_description], a.[rueva_rule_type], a.[rueva_required],
-           a.[date_created], a.[user_id_created], a.[date_edited], a.[user_id_edited]
-    FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_actions] a
-    LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ru_event_types] t ON a.[ruevt_id] = t.[ruevt_id]
-    {where_clause}
-    ORDER BY a.[rueva_id] ASC;
-    ",
+    "SELECT * FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_actions]
+     WHERE ([ruevt_id] = {ruevt_id} AND [ruesv_id] = {ruesv_id})
+        OR ([ruevt_id] = 0 AND [ruesv_id] = 0)
+        OR ([ruevt_id] = {ruevt_id} AND [ruesv_id] = 0)
+        OR ([ruevt_id] = 0 AND [ruesv_id] = {ruesv_id});",
     .con = conn
   )
-
-  db_get_query(conn, query)
+  DBI::dbGetQuery(conn, query)
 }
 
 #' Add a Pre-Configured Custom Field Rule Blueprint Definition
