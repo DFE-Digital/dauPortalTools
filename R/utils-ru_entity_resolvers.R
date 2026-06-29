@@ -8,9 +8,6 @@
 #' @param db_get_query Function used to execute the query.
 #' @return A data.frame with uniform columns: ID, Name, Region.
 #' @export
-#' Resolve Entity Summary Metadata Natively
-#'
-#' @export
 utils_ru_resolve_entity_meta <- function(
   entity_id,
   entity_type,
