@@ -46,3 +46,12 @@ ui_filter_event_type_select <- function(
 
   selectInput(id, label, choices = choices, selected = choices[1])
 }
+
+#' Build a Cascading Event Sub-Variety Selection Inputs Wrapper
+#' @export
+ui_filter_event_sub_variety_select <- function(
+  id,
+  label = "Event Cohort / Sub-Variety:"
+) {
+  selectInput(id, label, choices = character(0))
+}
