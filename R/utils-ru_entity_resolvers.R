@@ -8,11 +8,16 @@
 #' @param db_get_query Function used to execute the query.
 #' @return A data.frame with uniform columns: ID, Name, Region.
 #' @export
+#' Resolve Entity Summary Metadata Natively
+#'
+#' @export
 utils_ru_resolve_entity_meta <- function(
   entity_id,
   entity_type,
   db_get_query = utils_db_get_query
 ) {
+  log_event(glue::glue("Resolving metadata for {entity_type} ID: {entity_id}"))
+
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
@@ -22,45 +27,57 @@ utils_ru_resolve_entity_meta <- function(
   )
   meta <- db_get_query(conn, meta_query)
   if (nrow(meta) == 0) {
-    return(data.frame(ID = integer(), Name = character(), Region = character()))
+    return(data.frame(ID = entity_id, Name = "Missing Type", Region = "N/A"))
   }
 
   cols_query <- glue_sql(
     "SELECT [ruec_db_column], [ruec_friendly_name], [ruec_is_key] 
      FROM {utils_resolve_schema('db_schema_01r')}.[ru_entity_columns] 
-     WHERE [ruec_entity_type] = {entity_type};",
+     WHERE [ruec_entity_type] = {entity_type}
+     ORDER BY [ruec_column_id] ASC;",
     .con = conn
   )
   cols_df <- db_get_query(conn, cols_query)
+  if (nrow(cols_df) == 0) {
+    return(data.frame(ID = entity_id, Name = "Unconfigured", Region = "N/A"))
+  }
 
   key_col <- cols_df$ruec_db_column[cols_df$ruec_is_key == 1][1]
-  name_col <- cols_df$ruec_db_column[grepl(
-    "name",
-    tolower(cols_df$ruec_friendly_name)
-  )][1]
-  reg_col <- cols_df$ruec_db_column[grepl(
-    "region",
-    tolower(cols_df$ruec_friendly_name)
-  )][1]
+  name_col <- cols_df$ruec_db_column[cols_df$ruec_is_key == 0][1]
+  reg_col <- cols_df$ruec_db_column[cols_df$ruec_is_key == 0][2]
 
-  select_name <- if (!is.na(name_col)) glue::glue("[{name_col}]") else "NULL"
-  select_region <- if (!is.na(reg_col)) {
-    glue::glue("[{reg_col}]")
+  select_name <- if (!is.na(name_col)) {
+    DBI::SQL(glue::glue("[{name_col}]"))
   } else {
-    "CAST('N/A' AS NVARCHAR)"
+    DBI::SQL("CAST('Unknown' AS NVARCHAR)")
+  }
+  select_region <- if (!is.na(reg_col)) {
+    DBI::SQL(glue::glue("[{reg_col}]"))
+  } else {
+    DBI::SQL("CAST('N/A' AS NVARCHAR)")
   }
 
   query <- glue_sql(
     "
-    SELECT 
-        {as.integer(entity_id)} AS [ID],
-        {select_name}           AS [Name],
-        {select_region}         AS [Region]
-    FROM {utils_resolve_schema('db_schema_01r')}.{DBI::SQL(meta$ruet_source_table)}
+    SELECT TOP 1
+        [{DBI::SQL(key_col)}] AS [ID],
+        {select_name}         AS [Name],
+        {select_region}       AS [Region]
+    FROM {utils_resolve_schema('db_schema_01r')}.[{DBI::SQL(meta$ruet_source_table)}]
     WHERE [{DBI::SQL(key_col)}] = {as.integer(entity_id)};
     ",
     .con = conn
   )
 
-  db_get_query(conn, query)
+  res <- db_get_query(conn, query)
+
+  if (nrow(res) == 0) {
+    return(data.frame(
+      ID = entity_id,
+      Name = "Not Found in Snapshot",
+      Region = "N/A"
+    ))
+  }
+
+  return(res)
 }
