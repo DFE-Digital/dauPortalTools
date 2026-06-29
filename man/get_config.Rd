@@ -10,16 +10,18 @@ get_config(path = "./config.yml")
 \item{path}{Character scalar. Path to the configuration YAML file.}
 }
 \value{
-A list containing structured configuration values.
+A list containing structured, environment-specific configuration values.
 }
 \description{
-Reads a YAML configuration file and returns a validated configuration list.
+Reads a YAML configuration file, resolves the active environment, and
+returns a validated configuration list.
 }
 \details{
-The function reads the configuration using \code{\link[yaml:read_yaml]{yaml::read_yaml()}} and
+The function reads the configuration using \code{\link[config:get]{config::get()}} to handle
+environment resolution (e.g., default, staging, production) and
 performs basic validation checks.
 
-The following fields must be present:
+The following fields must be present in the resolved configuration:
 \itemize{
 \item \code{app_details$app_id}
 \item \code{logging}
