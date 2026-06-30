@@ -103,6 +103,14 @@ db_ru_update_event_type <- function(
 #' @param entity_id Integer scalar or `NULL`. Unique identifier target constraint.
 #' @param entity_type Character scalar or `NULL`. Structural label filter (e.g., 'Trust').
 #' @export
+#' Get Event Registry Logs
+#'
+#' Pulls event interaction rows matching the active polymorphic entity target filters.
+#'
+#' @param ruev_id Integer scalar or `NULL`. Filter for an explicit event instance.
+#' @param entity_id Integer scalar or `NULL`. Unique identifier target constraint.
+#' @param entity_type Character scalar or `NULL`. Structural label filter (e.g., 'Trust').
+#' @export
 db_ru_get_events <- function(
   ruev_id = NULL,
   entity_id = NULL,
@@ -138,18 +146,21 @@ db_ru_get_events <- function(
       .con = conn
     )
   } else {
-    DBI::SQL("")
+    Keep <- DBI::SQL("")
   }
 
   query <- glue_sql(
     "
-    SELECT e.[ruev_id], e.[ruevt_id], e.[ruev_entity_type], e.[ruev_entity_id],
+    SELECT e.[ruev_id], e.[ruevt_id], e.[ruesv_id], e.[ruev_entity_type], e.[ruev_entity_id],
            e.[ruev_date], e.[ruev_completed], e.[ruev_summary_notes],
            e.[date_created], e.[user_id_created], e.[date_edited], e.[user_id_edited],
-           t.[ruevt_name] AS [event_type_name]
+           t.[ruevt_name]  AS [event_type_name],
+           sv.[ruesv_name] AS [event_sub_variety_name]
     FROM {utils_resolve_schema('db_schema_01r')}.[ru_events] e
     LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ru_event_types] t 
       ON e.[ruevt_id] = t.[ruevt_id]
+    LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ru_event_sub_varieties] sv
+      ON e.[ruesv_id] = sv.[ruesv_id]
     {where_clause}
     ORDER BY e.[ruev_date] DESC, e.[date_created] DESC;
     ",
