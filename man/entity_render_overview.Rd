@@ -2,7 +2,7 @@
 % Please edit documentation in R/ui-render_entity_overview.R
 \name{entity_render_overview}
 \alias{entity_render_overview}
-\title{Render Parent Entity Overview Panel}
+\title{Render Parent Entity Overview Panel with Full Diagnostic Guard Rails}
 \usage{
 entity_render_overview(
   entity_type = c("trust", "la", "diocese"),
@@ -10,14 +10,6 @@ entity_render_overview(
   id = paste0("entity_overview_", entity_type, "_", entity_id)
 )
 }
-\arguments{
-\item{entity_type}{Character scalar. Must be one of: \code{"trust"}, \code{"la"}, or \code{"diocese"}.}
-
-\item{entity_id}{Character or numeric scalar. The unique identifier code matching the chosen entity type.}
-
-\item{id}{Character scalar. UI container ID namespace prefix.}
-}
 \description{
-Generates a GOV.UK-styled summary layout tracking aggregated operational
-metrics across individual grouping tiers (Trusts, Local Authorities, or Dioceses).
+Render Parent Entity Overview Panel with Full Diagnostic Guard Rails
 }

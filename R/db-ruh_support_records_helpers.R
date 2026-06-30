@@ -1,14 +1,10 @@
 #' Get Support Records with Polymorphic Lookups
 #'
-#' Returns ongoing track provisions from the database with flexible filtering for
-#' specific records, parent hubs, or a targeted entity level block.
-#'
 #' @param ruhsr_id Integer scalar or `NULL`. Unique primary track ID filter.
 #' @param hub_id Integer scalar or `NULL`. Filter for a specific parent hub.
-#' @param entity_id Integer scalar or `NULL`. Target unit unique identifier.
+#' @param entity_id Character or Integer scalar or `NULL`. Target unit unique identifier.
 #' @param entity_type Character scalar or `NULL`. Target category (e.g., 'School', 'Trust').
 #' @param db_get_query Function used to execute the query (default: `utils_db_get_query`).
-#' @return A `data.frame` containing ongoing track records joined with hub and track metadata.
 #' @export
 db_ruh_get_support_records <- function(
   ruhsr_id = NULL,
@@ -44,13 +40,20 @@ db_ruh_get_support_records <- function(
   if (!is.null(entity_id)) {
     conditions <- c(
       conditions,
-      glue_sql("s.[ruhsr_entity_id] = {entity_id}", .con = conn)
+      # FIX: Apply character conversion cast to underlying entity support records ledger identification column rules
+      glue_sql(
+        "CAST(s.[ruhsr_entity_id] AS VARCHAR(50)) = {as.character(entity_id)}",
+        .con = conn
+      )
     )
   }
   if (!is.null(entity_type)) {
     conditions <- c(
       conditions,
-      glue_sql("s.[ruhsr_entity_type] = {entity_type}", .con = conn)
+      glue_sql(
+        "s.[ruhsr_entity_type] = {as.character(entity_type)}",
+        .con = conn
+      )
     )
   }
 

@@ -6,59 +6,6 @@
 \usage{
 school_render_overview(urn, id = paste0("school_overview_", urn))
 }
-\arguments{
-\item{urn}{Character or numeric scalar. Unique Reference Number (URN)
-identifying the school.}
-
-\item{id}{Character scalar. Optional UI container ID used to namespace
-tab interactions. Defaults to a value derived from \code{urn}.}
-}
-\value{
-A Shiny UI object. If no data is available for the supplied URN,
-a GOV.UK-styled message is returned instead.
-}
 \description{
-Generates a GOV.UK-styled tabbed UI panel displaying summary information
-for an individual school using the latest available Edubase snapshot.
-}
-\details{
-The panel is organised into tabbed sections:
-
-\itemize{
-\item \strong{School Details} – Local authority, region, type, group,
-and opening/closing information
-\item \strong{Trust Details} – Trust reference and name (if applicable)
-\item \strong{More Details} – Demographic and structural information,
-including pupil numbers and FSM percentage
-\item \strong{Important Links} – External links including SLIC,
-school website, Ofsted reports, GIAS, and (if applicable)
-trust-level GIAS pages
-}
-
-Data is retrieved from the Edubase dataset using the most recent
-\code{DateStamp} to ensure a consistent snapshot.
-
-Tab navigation is implemented using lightweight custom JavaScript and CSS,
-providing a GOV.UK-style interface without relying on Shiny tabset components.
-
-Summary content is rendered using \code{\link[shinyGovstyle:gov_summary]{shinyGovstyle::gov_summary()}}, and links
-are displayed as a GOV.UK-styled list using \code{\link[=make_shiny_link]{make_shiny_link()}}.
-}
-\section{Side Effects}{
-
-\itemize{
-\item Opens a database connection via \code{\link[=sql_manager]{sql_manager()}}
-\item Executes SQL queries using \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}
-\item Writes log entries via \code{\link[=log_event]{log_event()}}
-}
-}
-
-\examples{
-\dontrun{
-school_render_overview(urn = "123456")
-}
-
-}
-\seealso{
-\code{\link[shinyGovstyle:gov_layout]{shinyGovstyle::gov_layout()}}, \code{\link[shinyGovstyle:gov_summary]{shinyGovstyle::gov_summary()}}
+Render School Overview Panel
 }

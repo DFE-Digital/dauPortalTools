@@ -1,7 +1,3 @@
-# =================================================================================
-# 1. EVENT TYPES CONFIGURATION LOOKUPS
-# =================================================================================
-
 #' Retrieve Event Types Catalog
 #'
 #' @param ruevt_id Integer scalar or `NULL`. Filter for a specific event type ID.
@@ -100,7 +96,7 @@ db_ru_update_event_type <- function(
 #' Pulls event interaction rows matching the active polymorphic entity target filters.
 #'
 #' @param ruev_id Integer scalar or `NULL`. Filter for an explicit event instance.
-#' @param entity_id Integer scalar or `NULL`. Unique identifier target constraint.
+#' @param entity_id Character or Integer scalar or `NULL`. Unique identifier target constraint.
 #' @param entity_type Character scalar or `NULL`. Structural label filter (e.g., 'Trust').
 #' @export
 db_ru_get_events <- function(
@@ -122,13 +118,20 @@ db_ru_get_events <- function(
   if (!is.null(entity_id)) {
     conditions <- c(
       conditions,
-      glue_sql("e.[ruev_entity_id] = {entity_id}", .con = conn)
+      # FIX: Apply character conversion cast to underlying entity table identification column rules
+      glue_sql(
+        "CAST(e.[ruev_entity_id] AS VARCHAR(50)) = {as.character(entity_id)}",
+        .con = conn
+      )
     )
   }
   if (!is.null(entity_type)) {
     conditions <- c(
       conditions,
-      glue_sql("e.[ruev_entity_type] = {entity_type}", .con = conn)
+      glue_sql(
+        "e.[ruev_entity_type] = {as.character(entity_type)}",
+        .con = conn
+      )
     )
   }
 
@@ -138,7 +141,7 @@ db_ru_get_events <- function(
       .con = conn
     )
   } else {
-    Keep <- DBI::SQL("")
+    DBI::SQL("")
   }
 
   query <- glue_sql(
@@ -181,7 +184,7 @@ db_ru_add_event <- function(
     "INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_events] 
      ([ruevt_id], [ruesv_id], [ruev_entity_id], [ruev_entity_type], [ruev_date], [ruev_summary_notes], [user_id_created])
      OUTPUT INSERTED.[ruev_id]
-     VALUES ({event_type_id}, {event_sub_variety_id}, {entity_id}, {entity_type}, {event_date}, {summary_notes}, {user_id});",
+     VALUES ({event_type_id}, {event_sub_variety_id}, {as.character(entity_id)}, {entity_type}, {event_date}, {summary_notes}, {user_id});",
     .con = conn
   )
 
@@ -201,7 +204,7 @@ db_ru_update_event <- function(
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  notes_val := if (is.null(summary_notes) || !nzchar(trimws(summary_notes))) {
+  notes_val <- if (is.null(summary_notes) || !nzchar(trimws(summary_notes))) {
     DBI::SQL("NULL")
   } else {
     summary_notes
@@ -223,9 +226,8 @@ db_ru_update_event <- function(
   DBI::dbExecute(conn, query)
 }
 
-
 # =================================================================================
-# 3. EVENT ACTIONS CONFIGURATION CATALOG (TABLE-DRIVEN METADATA MASTER CORES)
+# 3. EVENT ACTIONS CONFIGURATION CATALOG
 # =================================================================================
 
 #' Get Pre-Configured Custom Event Fields Blueprint Definitions
@@ -254,7 +256,7 @@ db_ru_add_event_action <- function(
   description = "",
   rule_type = "Character",
   is_required = 0,
-  ruesv_id = 0,
+  uesv_id = 0,
   user_id = NULL
 ) {
   conn <- sql_manager("dit")
@@ -269,7 +271,6 @@ db_ru_add_event_action <- function(
 
   utils_db_execute(conn, query)
 }
-
 
 # =================================================================================
 # 4. CUSTOM ACTION FORM INPUT RESPONSES LEDGER HANDLERS
@@ -376,7 +377,7 @@ db_ru_get_event_sub_varieties <- function(ruevt_id = NULL) {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  base_query <- "SELECT [ruesv_id], [ruevt_id], [ruesv_name], [ruesv_description], [date_created], [user_id_created] 
+  base_query <- "SELECT [ruuesv_id], [ruevt_id], [ruesv_name], [ruesv_description], [date_created], [user_id_created] 
                  FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_sub_varieties]"
 
   if (!is.null(ruevt_id)) {
@@ -399,10 +400,6 @@ db_ru_get_event_sub_varieties <- function(ruevt_id = NULL) {
 
 #' Add a New Event Sub-Variety Entry
 #'
-#' @param ruevt_id Integer scalar. Parent event type ID.
-#' @param name Character scalar. Name of the sub-cohort/variety.
-#' @param description Character scalar. Context notes.
-#' @param user_id Character scalar. Active auditor logging the row.
 #' @export
 db_ru_add_event_sub_variety <- function(
   ruevt_id,
