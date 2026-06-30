@@ -1,6 +1,6 @@
 #' Render Parent Entity Overview Panel
 #'
-#' Generates a GOV.UK-styled summary layout tracking aggregated operational
+#' Generates an upgraded, full-width GOV.UK-styled summary layout tracking aggregated operational
 #' metrics across individual grouping tiers (Trusts, Local Authorities, or Dioceses).
 #'
 #' @param entity_type Character scalar. Must be one of: \code{"trust"}, \code{"la"}, or \code{"diocese"}.
@@ -28,9 +28,6 @@ entity_render_overview <- function(
 
   schema <- utils_resolve_schema("db_schema_00c")
 
-  # ------------------------------------------------------------------
-  # 1. Pipeline Routing: Build Custom Polymorphic SQL Aggregates
-  # ------------------------------------------------------------------
   sql_command <- if (entity_type == "trust") {
     glue::glue_sql(
       "
@@ -107,14 +104,11 @@ entity_render_overview <- function(
     )
   }
 
-  # ------------------------------------------------------------------
-  # 2. Map Layout Parameters and Information Metrics Cards
-  # ------------------------------------------------------------------
-  summary_headers <- c("Total Active Open Schools")
-  summary_info <- c(prettyNum(
-    entity_data$open_schools_count[1],
-    big.mark = ","
-  ))
+  summary_headers <- c("Entity Code Identifier", "Total Active Open Schools")
+  summary_info <- c(
+    as.character(entity_id),
+    prettyNum(entity_data$open_schools_count[1], big.mark = ",")
+  )
 
   if (entity_type == "la") {
     summary_headers <- c(summary_headers, "Unique Operating MAT Trusts")
@@ -122,6 +116,10 @@ entity_render_overview <- function(
       summary_info,
       prettyNum(entity_data$associated_trusts_count[1], big.mark = ",")
     )
+  }
+
+  if (entity_type == "trust") {
+    summary_headers <- c("Trust Group Code", summary_headers[2])
   }
 
   summary_list_ui <- shinyGovstyle::gov_summary(
@@ -136,39 +134,78 @@ entity_render_overview <- function(
     trust_string <- entity_data$associated_trusts_list[1]
 
     supplementary_ui <- tags$div(
-      class = "govuk-!-margin-top-4",
-      style = "border-top: 2px solid #b1b4b6; padding-top: 15px;",
+      class = "govuk-!-margin-top-6",
+      style = "border-top: 2px solid #b1b4b6; padding-top: 20px;",
       tags$h3(
         class = "govuk-heading-m",
-        "Associated Trust Footprint Directory"
+        "Associated MAT Trust Footprint Directory"
       ),
       if (!is.na(trust_string) && nzchar(trust_string)) {
         tags$ul(
-          class = "govuk-list govuk-list--bullet",
+          class = "govuk-list govuk-list--bullet govuk-list--spaced",
+          style = "padding-left: 20px;",
           lapply(strsplit(trust_string, ", ")[[1]], function(trust) {
-            tags$li(class = "govuk-body", trust)
+            tags$li(class = "govuk-body", style = "margin-bottom: 5px;", trust)
           })
         )
       } else {
         p(em(
           class = "text-muted",
-          "No corporate multi-academy trusts currently registered or logged under this diocese education code profile."
+          "No corporate multi-academy trusts currently registered or logged under this diocese profile."
         ))
       }
     )
   }
 
+  tag_class <- if (entity_type == "trust") {
+    "govuk-tag--blue"
+  } else if (entity_type == "la") {
+    "govuk-tag--purple"
+  } else {
+    "govuk-tag--turquoise"
+  }
+
+  header_title_block <- shiny::tags$div(
+    style = "display: flex; align-items: center; justify-content: flex-start; margin-bottom: 5px; flex-wrap: wrap; gap: 15px;",
+    shinyGovstyle::heading_text(entity_data$entity_name[1], size = "l"),
+    shiny::tags$strong(
+      class = paste("govuk-tag", tag_class),
+      style = "vertical-align: middle; font-size: 14px; padding: 4px 8px;",
+      tools::toTitleCase(entity_type)
+    )
+  )
+
+  wide_layout_css <- tags$style(HTML(paste0(
+    "
+    #",
+    id,
+    " .govuk-summary-list {
+      width: 100% !important;
+      max-width: 100% !important;
+      display: table !important;
+      margin-bottom: 25px !important;
+    }
+    #",
+    id,
+    " .govuk-summary-list__row {
+      display: table-row !important;
+    }
+    #",
+    id,
+    " .govuk-summary-list__key, #",
+    id,
+    " .govuk-summary-list__value {
+      display: table-cell !important;
+      padding: 12px 15px !important;
+    }
+  "
+  )))
+
   ui_layout <- shinyGovstyle::gov_layout(
-    shinyGovstyle::heading_text(
-      glue::glue("{entity_data$entity_name} ({entity_id})"),
-      size = "l"
-    ),
-    shiny::tags$span(
-      class = "govuk-caption-m govuk-!-margin-bottom-4",
-      paste("System Tier Record Context:", tools::toTitleCase(entity_type))
-    ),
+    wide_layout_css,
+    header_title_block,
     shiny::div(
-      class = "govuk-!-margin-top-3",
+      class = "govuk-!-margin-top-4",
       summary_list_ui,
       supplementary_ui
     )
@@ -180,7 +217,8 @@ entity_render_overview <- function(
 
   shiny::div(
     id = id,
-    class = "entity-overview-wrapper govuk-!-margin-top-4",
+    class = "entity-overview-wrapper govuk-!-margin-top-2",
+    style = "width: 100% !important; max-width: 100% !important;",
     ui_layout
   )
 }
