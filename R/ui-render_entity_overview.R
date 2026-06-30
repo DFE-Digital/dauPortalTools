@@ -1,4 +1,4 @@
-#' Render Parent Entity Overview Panel
+#' Render Parent Entity Overview Panel with Full Diagnostic Guard Rails
 #'
 #' @export
 entity_render_overview <- function(
@@ -8,8 +8,12 @@ entity_render_overview <- function(
 ) {
   start_time <- Sys.time()
   entity_type <- match.arg(entity_type)
-  log_event(glue::glue(
-    "Starting entity_render_overview for {entity_type} with ID: {entity_id}"
+
+  # Diagnostic Input Logging
+  message(glue::glue("--- DIAGNOSTIC START ---"))
+  message(glue::glue("Incoming entity_type: '{entity_type}'"))
+  message(glue::glue(
+    "Incoming entity_id: '{entity_id}' (Type: {typeof(entity_id)})"
   ))
 
   conn <- sql_manager("dit")
@@ -23,65 +27,123 @@ entity_render_overview <- function(
   schema <- utils_resolve_schema("db_schema_00c")
 
   # ------------------------------------------------------------------
-  # 1. Pipeline Routing: Build Custom Polymorphic SQL Aggregates
+  # 1. Pipeline Routing & Safe Coercion Checking
   # ------------------------------------------------------------------
-  sql_command <- if (entity_type == "trust") {
-    glue::glue_sql(
-      "
-      SELECT 
-        MAX([Trust_Name]) AS entity_name,
-        COUNT(DISTINCT [URN]) AS open_schools_count
-      FROM {schema}.[Chains]
-      WHERE [Trust_ID] = {as.character(entity_id)}
-        AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Chains])
-      ",
-      .con = conn
-    )
-  } else if (entity_type == "la") {
-    glue::glue_sql(
-      "
-      SELECT 
-        MAX([LA (name)]) AS entity_name,
-        COUNT(CASE WHEN [CloseDate] IS NULL THEN 1 END) AS open_schools_count,
-        COUNT(DISTINCT NULLIF([Trusts (code)], '0')) AS associated_trusts_count
-      FROM {schema}.[Edubase]
-      WHERE [LA (code)] = {as.character(entity_id)}
-        AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
-      ",
-      .con = conn
-    )
-  } else if (entity_type == "diocese") {
-    glue::glue_sql(
-      "
-      SELECT 
-        MAX([Diocese (name)]) AS entity_name,
-        COUNT(CASE WHEN [CloseDate] IS NULL THEN 1 END) AS open_schools_count,
-        (
-          SELECT STRING_AGG(CAST(t.t_name AS VARCHAR(MAX)), ', ') WITHIN GROUP (ORDER BY t.t_name)
-          FROM (
-            SELECT DISTINCT [Trusts (name)] AS t_name
-            FROM {schema}.[Edubase]
-            WHERE [Diocese (code)] = {as.character(entity_id)} 
-              AND NULLIF([Trusts (name)], '') IS NOT NULL
-              AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
-          ) t
-        ) AS associated_trusts_list
-      FROM {schema}.[Edubase]
-      WHERE [Diocese (code)] = {as.character(entity_id)}
-        AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
-      ",
-      .con = conn
-    )
+  sql_command <- NULL
+
+  # Wrap the SQL generation execution in a safe tryCatch block
+  pipeline_error <- tryCatch(
+    {
+      if (entity_type == "trust") {
+        # Defensive Check: Ensure we have a valid, usable string format
+        clean_id_str <- as.character(entity_id)
+        message(glue::glue(
+          "Trust Processing - Cleaned string id token: '{clean_id_str}'"
+        ))
+
+        if (!nzchar(clean_id_str) || is.na(clean_id_str)) {
+          stop("The incoming trust identity variable is blank or NA.")
+        }
+
+        sql_command <- glue::glue_sql(
+          "
+        SELECT 
+          MAX([Trust_Name]) AS entity_name,
+          COUNT(DISTINCT [URN]) AS open_schools_count
+        FROM {schema}.[Chains]
+        WHERE [Trust_ID] = {clean_id_str}
+          AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Chains])
+        ",
+          .con = conn
+        )
+      } else if (entity_type == "la") {
+        clean_la_str <- as.character(entity_id)
+        if (!nzchar(clean_la_str) || is.na(clean_la_str)) {
+          stop("LA code parameter is invalid.")
+        }
+
+        sql_command <- glue::glue_sql(
+          "
+        SELECT 
+          MAX([LA (name)]) AS entity_name,
+          COUNT(CASE WHEN [CloseDate] IS NULL THEN 1 END) AS open_schools_count,
+          COUNT(DISTINCT NULLIF([Trusts (code)], '0')) AS associated_trusts_count
+        FROM {schema}.[Edubase]
+        WHERE [LA (code)] = {clean_la_str}
+          AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
+        ",
+          .con = conn
+        )
+      } else if (entity_type == "diocese") {
+        clean_dio_str <- as.character(entity_id)
+        if (!nzchar(clean_dio_str) || is.na(clean_dio_str)) {
+          stop("Diocese code parameter is invalid.")
+        }
+
+        sql_command <- glue::glue_sql(
+          "
+        SELECT 
+          MAX([Diocese (name)]) AS entity_name,
+          COUNT(CASE WHEN [CloseDate] IS NULL THEN 1 END) AS open_schools_count,
+          (
+            SELECT STRING_AGG(CAST(t.t_name AS VARCHAR(MAX)), ', ') WITHIN GROUP (ORDER BY t.t_name)
+            FROM (
+              SELECT DISTINCT [Trusts (name)] AS t_name
+              FROM {schema}.[Edubase]
+              WHERE [Diocese (code)] = {clean_dio_str} 
+                AND NULLIF([Trusts (name)], '') IS NOT NULL
+                AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
+            ) t
+          ) AS associated_trusts_list
+        FROM {schema}.[Edubase]
+        WHERE [Diocese (code)] = {clean_dio_str}
+          AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
+        ",
+          .con = conn
+        )
+      }
+      NULL # No error encountered during SQL compilation
+    },
+    error = function(e) {
+      message(glue::glue("Pipeline Error during SQL generation: {e$message}"))
+      return(e$message)
+    }
+  )
+
+  # Render an Explicit Debug Box if SQL setup fails
+  if (!is.null(pipeline_error)) {
+    return(tags$div(
+      class = "govuk-error-summary",
+      style = "border: 4px solid #d4351c; padding: 15px; margin-top: 10px;",
+      tags$h2(
+        class = "govuk-error-summary__title",
+        "App Coercion Pipeline Crash"
+      ),
+      p(tags$strong("Entity Context: "), entity_type),
+      p(tags$strong("Passed Raw Value: "), as.character(entity_id)),
+      p(tags$strong("Error Context Details: "), pipeline_error)
+    ))
   }
+
+  # ------------------------------------------------------------------
+  # 2. Database Fetch Execution with Error Tracking
+  # ------------------------------------------------------------------
+  message(glue::glue("Executing Compiled SQL Command: \n{sql_command}"))
 
   entity_data <- tryCatch(
     DBI::dbGetQuery(conn, sql_command),
     error = function(e) {
+      message(glue::glue("Database Execution Error: {e$message}"))
       log_event(glue::glue("Error fetching entity overview: {e$message}"))
       NULL
     }
   )
 
+  message("Database Fetch Output Matrix:")
+  print(entity_data)
+  message(glue::glue("--- DIAGNOSTIC END ---"))
+
+  # Explicit fallback card if data returns completely empty from SQL Server
   if (
     is.null(entity_data) ||
       nrow(entity_data) == 0 ||
@@ -90,19 +152,32 @@ entity_render_overview <- function(
     return(
       shiny::div(
         id = id,
+        class = "govuk-error-summary",
+        style = "background: #f3f2f1; padding: 20px; border-left: 10px solid #1d70b8;",
         shinyGovstyle::heading_text(
-          paste(tools::toTitleCase(entity_type), "Overview"),
-          size = "l"
+          paste(tools::toTitleCase(entity_type), "Record Missing"),
+          size = "m"
         ),
-        shiny::HTML(
-          "<p class='govuk-body'>No operational directory data found for this identifier context.</p>"
+        tags$p(
+          class = "govuk-body",
+          glue::glue(
+            "The lookup executed successfully but returned zero rows from the database layout."
+          )
+        ),
+        tags$ul(
+          class = "govuk-list",
+          tags$li(
+            tags$strong("Attempted Code Filter: "),
+            as.character(entity_id)
+          ),
+          tags$li(tags$strong("Target Schema Base: "), schema)
         )
       )
     )
   }
 
   # ------------------------------------------------------------------
-  # 2. Map Layout Parameters to Wide Full-Width Rows
+  # 3. Main GOV.UK Layout Assembly (Only fires if query was successful)
   # ------------------------------------------------------------------
   summary_headers <- c("Entity Code Identifier", "Total Active Open Schools")
   summary_info <- c(
@@ -117,7 +192,6 @@ entity_render_overview <- function(
       prettyNum(entity_data$associated_trusts_count[1], big.mark = ",")
     )
   }
-
   if (entity_type == "trust") {
     summary_headers <- c("Trust Group Code", summary_headers[2])
   }
@@ -132,7 +206,6 @@ entity_render_overview <- function(
   supplementary_ui <- NULL
   if (entity_type == "diocese") {
     trust_string <- entity_data$associated_trusts_list[1]
-
     supplementary_ui <- tags$div(
       class = "govuk-!-margin-top-6",
       style = "border-top: 2px solid #b1b4b6; padding-top: 20px;",
@@ -151,7 +224,7 @@ entity_render_overview <- function(
       } else {
         p(em(
           class = "text-muted",
-          "No corporate multi-academy trusts currently registered or logged under this diocese profile."
+          "No corporate trusts currently mapped under this diocese."
         ))
       }
     )
@@ -179,25 +252,15 @@ entity_render_overview <- function(
     "
     #",
     id,
-    " .govuk-summary-list {
-      width: 100% !important;
-      max-width: 100% !important;
-      display: table !important;
-      margin-bottom: 25px !important;
-    }
+    " .govuk-summary-list { width: 100% !important; max-width: 100% !important; display: table !important; margin-bottom: 25px !important; }
     #",
     id,
-    " .govuk-summary-list__row {
-      display: table-row !important;
-    }
+    " .govuk-summary-list__row { display: table-row !important; }
     #",
     id,
     " .govuk-summary-list__key, #",
     id,
-    " .govuk-summary-list__value {
-      display: table-cell !important;
-      padding: 12px 15px !important;
-    }
+    " .govuk-summary-list__value { display: table-cell !important; padding: 12px 15px !important; }
   "
   )))
 
