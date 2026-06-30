@@ -28,14 +28,19 @@ entity_render_overview <- function(
 
   schema <- utils_resolve_schema("db_schema_00c")
 
+  # ------------------------------------------------------------------
+  # 1. Pipeline Routing: Build Custom Polymorphic SQL Aggregates
+  # ------------------------------------------------------------------
   sql_command <- if (entity_type == "trust") {
+    clean_id_int <- as.integer(gsub("[A-Za-z]", "", as.character(entity_id)))
+
     glue::glue_sql(
       "
       SELECT 
         MAX([Trusts (name)]) AS entity_name,
         COUNT(CASE WHEN [CloseDate] IS NULL THEN 1 END) AS open_schools_count
       FROM {schema}.[Edubase]
-      WHERE [Trusts (code)] = {entity_id}
+      WHERE CAST([Trusts (code)] AS INT) = {clean_id_int}
         AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
       ",
       .con = conn
@@ -48,7 +53,7 @@ entity_render_overview <- function(
         COUNT(CASE WHEN [CloseDate] IS NULL THEN 1 END) AS open_schools_count,
         COUNT(DISTINCT NULLIF([Trusts (code)], '0')) AS associated_trusts_count
       FROM {schema}.[Edubase]
-      WHERE [LA (code)] = {entity_id}
+      WHERE [LA (code)] = {as.character(entity_id)}
         AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
       ",
       .con = conn
@@ -64,13 +69,13 @@ entity_render_overview <- function(
           FROM (
             SELECT DISTINCT [Trusts (name)] AS t_name
             FROM {schema}.[Edubase]
-            WHERE [Diocese (code)] = {entity_id} 
+            WHERE [Diocese (code)] = {as.character(entity_id)} 
               AND NULLIF([Trusts (name)], '') IS NOT NULL
               AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
           ) t
         ) AS associated_trusts_list
       FROM {schema}.[Edubase]
-      WHERE [Diocese (code)] = {entity_id}
+      WHERE [Diocese (code)] = {as.character(entity_id)}
         AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
       ",
       .con = conn
@@ -104,6 +109,9 @@ entity_render_overview <- function(
     )
   }
 
+  # ------------------------------------------------------------------
+  # 2. Map Layout Parameters to Wide Full-Width Rows
+  # ------------------------------------------------------------------
   summary_headers <- c("Entity Code Identifier", "Total Active Open Schools")
   summary_info <- c(
     as.character(entity_id),
@@ -145,7 +153,11 @@ entity_render_overview <- function(
           class = "govuk-list govuk-list--bullet govuk-list--spaced",
           style = "padding-left: 20px;",
           lapply(strsplit(trust_string, ", ")[[1]], function(trust) {
-            tags$li(class = "govuk-body", style = "margin-bottom: 5px;", trust)
+            tags$li(
+              class = "govuk-body",
+              style = "margin-bottom: 5px;",
+              tsl = trust
+            )
           })
         )
       } else {
