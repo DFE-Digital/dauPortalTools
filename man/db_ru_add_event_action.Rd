@@ -7,11 +7,11 @@
 db_ru_add_event_action(
   event_type_id,
   action_name,
-  description = NULL,
-  rule_type,
+  description = "",
+  rule_type = "Character",
   is_required = 0,
-  user_id,
-  db_get_query = utils_db_get_query
+  ruesv_id = 0,
+  user_id = NULL
 )
 }
 \description{

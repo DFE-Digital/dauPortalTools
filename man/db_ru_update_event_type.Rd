@@ -4,7 +4,7 @@
 \alias{db_ru_update_event_type}
 \title{Update an Existing Event Type Catalog Description}
 \usage{
-db_ru_update_event_type(ruevt_id, name, description = NULL, user_id)
+db_ru_update_event_type(ruevt_id, name, description, user_id = NULL)
 }
 \description{
 Update an Existing Event Type Catalog Description
