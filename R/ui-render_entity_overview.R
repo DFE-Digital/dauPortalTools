@@ -1,11 +1,5 @@
 #' Render Parent Entity Overview Panel
 #'
-#' Generates an upgraded, full-width GOV.UK-styled summary layout tracking aggregated operational
-#' metrics across individual grouping tiers (Trusts, Local Authorities, or Dioceses).
-#'
-#' @param entity_type Character scalar. Must be one of: \code{"trust"}, \code{"la"}, or \code{"diocese"}.
-#' @param entity_id Character or numeric scalar. The unique identifier code matching the chosen entity type.
-#' @param id Character scalar. UI container ID namespace prefix.
 #' @export
 entity_render_overview <- function(
   entity_type = c("trust", "la", "diocese"),
@@ -32,16 +26,14 @@ entity_render_overview <- function(
   # 1. Pipeline Routing: Build Custom Polymorphic SQL Aggregates
   # ------------------------------------------------------------------
   sql_command <- if (entity_type == "trust") {
-    clean_id_int <- as.integer(gsub("[A-Za-z]", "", as.character(entity_id)))
-
     glue::glue_sql(
       "
       SELECT 
-        MAX([Trusts (name)]) AS entity_name,
-        COUNT(CASE WHEN [CloseDate] IS NULL THEN 1 END) AS open_schools_count
-      FROM {schema}.[Edubase]
-      WHERE CAST([Trusts (code)] AS INT) = {clean_id_int}
-        AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Edubase])
+        MAX([Trust_Name]) AS entity_name,
+        COUNT(DISTINCT [URN]) AS open_schools_count
+      FROM {schema}.[Chains]
+      WHERE [Trust_ID] = {as.character(entity_id)}
+        AND [DateStamp] = (SELECT MAX(DateStamp) FROM {schema}.[Chains])
       ",
       .con = conn
     )
@@ -153,11 +145,7 @@ entity_render_overview <- function(
           class = "govuk-list govuk-list--bullet govuk-list--spaced",
           style = "padding-left: 20px;",
           lapply(strsplit(trust_string, ", ")[[1]], function(trust) {
-            tags$li(
-              class = "govuk-body",
-              style = "margin-bottom: 5px;",
-              tsl = trust
-            )
+            tags$li(class = "govuk-body", style = "margin-bottom: 5px;", trust)
           })
         )
       } else {
