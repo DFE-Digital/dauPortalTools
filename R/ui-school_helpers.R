@@ -1,66 +1,19 @@
 #' Render School Overview Panel
 #'
-#' Generates a GOV.UK-styled tabbed UI panel displaying summary information
+#' Generates an upgraded authentic GOV.UK-styled tabbed UI panel displaying summary information
 #' for an individual school using the latest available Edubase snapshot.
 #'
-#' @param urn Character or numeric scalar. Unique Reference Number (URN)
-#'   identifying the school.
-#' @param id Character scalar. Optional UI container ID used to namespace
-#'   tab interactions. Defaults to a value derived from `urn`.
-#'
-#' @details
-#' The panel is organised into tabbed sections:
-#'
-#' \itemize{
-#'   \item \strong{School Details} – Local authority, region, type, group,
-#'         and opening/closing information
-#'   \item \strong{Trust Details} – Trust reference and name (if applicable)
-#'   \item \strong{More Details} – Demographic and structural information,
-#'         including pupil numbers and FSM percentage
-#'   \item \strong{Important Links} – External links including SLIC,
-#'         school website, Ofsted reports, GIAS, and (if applicable)
-#'         trust-level GIAS pages
-#' }
-#'
-#' Data is retrieved from the Edubase dataset using the most recent
-#' `DateStamp` to ensure a consistent snapshot.
-#'
-#' Tab navigation is implemented using lightweight custom JavaScript and CSS,
-#' providing a GOV.UK-style interface without relying on Shiny tabset components.
-#'
-#' Summary content is rendered using [shinyGovstyle::gov_summary()], and links
-#' are displayed as a GOV.UK-styled list using [make_shiny_link()].
-#'
-#' @section Side Effects:
-#' \itemize{
-#'   \item Opens a database connection via [sql_manager()]
-#'   \item Executes SQL queries using [DBI::dbGetQuery()]
-#'   \item Writes log entries via [log_event()]
-#' }
-#'
-#' @return A Shiny UI object. If no data is available for the supplied URN,
-#'   a GOV.UK-styled message is returned instead.
-#'
-#' @examples
-#' \dontrun{
-#' school_render_overview(urn = "123456")
-#' }
-#'
-#' @seealso [shinyGovstyle::gov_layout()], [shinyGovstyle::gov_summary()]
-#'
+#' @param urn Character or numeric scalar. Unique Reference Number (URN) identifying the school.
+#' @param id Character scalar. Optional UI container ID used to namespace tab interactions.
 #' @export
-
 school_render_overview <- function(
   urn,
   id = paste0("school_overview_", urn)
 ) {
   start_time <- Sys.time()
-  log_event(glue::glue(
-    "Starting school_render_overview with urn: {urn}"
-  ))
+  log_event(glue::glue("Starting school_render_overview with urn: {urn}"))
 
   conn <- sql_manager("dit")
-
   on.exit(
     {
       try(DBI::dbDisconnect(conn), silent = TRUE)
@@ -113,12 +66,26 @@ school_render_overview <- function(
     return(
       shiny::div(
         id = id,
-        shinyGovstyle::heading_text(
-          "School Overview",
-          size = "l"
-        ),
-        shiny::HTML("<p>No data available for this school.</p>")
+        shinyGovstyle::heading_text("School Overview", size = "l"),
+        shiny::HTML(
+          "<p class='govuk-body'>No data available for this school.</p>"
+        )
       )
+    )
+  }
+
+  is_closed <- !is.na(summary_data$close_date[1])
+  status_tag <- if (is_closed) {
+    shiny::tags$strong(
+      class = "govuk-tag govuk-tag--red",
+      style = "margin-left: 15px; vertical-align: middle;",
+      "Closed"
+    )
+  } else {
+    shiny::tags$strong(
+      class = "govuk-tag govuk-tag--green",
+      style = "margin-left: 15px; vertical-align: middle;",
+      "Open"
     )
   }
 
@@ -129,10 +96,14 @@ school_render_overview <- function(
     "Region" = summary_data$region,
     "Type" = summary_data$school_type,
     "Group" = summary_data$school_type_group,
-    "Opened" = format(as.Date(summary_data$open_date), "%d-%m-%Y")
+    "Opened" = if (!is.na(summary_data$open_date[1])) {
+      format(as.Date(summary_data$open_date), "%d-%m-%Y")
+    } else {
+      "Unknown"
+    }
   )
 
-  if (!is.na(summary_data$close_date[1])) {
+  if (is_closed) {
     tabs[["School Details"]] <- c(
       tabs[["School Details"]],
       "Closed" = format(as.Date(summary_data$close_date), "%d-%m-%Y"),
@@ -147,13 +118,22 @@ school_render_overview <- function(
     )
   }
 
+  fsm_formatted <- if (!is.na(summary_data$perc_fsm[1])) {
+    paste0(summary_data$perc_fsm, "%")
+  } else {
+    "Data Not Available"
+  }
   tabs[["More Details"]] <- list(
     "Phase" = summary_data$phase,
     "Religious character" = summary_data$religious_character,
     "Diocese" = summary_data$diocese_name,
     "Gender" = summary_data$gender,
-    "Pupils" = prettyNum(summary_data$pupil_number, big.mark = ","),
-    "% FSM" = summary_data$perc_fsm
+    "Pupils" = if (!is.na(summary_data$pupil_number[1])) {
+      prettyNum(summary_data$pupil_number, big.mark = ",")
+    } else {
+      "0"
+    },
+    "% FSM" = fsm_formatted
   )
 
   links <- c(
@@ -162,32 +142,17 @@ school_render_overview <- function(
     ofsted_url(summary_data$urn[1]),
     gias_school_url(summary_data$urn[1])
   )
+  link_names <- c("SLIC", "Website", "Ofsted Reports", "GIAS")
 
-  link_names <- c(
-    "SLIC",
-    "Website",
-    "Ofsted Reports",
-    "GIAS"
-  )
-
-  # Add Trust link if available
   if (
     !is.na(summary_data$trust_ref) &&
       summary_data$trust_ref != "" &&
       !is.na(summary_data$trust_name) &&
       summary_data$trust_name != ""
   ) {
-    links <- c(
-      links,
-      gias_trust_url(summary_data$trust_ref[1])
-    )
-
-    link_names <- c(
-      link_names,
-      paste(summary_data$trust_name, "GIAS Trust")
-    )
+    links <- c(links, gias_trust_url(summary_data$trust_ref[1]))
+    link_names <- c(link_names, paste(summary_data$trust_name, "GIAS Trust"))
   }
-
   names(links) <- link_names
 
   link_tags <- htmltools::tags$ul(
@@ -195,39 +160,41 @@ school_render_overview <- function(
     lapply(seq_along(links), function(i) {
       url <- links[[i]]
       label <- names(links)[i]
-
-      htmltools::tags$li(
-        make_shiny_link(url, label)
-      )
+      htmltools::tags$li(make_shiny_link(url, label))
     })
   )
-
   tabs[["Important Links"]] <- link_tags
 
-  tab_buttons <- tags$div(
-    class = "custom-tabs-buttons",
+  tab_buttons <- tags$ul(
+    class = "govuk-tabs__list",
     lapply(names(tabs), function(tab) {
-      tags$button(
-        class = if (tab == names(tabs)[1]) {
-          "custom-tab-btn active"
+      is_first <- (tab == names(tabs)[1])
+      tags$li(
+        class = if (is_first) {
+          "govuk-tabs__list-item govuk-tabs__list-item--selected"
         } else {
-          "custom-tab-btn"
+          "govuk-tabs__list-item"
         },
-        `data-tab` = tab,
-        tab
+        tags$a(
+          class = "govuk-tabs__tab custom-tab-trigger",
+          `data-tab` = tab,
+          href = "javascript:void(0);",
+          tab
+        )
       )
     })
   )
 
   tab_contents <- tags$div(
-    class = "custom-tabs-contents",
+    class = "govuk-tabs__panels-container",
     lapply(names(tabs), function(tab) {
       content <- tabs[[tab]]
+      is_first <- (tab == names(tabs)[1])
 
-      if (tab == "Important Links") {
-        body <- content
+      body <- if (tab == "Important Links") {
+        content
       } else {
-        body <- shinyGovstyle::gov_summary(
+        shinyGovstyle::gov_summary(
           inputId = paste0(id, "_", gsub(" ", "_", tolower(tab))),
           headers = names(content),
           info = unname(content),
@@ -236,11 +203,12 @@ school_render_overview <- function(
       }
 
       tags$div(
-        class = if (tab == names(tabs)[1]) {
-          "custom-tab-content active"
+        class = if (is_first) {
+          "govuk-tabs__panel custom-tab-panel active"
         } else {
-          "custom-tab-content"
+          "govuk-tabs__panel custom-tab-panel"
         },
+        style = if (is_first) "display: block;" else "display: none;",
         `data-tab` = tab,
         body
       )
@@ -254,45 +222,88 @@ school_render_overview <- function(
         const root = document.getElementById('{id}');
         if (!root) return;
 
-        root.querySelectorAll('.custom-tab-btn').forEach(btn => {{
-          btn.addEventListener('click', function() {{
-            const target = this.dataset.tab;
+        root.querySelectorAll('.custom-tab-trigger').forEach(trigger => {{
+          trigger.addEventListener('click', function(e) {{
+            e.preventDefault();
+            const targetTab = this.dataset.tab;
+            const listItem = this.parentElement;
 
-            root.querySelectorAll('.custom-tab-btn')
-              .forEach(b => b.classList.remove('active'));
-            root.querySelectorAll('.custom-tab-content')
-              .forEach(c => c.classList.remove('active'));
+            // Strip active markers from selection array list items
+            root.querySelectorAll('.govuk-tabs__list-item').forEach(li => {{
+              li.classList.remove('govuk-tabs__list-item--selected');
+            }});
+            // Hide all active content matrix panel frames
+            root.querySelectorAll('.custom-tab-panel').forEach(panel => {{
+              panel.style.display = 'none';
+            }});
 
-            this.classList.add('active');
-            root.querySelector(
-              '.custom-tab-content[data-tab=\"' + target + '\"]'
-            ).classList.add('active');
+            // Activate chosen parameters elements instantly
+            listItem.classList.add('govuk-tabs__list-item--selected');
+            const targetPanel = root.querySelector('.custom-tab-panel[data-tab=\"' + targetTab + '\"]');
+            if (targetPanel) {{
+              targetPanel.style.display = 'block';
+            }}
           }});
         }});
       }})();
-    "
+      "
     )
   ))
 
   tab_css <- tags$style(HTML(
     glue::glue(
       "
-      #{id} .custom-tab-btn {{ background:#f3f2f1; border:1px solid #b1b4b6; padding:6px 12px; cursor:pointer; }}
-      #{id} .custom-tab-btn.active {{ background:#005ea5; color:white; }}
-      #{id} .custom-tab-content {{ display:none; }}
-      #{id} .custom-tab-content.active {{ display:block; }}
-    "
+      #{id} .govuk-tabs__list {{
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border-bottom: 2px solid #b1b4b6;
+        display: flex;
+      }}
+      #{id} .govuk-tabs__list-item {{
+        margin-right: 5px;
+        margin-bottom: -2px;
+      }}
+      #{id} .govuk-tabs__tab {{
+        display: block;
+        padding: 10px 20px;
+        color: #1d70b8;
+        text-decoration: none;
+        font-weight: bold;
+        background: #f3f2f1;
+        border: 2px solid transparent;
+        border-bottom: none;
+      }}
+      #{id} .govuk-tabs__list-item--selected .govuk-tabs__tab {{
+        background: #ffffff;
+        color: #0b0c0c;
+        border-color: #b1b4b6;
+        border-bottom: 2px solid #ffffff;
+      }}
+      #{id} .govuk-tabs__panel {{
+        border: 2px solid #b1b4b6;
+        border-top: none;
+        padding: 20px;
+        background: #ffffff;
+      }}
+      "
     )
   ))
 
-  ui <- shinyGovstyle::gov_layout(
+  header_title_block <- shiny::tags$div(
+    style = "display: flex; align-items: center; margin-bottom: 15px;",
     shinyGovstyle::heading_text(
       glue::glue("{summary_data$school_name} ({summary_data$urn})"),
       size = "l"
     ),
+    status_tag
+  )
+
+  ui <- shinyGovstyle::gov_layout(
+    header_title_block,
     tab_css,
     shiny::div(
-      class = "govuk-!-margin-top-3",
+      class = "govuk-tabs",
       tab_buttons,
       tab_contents
     ),
@@ -305,7 +316,7 @@ school_render_overview <- function(
 
   shiny::div(
     id = id,
-    class = "school-overview-wrapper",
+    class = "school-overview-wrapper govuk-!-margin-top-4",
     ui
   )
 }
