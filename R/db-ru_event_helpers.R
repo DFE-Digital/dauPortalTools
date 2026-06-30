@@ -103,14 +103,6 @@ db_ru_update_event_type <- function(
 #' @param entity_id Integer scalar or `NULL`. Unique identifier target constraint.
 #' @param entity_type Character scalar or `NULL`. Structural label filter (e.g., 'Trust').
 #' @export
-#' Get Event Registry Logs
-#'
-#' Pulls event interaction rows matching the active polymorphic entity target filters.
-#'
-#' @param ruev_id Integer scalar or `NULL`. Filter for an explicit event instance.
-#' @param entity_id Integer scalar or `NULL`. Unique identifier target constraint.
-#' @param entity_type Character scalar or `NULL`. Structural label filter (e.g., 'Trust').
-#' @export
 db_ru_get_events <- function(
   ruev_id = NULL,
   entity_id = NULL,
