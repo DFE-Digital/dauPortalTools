@@ -1,10 +1,5 @@
 #' Render School Overview Panel
 #'
-#' Generates an upgraded authentic GOV.UK-styled tabbed UI panel displaying summary information
-#' for an individual school using the latest available Edubase snapshot.
-#'
-#' @param urn Character or numeric scalar. Unique Reference Number (URN) identifying the school.
-#' @param id Character scalar. Optional UI container ID used to namespace tab interactions.
 #' @export
 school_render_overview <- function(
   urn,
@@ -165,24 +160,27 @@ school_render_overview <- function(
   )
   tabs[["Important Links"]] <- link_tags
 
-  tab_buttons <- tags$ul(
-    class = "govuk-tabs__list",
-    lapply(names(tabs), function(tab) {
-      is_first <- (tab == names(tabs)[1])
-      tags$li(
-        class = if (is_first) {
-          "govuk-tabs__list-item govuk-tabs__list-item--selected"
-        } else {
-          "govuk-tabs__list-item"
-        },
-        tags$a(
-          class = "govuk-tabs__tab custom-tab-trigger",
-          `data-tab` = tab,
-          href = "javascript:void(0);",
-          tab
+  tab_buttons <- tags$div(
+    class = "govuk-tabs-nav-wrapper",
+    tags$ul(
+      class = "govuk-tabs__list",
+      lapply(names(tabs), function(tab) {
+        is_first <- (tab == names(tabs)[1])
+        tags$li(
+          class = if (is_first) {
+            "govuk-tabs__list-item govuk-tabs__list-item--selected"
+          } else {
+            "govuk-tabs__list-item"
+          },
+          tags$a(
+            class = "govuk-tabs__tab custom-tab-trigger",
+            `data-tab` = tab,
+            href = "javascript:void(0);",
+            tab
+          )
         )
-      )
-    })
+      })
+    )
   )
 
   tab_contents <- tags$div(
@@ -228,16 +226,13 @@ school_render_overview <- function(
             const targetTab = this.dataset.tab;
             const listItem = this.parentElement;
 
-            // Strip active markers from selection array list items
             root.querySelectorAll('.govuk-tabs__list-item').forEach(li => {{
               li.classList.remove('govuk-tabs__list-item--selected');
             }});
-            // Hide all active content matrix panel frames
             root.querySelectorAll('.custom-tab-panel').forEach(panel => {{
               panel.style.display = 'none';
             }});
 
-            // Activate chosen parameters elements instantly
             listItem.classList.add('govuk-tabs__list-item--selected');
             const targetPanel = root.querySelector('.custom-tab-panel[data-tab=\"' + targetTab + '\"]');
             if (targetPanel) {{
@@ -253,38 +248,47 @@ school_render_overview <- function(
   tab_css <- tags$style(HTML(
     glue::glue(
       "
+      #{id} .govuk-tabs-nav-wrapper {{
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }}
       #{id} .govuk-tabs__list {{
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        border-bottom: 2px solid #b1b4b6;
-        display: flex;
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-bottom: 2px solid #b1b4b6 !important;
+        display: flex !important;
       }}
       #{id} .govuk-tabs__list-item {{
-        margin-right: 5px;
-        margin-bottom: -2px;
+        margin-right: 5px !important;
+        margin-bottom: -2px !important;
+        list-style-type: none !important;
+      }}
+      #{id} .govuk-tabs__list-item::before {{
+        content: none !important; /* Obliterates rogue lines */
       }}
       #{id} .govuk-tabs__tab {{
-        display: block;
-        padding: 10px 20px;
-        color: #1d70b8;
-        text-decoration: none;
-        font-weight: bold;
-        background: #f3f2f1;
-        border: 2px solid transparent;
-        border-bottom: none;
+        display: block !important;
+        padding: 10px 20px !important;
+        color: #1d70b8 !important;
+        text-decoration: none !important;
+        font-weight: bold !important;
+        background: #f3f2f1 !important;
+        border: 2px solid transparent !important;
+        border-bottom: none !important;
       }}
       #{id} .govuk-tabs__list-item--selected .govuk-tabs__tab {{
-        background: #ffffff;
-        color: #0b0c0c;
-        border-color: #b1b4b6;
-        border-bottom: 2px solid #ffffff;
+        background: #ffffff !important;
+        color: #0b0c0c !important;
+        border-color: #b1b4b6 !important;
+        border-bottom: 2px solid #ffffff !important;
       }}
       #{id} .govuk-tabs__panel {{
-        border: 2px solid #b1b4b6;
-        border-top: none;
-        padding: 20px;
-        background: #ffffff;
+        border: 2px solid #b1b4b6 !important;
+        border-top: none !important;
+        padding: 20px !important;
+        background: #ffffff !important;
       }}
       "
     )
