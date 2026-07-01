@@ -6,15 +6,6 @@
 \usage{
 db_ru_add_event_sub_variety(ruevt_id, name, description = NULL, user_id = NULL)
 }
-\arguments{
-\item{ruevt_id}{Integer scalar. Parent event type ID.}
-
-\item{name}{Character scalar. Name of the sub-cohort/variety.}
-
-\item{description}{Character scalar. Context notes.}
-
-\item{user_id}{Character scalar. Active auditor logging the row.}
-}
 \description{
 Add a New Event Sub-Variety Entry
 }

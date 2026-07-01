@@ -14,7 +14,7 @@ db_ru_get_events(
 \arguments{
 \item{ruev_id}{Integer scalar or \code{NULL}. Filter for an explicit event instance.}
 
-\item{entity_id}{Integer scalar or \code{NULL}. Unique identifier target constraint.}
+\item{entity_id}{Character or Integer scalar or \code{NULL}. Unique identifier target constraint.}
 
 \item{entity_type}{Character scalar or \code{NULL}. Structural label filter (e.g., 'Trust').}
 }

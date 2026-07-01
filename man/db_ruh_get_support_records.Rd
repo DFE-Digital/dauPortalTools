@@ -17,16 +17,12 @@ db_ruh_get_support_records(
 
 \item{hub_id}{Integer scalar or \code{NULL}. Filter for a specific parent hub.}
 
-\item{entity_id}{Integer scalar or \code{NULL}. Target unit unique identifier.}
+\item{entity_id}{Character or Integer scalar or \code{NULL}. Target unit unique identifier.}
 
 \item{entity_type}{Character scalar or \code{NULL}. Target category (e.g., 'School', 'Trust').}
 
 \item{db_get_query}{Function used to execute the query (default: \code{utils_db_get_query}).}
 }
-\value{
-A \code{data.frame} containing ongoing track records joined with hub and track metadata.
-}
 \description{
-Returns ongoing track provisions from the database with flexible filtering for
-specific records, parent hubs, or a targeted entity level block.
+Get Support Records with Polymorphic Lookups
 }
