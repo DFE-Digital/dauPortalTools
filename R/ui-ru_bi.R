@@ -52,13 +52,6 @@ ru_render_summary <- function(db_get_query = utils_db_get_query) {
              
           UNION ALL
           
-          -- Dynamic Fields Action Responses Ledger
-          SELECT COUNT(*) AS cnt FROM {schema}.[ru_event_action_responses] 
-          WHERE [date_created] >= DATEADD(DAY, -30, GETDATE()) 
-             OR [date_edited] >= DATEADD(DAY, -30, GETDATE())
-             
-          UNION ALL
-          
           -- Hubs Management Records Table (If it tracks timeline changes)
           SELECT COUNT(*) AS cnt FROM {schema}.[ruh_lead_schools]
           WHERE [date_created] >= DATEADD(DAY, -30, GETDATE())
