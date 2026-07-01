@@ -377,7 +377,7 @@ db_ru_get_event_sub_varieties <- function(ruevt_id = NULL) {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  base_query <- "SELECT [ruuesv_id], [ruevt_id], [ruesv_name], [ruesv_description], [date_created], [user_id_created] 
+  base_query <- "SELECT [ruesv_id], [ruevt_id], [ruesv_name], [ruesv_description], [date_created], [user_id_created] 
                  FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_sub_varieties]"
 
   if (!is.null(ruevt_id)) {
