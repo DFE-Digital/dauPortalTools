@@ -89,3 +89,61 @@ db_ruh_update_action <- function(
 
   db_get_query(conn, query)
 }
+
+#' Register a New Hub Provision Sub-Category
+#' @export
+db_ruh_add_sub_category <- function(
+  ruht_id,
+  ruhb_id,
+  name,
+  description,
+  user_id
+) {
+  conn <- sql_manager("dit")
+  on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+
+  query <- glue::glue_sql(
+    "
+    INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ruh_sub_categories] 
+      ([ruht_id], [ruhb_id], [ruhsc_name], [ruhsc_description], [created_by])
+    VALUES 
+      ({ruht_id}, {ruhb_id}, {name}, {trimws(description)}, {user_id});
+  ",
+    .con = conn
+  )
+
+  DBI::dbExecute(conn, query)
+}
+
+#' Register a New Hub Blueprint Input Field Configuration
+#' @export
+db_ruh_add_blueprint_field <- function(
+  ruht_id,
+  ruhsc_id,
+  field_name,
+  description,
+  rule_type,
+  is_required,
+  user_id
+) {
+  conn <- sql_manager("dit")
+  on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+
+  # Structural server-side check ensuring incoming string types map strictly to your engine specs
+  valid_types <- c("Character", "Integer", "Date", "Boolean")
+  if (!rule_type %in% valid_types) {
+    stop("Invalid storage validation type assignment.")
+  }
+
+  query <- glue::glue_sql(
+    "
+    INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ruh_blueprint_fields]
+      ([ruht_id], [ruhsc_id], [ruhbf_name], [ruhbf_description], [ruhbf_rule_type], [ruhbf_required], [created_by])
+    VALUES
+      ({ruht_id}, {ruhsc_id}, {field_name}, {trimws(description)}, {rule_type}, {is_required}, {user_id});
+  ",
+    .con = conn
+  )
+
+  DBI::dbExecute(conn, query)
+}
