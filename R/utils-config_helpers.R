@@ -32,11 +32,11 @@ get_config <- function(path = "./config.yml") {
     stop("Config file not found: ", path, call. = FALSE)
   }
 
-  cat(paste0("Starting get_config with ", Sys.getenv("R_CONFIG_ACTIVE")))
+  active_env <- Sys.getenv("R_CONFIG_ACTIVE", "default")
 
   conf <- config::merge(
     config::get(file = path, config = "global"),
-    config::get(file = path, config = "R_CONFIG_ACTIVE")
+    config::get(file = path, config = active_env)
   )
 
   if (is.null(conf$app_details$app_id)) {
