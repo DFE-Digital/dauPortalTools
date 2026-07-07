@@ -33,8 +33,8 @@ get_config <- function(path = "./config.yml") {
   }
 
   conf <- config::merge(
-    config::get(file = path, config = "R_CONFIG_ACTIVE"),
-    config::get(file = path, config = "global")
+    config::get(file = path, config = "global"),
+    config::get(file = path, config = "R_CONFIG_ACTIVE")
   )
 
   if (is.null(conf$app_details$app_id)) {
