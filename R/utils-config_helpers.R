@@ -28,13 +28,11 @@
 #'
 #' @export
 get_config <- function(path = "./config.yml") {
-  log_event("Running get_config", TRUE)
-
   if (!file.exists(path)) {
     stop("Config file not found: ", path, call. = FALSE)
   }
 
-  log_event(Sys.getenv("R_CONFIG_ACTIVE"), TRUE)
+  cat(paste0("Starting get_config with ", Sys.getenv("R_CONFIG_ACTIVE")))
 
   conf <- config::merge(
     config::get(file = path, config = "global"),
@@ -48,8 +46,6 @@ get_config <- function(path = "./config.yml") {
   if (is.null(conf$logging)) {
     stop("Configuration is missing: logging section", call. = FALSE)
   }
-
-  log_event(conf, TRUE)
 
   conf
 }
