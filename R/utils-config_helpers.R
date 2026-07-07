@@ -34,15 +34,18 @@ get_config <- function(path = "./config.yml") {
 
   active_env <- Sys.getenv("R_CONFIG_ACTIVE", "default")
 
-  conf <- config::merge(
-    config::get(file = path, config = "global"),
-    config::get(file = path, config = active_env)
+  global_layer <- config::get(
+    file = path,
+    config = "global",
+    use_parent = FALSE
   )
+  env_layer <- config::get(file = path, config = active_env, use_parent = FALSE)
+
+  conf <- config::merge(global_layer, env_layer)
 
   if (is.null(conf$app_details$app_id)) {
     stop("Configuration is missing: app_details$app_id", call. = FALSE)
   }
-
   if (is.null(conf$logging)) {
     stop("Configuration is missing: logging section", call. = FALSE)
   }
