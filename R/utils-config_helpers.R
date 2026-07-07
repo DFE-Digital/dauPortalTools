@@ -32,6 +32,8 @@ get_config <- function(path = "./config.yml") {
     stop("Config file not found: ", path, call. = FALSE)
   }
 
+  log_event(Sys.getenv("R_CONFIG_ACTIVE"), debug = TRUE)
+
   conf <- config::merge(
     config::get(file = path, config = "global"),
     config::get(file = path, config = "R_CONFIG_ACTIVE")
@@ -44,6 +46,8 @@ get_config <- function(path = "./config.yml") {
   if (is.null(conf$logging)) {
     stop("Configuration is missing: logging section", call. = FALSE)
   }
+
+  log_event(conf, debug = TRUE)
 
   conf
 }
