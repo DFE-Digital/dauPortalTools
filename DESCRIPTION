@@ -1,6 +1,6 @@
 Package: dauPortalTools
 Title: Data Analysis Unit Portal Tools
-Version: 2026.7.0
+Version: 2026.7.1
 Authors@R: c(person("Ben","Smith",email="ben7.smith@education.gov.uk",role=c("aut","cre")),
              person("Ben","Clewarth",email="ben.clewarth@education.gov.uk",role="aut"),
              person("Mark","Horton",email="mark.horton@education.gov.uk",role="aut"))

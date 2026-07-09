@@ -2,10 +2,10 @@
 % Please edit documentation in R/db-ruh_lead_schools_helpers.R
 \name{db_get_hub_lead_urns}
 \alias{db_get_hub_lead_urns}
-\title{Get Distinct Lead School Identifier Values Array}
+\title{Get Distinct Lead School Identifier Values Array (Legacy Compatibility Vector)}
 \usage{
 db_get_hub_lead_urns(db_get_query = utils_db_get_query)
 }
 \description{
-Get Distinct Lead School Identifier Values Array
+Get Distinct Lead School Identifier Values Array (Legacy Compatibility Vector)
 }
