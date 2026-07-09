@@ -10,7 +10,7 @@ db_ru_add_event_action(
   description = "",
   rule_type = "Character",
   is_required = 0,
-  uesv_id = 0,
+  ruesv_id = 0,
   user_id = NULL
 )
 }
