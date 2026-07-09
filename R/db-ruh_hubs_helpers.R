@@ -120,3 +120,24 @@ db_ruh_get_hub_summary <- function(db_get_query = utils_db_get_query) {
 
   db_get_query(conn, query)
 }
+
+
+#' Retrieve Master List of All Regional Hub Profiles
+#'
+#' Pulls a clean, unique data frame of all active hub IDs and names.
+#'
+#' @return A data.frame with columns [ruhb_id] and [ruhb_name].
+#' @export
+db_hubs_lookup <- function() {
+  conn <- sql_manager("dit")
+  on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+
+  query <- glue::glue_sql(
+    "SELECT [ruhb_id], [ruhb_name] 
+     FROM {utils_resolve_schema('db_schema_01r')}.[ruh_hubs]
+     ORDER BY [ruhb_name];",
+    .con = conn
+  )
+
+  DBI::dbGetQuery(conn, query)
+}
