@@ -419,3 +419,29 @@ db_ru_add_event_sub_variety <- function(
 
   utils_db_execute(conn, query)
 }
+
+#' Retrieve Master Profile Metadata for a Point-in-Time Event
+#'
+#' Pulls record parameters for a specific primary event container tracker row.
+#'
+#' @param event_master_id Integer. The primary key ID of the target event master record.
+#' @return A data.frame containing columns `ruevm_id`, `ruevm_name`, `ruevm_active`, `created_date`, and `created_by`.
+#' @export
+db_ru_get_event_master_record <- function(event_master_id) {
+  req(event_master_id)
+
+  conn <- sql_manager("dit")
+  on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+
+  query <- glue::glue_sql(
+    "SELECT [ruevm_id], [ruevm_name], [ruevm_active], [created_date], [created_by]
+     FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_master]
+     WHERE [ruevm_id] = {as.integer(event_master_id)};",
+    .con = conn
+  )
+
+  df <- DBI::dbGetQuery(conn, query)
+  req(nrow(df) > 0)
+
+  return(df)
+}

@@ -126,7 +126,7 @@ db_ruh_get_hub_summary <- function(db_get_query = utils_db_get_query) {
 #'
 #' Pulls a clean, unique data frame of all active hub IDs and names.
 #'
-#' @return A data.frame with columns [ruhb_id] and [ruhb_name].
+#' @return A data.frame with columns `ruhb_id` and `ruhb_name`.
 #' @export
 db_hubs_lookup <- function() {
   conn <- sql_manager("dit")

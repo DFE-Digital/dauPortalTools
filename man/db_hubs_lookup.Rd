@@ -7,7 +7,7 @@
 db_hubs_lookup()
 }
 \value{
-A data.frame with columns \link{ruhb_id} and \link{ruhb_name}.
+A data.frame with columns \code{ruhb_id} and \code{ruhb_name}.
 }
 \description{
 Pulls a clean, unique data frame of all active hub IDs and names.
