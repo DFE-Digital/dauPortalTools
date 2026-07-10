@@ -420,12 +420,12 @@ db_ru_add_event_sub_variety <- function(
   utils_db_execute(conn, query)
 }
 
-#' Retrieve Master Profile Metadata for a Point-in-Time Event
+#' Retrieve Metadata Profile for an Event Type Configuration
 #'
-#' Pulls record parameters for a specific primary event container tracker row.
+#' Pulls row parameters for a specific category or top-level event type.
 #'
-#' @param event_master_id Integer. The primary key ID of the target event master record.
-#' @return A data.frame containing columns `ruevm_id`, `ruevm_name`, `ruevm_active`, `created_date`, and `created_by`.
+#' @param event_master_id Integer. Passed from the router (maps to ruevt_id).
+#' @return A data.frame containing columns `ruevt_id`, `ruevt_name`, and `user_id_created`.
 #' @export
 db_ru_get_event_master_record <- function(event_master_id) {
   req(event_master_id)
@@ -433,10 +433,13 @@ db_ru_get_event_master_record <- function(event_master_id) {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
+  # Pointed directly to your active ru_event_types tracking table structure
   query <- glue::glue_sql(
-    "SELECT [ruevm_id], [ruevm_name], [ruevm_active], [created_date], [created_by]
-     FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_master]
-     WHERE [ruevm_id] = {as.integer(event_master_id)};",
+    "SELECT [ruevt_id] AS [ruevm_id], 
+            [ruevt_name] AS [ruevm_name], 
+            1 AS [ruevm_active]
+     FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_types]
+     WHERE [ruevt_id] = {as.integer(event_master_id)};",
     .con = conn
   )
 
