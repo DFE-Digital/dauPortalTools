@@ -2,16 +2,16 @@
 % Please edit documentation in R/db-ru_event_helpers.R
 \name{db_ru_get_event_master_record}
 \alias{db_ru_get_event_master_record}
-\title{Retrieve Master Profile Metadata for a Point-in-Time Event}
+\title{Retrieve Metadata Profile for an Event Type Configuration}
 \usage{
 db_ru_get_event_master_record(event_master_id)
 }
 \arguments{
-\item{event_master_id}{Integer. The primary key ID of the target event master record.}
+\item{event_master_id}{Integer. Passed from the router (maps to ruevt_id).}
 }
 \value{
-A data.frame containing columns \code{ruevm_id}, \code{ruevm_name}, \code{ruevm_active}, \code{created_date}, and \code{created_by}.
+A data.frame containing columns \code{ruevt_id}, \code{ruevt_name}, and \code{user_id_created}.
 }
 \description{
-Pulls record parameters for a specific primary event container tracker row.
+Pulls row parameters for a specific category or top-level event type.
 }
