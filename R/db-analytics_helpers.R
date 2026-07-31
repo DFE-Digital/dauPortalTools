@@ -23,6 +23,8 @@ db_insert_app_analytics <- function(
   log_event("Starting db_insert_app_analytics")
   on.exit(log_event("Finished db_insert_app_analytics"), add = TRUE)
 
+  conn <- sql_manager("dit")
+
   shiny::req(conn, user_id, app_id, env_id, page_name, action_type)
 
   query <- glue::glue_sql(
@@ -69,6 +71,8 @@ db_insert_audit_log <- function(
   log_event("Starting db_insert_audit_log")
   on.exit(log_event("Finished db_insert_audit_log"), add = TRUE)
 
+  conn <- sql_manager("dit")
+
   shiny::req(
     conn,
     app_id,
@@ -110,6 +114,8 @@ db_insert_audit_log <- function(
 db_get_analytics_summary <- function(conn, app_id, days_back = 30) {
   log_event("Starting db_get_analytics_summary")
   on.exit(log_event("Finished db_get_analytics_summary"), add = TRUE)
+
+  conn <- sql_manager("dit")
 
   shiny::req(conn, app_id)
 
