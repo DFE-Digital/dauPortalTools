@@ -78,7 +78,7 @@ db_ruh_update_support_type <- function(
     description
   }
 
-  query := glue_sql(
+  query <- glue_sql(
     "
     UPDATE {utils_resolve_schema('db_schema_01r')}.[ruh_support_types]
     SET [ruht_name]        = {name}, 
