@@ -92,33 +92,48 @@ db_ruh_update_hub <- function(hub_id, hub_name, user_id) {
 #' Returns aggregated counts mapping active engagement allocations across the polymorphic track matrix.
 #'
 #' @export
-db_ruh_get_hub_summary <- function(db_get_query = utils_db_get_query) {
-  log_event("Starting db_ruh_get_hub_summary")
-
+#' Get Hub Summary metrics for Directory Search
+#' @export
+db_ruh_get_hub_summary <- function() {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  query <- glue_sql(
-    "
-    SELECT 
-        h.[ruhb_id], 
-        h.[ruhb_name] AS [hub_name],
-        COUNT(DISTINCT CASE WHEN s.[ruhsr_active] = 1 AND s.[ruhsr_entity_type] = 'School' THEN s.[ruhsr_entity_id] END) AS [schools_supported_active],
-        COUNT(DISTINCT CASE WHEN s.[ruhsr_active] = 1 AND s.[ruhsr_entity_type] = 'Trust'  THEN s.[ruhsr_entity_id] END) AS [trusts_supported_active],
-        COUNT(DISTINCT CASE WHEN s.[ruhsr_active] = 1 AND s.[ruhsr_entity_type] = 'LA'     THEN s.[ruhsr_entity_id] END) AS [las_supported_active],
-        COUNT(DISTINCT CASE WHEN l.[ruhl_active] = 1  THEN l.[ruhl_urn] END) AS [lead_schools_active],
-        COUNT(DISTINCT t.[ruht_id]) AS [support_types_count]
-    FROM {utils_resolve_schema('db_schema_01r')}.[ruh_hubs] h
-    LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_support_records] s ON h.[ruhb_id] = s.[ruhb_id]
-    LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_lead_schools] l    ON h.[ruhb_id] = l.[ruhb_id]
-    LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_support_types] t   ON h.[ruhb_id] = t.[ruhb_id]
-    GROUP BY h.[ruhb_id], h.[ruhb_name]
-    ORDER BY h.[ruhb_name] ASC;
-    ",
-    .con = conn
+  tryCatch(
+    {
+      query <- glue::glue(
+        "SELECT 
+         h.[ruhb_id] AS [id],
+         h.[ruhb_name] AS [hub_name],
+         COUNT(DISTINCT CASE WHEN sr.[ruhsr_active] = 1 AND sr.[ruhsr_entity_type] = 'School' THEN sr.[ruhsr_entity_id] END) AS [active_schools_tracked],
+         COUNT(DISTINCT CASE WHEN sr.[ruhsr_active] = 1 AND sr.[ruhsr_entity_type] = 'Trust' THEN sr.[ruhsr_entity_id] END) AS [active_trusts_tracked],
+         COUNT(DISTINCT CASE WHEN sr.[ruhsr_active] = 1 AND sr.[ruhsr_entity_type] = 'LA' THEN sr.[ruhsr_entity_id] END) AS [active_las_tracked],
+         COUNT(DISTINCT CASE WHEN ls.[ruhl_active] = 1 THEN ls.[ruhl_id] END) AS [active_lead_centers],
+         COUNT(DISTINCT st.[ruht_id]) AS [total_active_categories]
+       FROM {utils_resolve_schema('db_schema_01r')}.[ruh_hubs] h
+       LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_support_records] sr 
+         ON h.[ruhb_id] = sr.[ruhb_id]
+       LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ru_lead_schools] ls 
+         ON h.[ruhb_id] = ls.[ruhb_id]
+       LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_support_types] st 
+         ON h.[ruhb_id] = st.[ruhb_id]
+       GROUP BY h.[ruhb_id], h.[ruhb_name]
+       ORDER BY h.[ruhb_name] ASC;"
+      )
+      res <- DBI::dbGetQuery(conn, query)
+      tibble::as_tibble(res)
+    },
+    error = function(e) {
+      tibble::tibble(
+        id = integer(0),
+        hub_name = character(0),
+        active_schools_tracked = integer(0),
+        active_trusts_tracked = integer(0),
+        active_las_tracked = integer(0),
+        active_lead_centers = integer(0),
+        total_active_categories = integer(0)
+      )
+    }
   )
-
-  db_get_query(conn, query)
 }
 
 
