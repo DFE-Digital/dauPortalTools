@@ -1,31 +1,27 @@
-#' Get Current Portal Username
+#' Get Current Portal Username Token
 #'
-#' Retrieves the username from the active Shiny (or Posit Connect) session.
-#' If unavailable (e.g. local development), falls back to a configured or
-#' provided default value.
+#' Retrieves the network username signature token from the active Shiny session
+#' or Posit Connect server headers. If unavailable (e.g. local development),
+#' falls back to local configuration overrides or a guest default.
 #'
-#' @param session Optional Shiny session object. If `NULL`, the function
-#'   attempts to detect the current session automatically.
-#' @param fallback Character scalar. Username to return if no session or
-#'   emulated user is available. Defaults to `"Guest"`.
+#' @param session Optional Shiny session object. If `NULL`, attempts to auto-detect
+#'   the active reactive domain context.
+#' @param fallback Character scalar. Default identity string if no session or emulated
+#'   token is present. Defaults to `"Guest"`.
 #'
 #' @details
-#' The function resolves the username in the following order:
+#' Resolves user identity tokens in the following hierarchy:
 #' \itemize{
-#'   \item `session$user`, if available
-#'   \item `config::get("emulate_user")`, if defined
-#'   \item `fallback`
+#'   \item `session$user` (Posit Connect / LDAP header string)
+#'   \item `config::get("emulate_user")` (Local dev override in config.yml)
+#'   \item `fallback` ("Guest")
 #' }
 #'
-#' This allows consistent behaviour across production and local development.
-#'
-#' @return Character scalar representing the resolved username.
-#'
-#' @seealso [config::get()]
-#'
+#' @return Character scalar representing the raw username identity token.
 #' @export
-
 get_user <- function(session = NULL, fallback = "Guest") {
+  log_event("Starting get_user session token resolution")
+
   if (is.null(session)) {
     session <- tryCatch(
       shiny::getDefaultReactiveDomain(),
@@ -33,19 +29,34 @@ get_user <- function(session = NULL, fallback = "Guest") {
     )
   }
 
+  # 1. Check Posit Connect / Server HTTP Header User
   if (!is.null(session) && !is.null(session$user) && nzchar(session$user)) {
+    log_event(paste0(
+      "Resolved user token directly from session$user: ",
+      session$user
+    ))
     return(session$user)
   }
 
+  # 2. Check local development emulation token in config.yml
   emulate_user <- tryCatch(
     config::get("emulate_user"),
     error = function(e) NULL
   )
 
   if (!is.null(emulate_user) && nzchar(emulate_user)) {
+    log_event(paste0(
+      "Resolved user token from emulate_user config: ",
+      emulate_user
+    ))
     return(emulate_user)
   }
 
+  # 3. Fallback
+  log_event(paste0(
+    "No active user session or emulation config found. Falling back to: ",
+    fallback
+  ))
   fallback
 }
 
@@ -103,10 +114,10 @@ get_user_role <- function(username) {
 
   sql <- "
     SELECT r.role_name
-    FROM [01_AIDT].[users] u
-    JOIN [01_AIDT].[user_roles] ur
+    FROM [01_SSSR].[users] u
+    JOIN [01_SSSR].[user_roles] ur
       ON u.user_id = ur.user_id
-    JOIN [01_AIDT].[roles] r
+    JOIN [01_SSSR].[roles] r
       ON ur.role_id = r.role_id
     WHERE u.username = ?
       AND ur.app_id = ?
@@ -160,7 +171,7 @@ get_user_id <- function(username) {
     conn,
     "
       SELECT user_id
-      FROM [Data_Insight_Team].[01_AIDT].[users]
+      FROM [Data_Insight_Team].[01_SSSR].[users]
       WHERE username = ?
     ",
     params = list(username)
