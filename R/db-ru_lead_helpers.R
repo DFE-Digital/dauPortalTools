@@ -275,3 +275,47 @@ select_ru_event_lead_providers_by_type <- function(ruevt_id) {
     }
   )
 }
+
+#' Get Hub Summary metrics for Directory Search
+#' @export
+db_ruh_get_hub_summary <- function() {
+  conn <- sql_manager("dit")
+  on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
+
+  tryCatch(
+    {
+      query <- glue::glue(
+        "SELECT 
+         h.[ruhb_id] AS [id],
+         h.[ruhb_name] AS [hub_name],
+         COUNT(DISTINCT CASE WHEN sr.[ruhsr_active] = 1 AND sr.[ruhsr_entity_type] = 'School' THEN sr.[ruhsr_entity_id] END) AS [active_schools_tracked],
+         COUNT(DISTINCT CASE WHEN sr.[ruhsr_active] = 1 AND sr.[ruhsr_entity_type] = 'Trust' THEN sr.[ruhsr_entity_id] END) AS [active_trusts_tracked],
+         COUNT(DISTINCT CASE WHEN sr.[ruhsr_active] = 1 AND sr.[ruhsr_entity_type] = 'LA' THEN sr.[ruhsr_entity_id] END) AS [active_las_tracked],
+         COUNT(DISTINCT CASE WHEN ls.[ruhl_active] = 1 THEN ls.[ruhl_id] END) AS [active_lead_centers],
+         COUNT(DISTINCT st.[ruht_id]) AS [total_active_categories]
+       FROM {utils_resolve_schema('db_schema_01r')}.[ruh_hubs] h
+       LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_support_records] sr 
+         ON h.[ruhb_id] = sr.[ruhb_id]
+       LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ru_lead_schools] ls 
+         ON h.[ruhb_id] = ls.[ruhb_id]
+       LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_support_types] st 
+         ON h.[ruhb_id] = st.[ruhb_id]
+       GROUP BY h.[ruhb_id], h.[ruhb_name]
+       ORDER BY h.[ruhb_name] ASC;"
+      )
+      res <- DBI::dbGetQuery(conn, query)
+      tibble::as_tibble(res)
+    },
+    error = function(e) {
+      tibble::tibble(
+        id = integer(0),
+        hub_name = character(0),
+        active_schools_tracked = integer(0),
+        active_trusts_tracked = integer(0),
+        active_las_tracked = integer(0),
+        active_lead_centers = integer(0),
+        total_active_categories = integer(0)
+      )
+    }
+  )
+}
