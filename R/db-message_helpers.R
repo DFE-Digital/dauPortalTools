@@ -16,6 +16,7 @@ db_get_portal_messages <- function() {
   app_id <- utils_get_app_id()
 
   conn <- sql_manager("dit")
+
   on.exit(
     {
       try(DBI::dbDisconnect(conn), silent = TRUE)
@@ -54,7 +55,7 @@ db_get_portal_messages <- function() {
   )
 }
 
-#' Add a Portal Message
+#' Add a Portal Messagekj
 #'
 #' Inserts a new message into the `portal_messages` table, linking it to a
 #' normalized user identifier.
