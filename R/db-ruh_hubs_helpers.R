@@ -92,8 +92,6 @@ db_ruh_update_hub <- function(hub_id, hub_name, user_id) {
 #' Returns aggregated counts mapping active engagement allocations across the polymorphic track matrix.
 #'
 #' @export
-#' Get Hub Summary metrics for Directory Search
-#' @export
 db_ruh_get_hub_summary <- function() {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
