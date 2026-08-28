@@ -9,42 +9,12 @@ db_get_roles()
 db_get_roles()
 }
 \value{
-A \code{\link{data.frame}} with the following columns:
-\describe{
-\item{role_id}{Integer role identifier.}
-\item{role_name}{Character role name.}
-}
+A \code{\link{data.frame}} with role configurations.
+
+A \code{\link{data.frame}} containing available roles.
 }
 \description{
 Returns all roles available within the application.
-}
-\details{
-The database schema is resolved using \code{\link[=utils_resolve_schema]{utils_resolve_schema()}}, and
-the query is executed using \code{\link[=utils_db_get_query]{utils_db_get_query()}}.
 
-Results are ordered alphabetically by role name.
-
-Database connections are managed internally and safely closed using
-\code{on.exit()}. Logging is performed via \code{\link[=log_event]{log_event()}} at the start
-and end of execution.
-}
-\section{Side Effects}{
-
-\itemize{
-\item Opens and closes a database connection.
-\item Writes log entries via \code{\link[=log_event]{log_event()}}.
-}
-}
-
-\examples{
-\dontrun{
-roles <- db_get_roles()
-
-# View roles
-roles
-}
-
-}
-\seealso{
-\code{\link[=db_get_app_users]{db_get_app_users()}}, \code{\link[=db_update_user_role]{db_update_user_role()}}
+Retrieves the global collection of system configuration roles from the registry.
 }

@@ -11,6 +11,9 @@ log_page_view(user_id, page_name)
 
 \item{page_name}{Character scalar. Target display location context.}
 }
+\value{
+\code{NULL}, invisibly.
+}
 \description{
 High-level wrapper tracking internal page switches (tabs, menus) into app_analytics.
 }

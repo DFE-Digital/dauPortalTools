@@ -4,63 +4,27 @@
 \alias{db_update_user_role}
 \title{Update or Insert a User Role Assignment}
 \usage{
-db_update_user_role(user_id, role_id)
+db_update_user_role(user_id, role_id, assigned_by)
 
-db_update_user_role(user_id, role_id)
+db_update_user_role(user_id, role_id, assigned_by)
 }
 \arguments{
 \item{user_id}{Integer scalar. The structural internal user account tracking key identifier.}
 
 \item{role_id}{Integer scalar. Targeted access matrix scope key.}
 
-\item{app_id}{Integer scalar. Application identifier.}
+\item{assigned_by}{Integer scalar. Identifier of the user executing the change.}
 
-\item{assigned_by}{Integer scalar. Identifier of the user performing
-the assignment.}
+\item{app_id}{Integer scalar. Application identifier.}
 }
 \value{
-Invisible logical \code{TRUE} on successful execution.
+Numeric rows affected.
+
+Integer scalar. Rows affected.
 }
 \description{
 Assigns or updates a user's role for a given application. If a record
-already exists, it is updated; otherwise, a new record is inserted.
-}
-\details{
-This function uses a SQL \code{MERGE} statement to:
-\itemize{
-\item update existing user-role assignments, or
-\item insert a new assignment if none exists.
-}
+already exists, it is activated and updated; otherwise, a new record is inserted.
 
-The database schema is resolved using \code{\link[=utils_resolve_schema]{utils_resolve_schema()}}, and
-the query is executed using \code{\link[=utils_db_execute]{utils_db_execute()}}.
-
-Inputs are coerced to integers prior to execution.
-
-Database connections are managed internally and safely closed using
-\code{on.exit()}. Logging is performed via \code{\link[=log_event]{log_event()}} at the start
-and end of execution.
-}
-\section{Side Effects}{
-
-\itemize{
-\item Writes to the database via an \code{INSERT} or \code{UPDATE}.
-\item Opens and closes a database connection.
-\item Writes log entries via \code{\link[=log_event]{log_event()}}.
-}
-}
-
-\examples{
-\dontrun{
-db_update_user_role(
-  user_id = 1,
-  role_id = 2,
-  app_id = 7,
-  assigned_by = 3
-)
-}
-
-}
-\seealso{
-\code{\link[=db_get_app_users]{db_get_app_users()}}, \code{\link[=db_get_roles]{db_get_roles()}}
+Updates or reactivates an access profile row for a specific user within the active application scope.
 }

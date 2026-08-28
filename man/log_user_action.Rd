@@ -15,6 +15,9 @@ log_user_action(user_id, page_name, action_type, element_id)
 
 \item{element_id}{Character scalar. Specific element identifier token.}
 }
+\value{
+\code{NULL}, invisibly.
+}
 \description{
 High-level wrapper tracking custom actions like download activations or filter fires.
 }

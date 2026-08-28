@@ -13,6 +13,9 @@ revoke_user_role(target_user_id, role_name, admin_user_id)
 
 \item{admin_user_id}{Integer. The executing administrator ID.}
 }
+\value{
+Logical. TRUE if the write succeeded, FALSE otherwise.
+}
 \description{
 Soft-deletes a user assignment row and files a system audit trace.
 }

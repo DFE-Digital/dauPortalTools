@@ -10,8 +10,6 @@ db_record_login(user = "Guest")
 }
 \arguments{
 \item{user}{Character scalar. Raw identity signature token from session header maps.}
-
-\item{db_execute}{Function. The execution function helper. Defaults to \code{\link[=utils_db_execute]{utils_db_execute()}}.}
 }
 \value{
 Integer scalar. The canonical primary key \link{user_id} representing the logged-in user.
@@ -19,7 +17,7 @@ Integer scalar. The canonical primary key \link{user_id} representing the logged
 Integer scalar. The fully resolved unique integer primary key \link{user_id}.
 }
 \description{
-Inserts a record into the \code{tools_analytics} table to track when a user
+Inserts a record into the app analytics table to track when a user
 accesses the application, resolving their unique integer ID dynamically.
 
 High-level wrapper deployed at shiny server startup to drop an 'Initial Load'

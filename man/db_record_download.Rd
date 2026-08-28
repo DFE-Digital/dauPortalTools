@@ -4,19 +4,12 @@
 \alias{db_record_download}
 \title{Record a File Download Event}
 \usage{
-db_record_download(
-  user = "Guest",
-  page_name,
-  file_name,
-  db_execute = utils_db_execute
-)
+db_record_download(user = "Guest", page_name, file_name)
 }
 \arguments{
-\item{user}{Character scalar. Username of the user performing the download.
-Defaults to \code{"Guest"}.}
+\item{user}{Character scalar. Username or email token executing the action. Defaults to \code{"Guest"}.}
 
-\item{page_name}{Character scalar. Name of the page where the download
-occurred.}
+\item{page_name}{Character scalar. Name of the page where the download occurred.}
 
 \item{file_name}{Character scalar. Name of the downloaded file.}
 }
@@ -24,41 +17,6 @@ occurred.}
 \code{NULL}, invisibly.
 }
 \description{
-Inserts a record into the \code{tools_analytics} table to track when a user
-}
-\details{
-The current application ID is resolved using \code{\link[=utils_get_app_id]{utils_get_app_id()}}. The
-event is recorded with an \code{action_type} of \code{"Download"} and the file name
-stored as \code{action_sub_type}.
-
-The database schema is resolved using \code{\link[=utils_resolve_schema]{utils_resolve_schema()}}, and the
-query is executed using \code{\link[=utils_db_execute]{utils_db_execute()}}.
-
-The timestamp is generated using \code{SYSUTCDATETIME()} at the database level.
-
-Database connections are managed internally and safely closed using
-\code{on.exit()}. Logging is performed via \code{\link[=log_event]{log_event()}} at the start and
-end of execution.
-}
-\section{Side Effects}{
-
-\itemize{
-\item Inserts a new row into the database.
-\item Opens and closes a database connection.
-\item Writes log entries via \code{\link[=log_event]{log_event()}}.
-}
-}
-
-\examples{
-\dontrun{
-db_record_download(
-  user = "BSMITH7",
-  page_name = "School Search",
-  file_name = "sigchange_export.csv"
-)
-}
-
-}
-\seealso{
-\code{\link[=utils_db_execute]{utils_db_execute()}}
+Inserts a record into the app analytics table to track file download actions,
+translating raw usernames into robust user_id records.
 }

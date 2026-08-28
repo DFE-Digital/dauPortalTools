@@ -2,35 +2,30 @@
 % Please edit documentation in R/utils-user_context.R
 \name{get_user}
 \alias{get_user}
-\title{Get Current Portal Username}
+\title{Get Current Portal Username Token}
 \usage{
 get_user(session = NULL, fallback = "Guest")
 }
 \arguments{
-\item{session}{Optional Shiny session object. If \code{NULL}, the function
-attempts to detect the current session automatically.}
+\item{session}{Optional Shiny session object. If \code{NULL}, attempts to auto-detect
+the active reactive domain context.}
 
-\item{fallback}{Character scalar. Username to return if no session or
-emulated user is available. Defaults to \code{"Guest"}.}
+\item{fallback}{Character scalar. Default identity string if no session or emulated
+token is present. Defaults to \code{"Guest"}.}
 }
 \value{
-Character scalar representing the resolved username.
+Character scalar representing the raw username identity token.
 }
 \description{
-Retrieves the username from the active Shiny (or Posit Connect) session.
-If unavailable (e.g. local development), falls back to a configured or
-provided default value.
+Retrieves the network username signature token from the active Shiny session
+or Posit Connect server headers. If unavailable (e.g. local development),
+falls back to local configuration overrides or a guest default.
 }
 \details{
-The function resolves the username in the following order:
+Resolves user identity tokens in the following hierarchy:
 \itemize{
-\item \code{session$user}, if available
-\item \code{config::get("emulate_user")}, if defined
-\item \code{fallback}
+\item \code{session$user} (Posit Connect / LDAP header string)
+\item \code{config::get("emulate_user")} (Local dev override in config.yml)
+\item \code{fallback} ("Guest")
 }
-
-This allows consistent behaviour across production and local development.
-}
-\seealso{
-\code{\link[config:get]{config::get()}}
 }

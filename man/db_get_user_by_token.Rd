@@ -15,5 +15,5 @@ db_get_user_by_token(conn, token)
 A data frame containing matching user records, or an empty data frame if none found.
 }
 \description{
-Executes a direct look up against the master users ledger using clean username or email strings.
+Executes a direct lookup against the master users ledger using clean username or email strings.
 }

@@ -7,59 +7,14 @@
 db_get_portal_messages()
 }
 \value{
-A \code{\link{data.frame}} containing active portal messages with the
-following columns:
-\describe{
-\item{message_date}{Datetime the message was created.}
-\item{message_text}{Character message content (may include HTML).}
-\item{app_id}{Integer application identifier.}
-\item{priority}{Integer priority (lower = higher importance).}
-\item{ad_username}{Character username of the message creator.}
-}
+A \code{\link{data.frame}} containing active portal messages.
 }
 \description{
 Returns all active portal messages relevant to the current application,
-including global ("catch-all") messages.
+including global ("catch-all") messages, resolving user identifiers.
 }
 \details{
-Messages are filtered to those marked as active (\code{is_active = 1}) and
-belonging either to the current application or to the global scope
-(\code{app_id = 1}).
-
 The current application ID is resolved using \code{\link[=utils_get_app_id]{utils_get_app_id()}}.
 The database schema is resolved via \code{\link[=utils_resolve_schema]{utils_resolve_schema()}}, and the
-query is executed using \code{\link[DBI:dbGetQuery]{dbGetQuery()}}.
-
-Results are ordered by:
-\itemize{
-\item \code{priority} (ascending; lower values indicate higher importance)
-\item \code{message_date} (descending; most recent messages first)
-}
-
-Database connections are managed internally and safely closed using
-\code{on.exit()}. Logging is performed via \code{\link[=log_event]{log_event()}} at the start and
-end of execution.
-}
-\section{Side Effects}{
-
-\itemize{
-\item Opens and closes a database connection.
-\item Writes log entries via \code{\link[=log_event]{log_event()}}.
-}
-}
-
-\examples{
-\dontrun{
-msgs <- db_get_portal_messages()
-
-# Preview messages
-head(msgs)
-
-# Filter high priority messages
-subset(msgs, priority == 1)
-}
-
-}
-\seealso{
-\code{\link[=db_add_portal_message]{db_add_portal_message()}}, \code{\link[=utils_get_app_id]{utils_get_app_id()}}
+query is executed using \code{\link[=utils_db_get_query]{utils_db_get_query()}}.
 }

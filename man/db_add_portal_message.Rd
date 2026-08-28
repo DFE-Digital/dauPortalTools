@@ -2,76 +2,28 @@
 % Please edit documentation in R/db-message_helpers.R
 \name{db_add_portal_message}
 \alias{db_add_portal_message}
-\title{Add a Portal Message}
+\title{Add a Portal Messagekj}
 \usage{
 db_add_portal_message(
   message_text,
   priority = 1,
-  ad_username,
+  user_id,
   force_catch_all = FALSE
 )
 }
 \arguments{
-\item{message_text}{Character scalar. The message body to display. HTML is
-permitted and will be rendered in the UI.}
+\item{message_text}{Character scalar. The message body to display. HTML is permitted.}
 
-\item{priority}{Integer scalar. Message priority, where lower values appear
-first. Defaults to \code{1}.}
+\item{priority}{Integer scalar. Message priority, where lower values appear first. Defaults to \code{1}.}
 
-\item{ad_username}{Character scalar. Username of the user creating the
-message (typically Active Directory username).}
+\item{user_id}{Integer scalar. The unique identity registry key of the creator.}
 
-\item{force_catch_all}{Logical scalar. If \code{TRUE}, the message is assigned to
-the global application (\code{app_id = 1L}), making it visible across all
-applications. If \code{FALSE}, the message is assigned to the current
-application via \code{\link[=utils_get_app_id]{utils_get_app_id()}}.}
+\item{force_catch_all}{Logical scalar. If \code{TRUE}, the message is assigned to the global app (\code{app_id = 1L}).}
 }
 \value{
-Logical scalar. Returns \code{TRUE} invisibly on successful insertion.
+Logical scalar. Returns \code{TRUE} invisibly on successful insertion, or \code{FALSE} on failure.
 }
 \description{
-Inserts a new message into the \code{portal_messages} table. The message can be
-scoped to the current application or applied globally ("catch-all") depending
-on the \code{force_catch_all} flag.
-}
-\details{
-Messages are stored with a priority value, where lower numbers indicate
-higher importance and are displayed first in the UI.
-
-The function resolves the database schema using
-\code{\link[=utils_resolve_schema]{utils_resolve_schema()}} and writes directly to the
-\code{portal_messages} table.
-
-Database connections are managed internally and safely closed on exit
-using \code{on.exit()}. Logging is performed via \code{\link[=log_event]{log_event()}} at the start
-and end of execution.
-}
-\section{Side Effects}{
-
-\itemize{
-\item Writes a new record to the database.
-\item Opens and closes a database connection.
-\item Writes log entries via \code{\link[=log_event]{log_event()}}.
-}
-}
-
-\examples{
-\dontrun{
-db_add_portal_message(
-  message_text = "<b>System maintenance tonight</b>",
-  priority = 1,
-  ad_username = "BSMITH7"
-)
-
-db_add_portal_message(
-  message_text = "Global announcement",
-  priority = 2,
-  ad_username = "ADMIN",
-  force_catch_all = TRUE
-)
-}
-
-}
-\seealso{
-\code{\link[=db_get_portal_messages]{db_get_portal_messages()}}, \code{\link[=utils_get_app_id]{utils_get_app_id()}}
+Inserts a new message into the \code{portal_messages} table, linking it to a
+normalized user identifier.
 }
