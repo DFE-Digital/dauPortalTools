@@ -5,7 +5,6 @@
 \title{Insert Standard App Clickstream Telemetry}
 \usage{
 db_insert_app_analytics(
-  conn,
   user_id,
   app_id,
   env_id,
@@ -15,8 +14,6 @@ db_insert_app_analytics(
 )
 }
 \arguments{
-\item{conn}{A DBI database connection object.}
-
 \item{user_id}{Integer. The canonical unique identity tracking key.}
 
 \item{app_id}{Integer. Normalized application ID.}
@@ -28,6 +25,8 @@ db_insert_app_analytics(
 \item{action_type}{Character scalar. Standard action verb ('Load', 'Click', 'Download').}
 
 \item{action_sub_type}{Character scalar. Supplemental metadata payload context.}
+
+\item{conn}{A DBI database connection object.}
 }
 \value{
 Integer scalar. Count of affected transactional database rows.
