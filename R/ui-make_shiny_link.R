@@ -42,7 +42,7 @@ make_shiny_link <- function(url, text, target = "_blank") {
   }
 
   is_external <- !grepl("\\.gov\\.uk", url) &&
-    !grepl("rsconnect(-pp)?/rsc", url)
+    !grepl("positconnect(-pp)?/rsc", url)
 
   external_note <- if (is_external) " (external)" else ""
 
