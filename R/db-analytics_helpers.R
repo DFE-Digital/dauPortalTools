@@ -12,7 +12,6 @@
 #' @return Integer scalar. Count of affected transactional database rows.
 #' @export
 db_insert_app_analytics <- function(
-  conn,
   user_id,
   app_id,
   env_id,
@@ -25,7 +24,7 @@ db_insert_app_analytics <- function(
 
   conn <- sql_manager("dit")
 
-  shiny::req(conn, user_id, app_id, env_id, page_name, action_type)
+  shiny::req(user_id, app_id, env_id, page_name, action_type)
 
   query <- glue::glue_sql(
     "INSERT INTO {utils_resolve_schema('db_schema_01sr')}.[app_analytics] 
