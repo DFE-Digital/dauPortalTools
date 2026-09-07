@@ -104,7 +104,7 @@ wnp_wn_url <- function(twn_id) {
     return(NULL)
   }
   paste0(
-    "https://rsconnect/rsc/warning-notice-portal/?wnid=",
+    "https://positconnect/rsc/warning-notice-portal/?wnid=",
     twn_id
   )
 }
@@ -130,7 +130,7 @@ scp_sc_url <- function(sigchange_id) {
     return(NULL)
   }
   paste0(
-    "https://rsconnect/rsc/sig-change-portal/?scid=",
+    "https://positconnect/rsc/sig-change-portal/?scid=",
     sigchange_id
   )
 }
@@ -156,7 +156,7 @@ slic_urn_url <- function(urn) {
   urn <- trimws(urn)
 
   invalid <- is.na(urn) | urn == ""
-  out <- paste0("https://rsconnect/rsc/slic/?urn=", urn)
+  out <- paste0("https://positconnect/rsc/slic/?urn=", urn)
   out[invalid] <- NA_character_
   out
 }
