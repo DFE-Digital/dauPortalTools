@@ -20,7 +20,8 @@ administrators to update user roles via a modal interaction.
 \details{
 The module performs the following operations:
 \itemize{
-\item Retrieves application configuration and the current user
+\item Retrieves application configuration and the current administrator's identity
+\item Resolves the administrator's integer \link{user_id} via \code{\link[=utils_resolve_user]{utils_resolve_user()}}
 \item Loads user and role data via \code{\link[=db_get_app_users]{db_get_app_users()}}
 \item Renders a selectable user table using \code{DT}
 \item Opens a role-edit modal upon row interaction
@@ -28,20 +29,6 @@ The module performs the following operations:
 \item Refreshes the user dataset after updates
 }
 }
-\section{Dependencies}{
-
-This module expects the following functions to be available:
-\itemize{
-\item \code{\link[=get_config]{get_config()}}
-\item \code{\link[=get_user]{get_user()}}
-\item \code{\link[=get_user_id]{get_user_id()}}
-\item \code{\link[=sql_manager]{sql_manager()}}
-\item \code{\link[=db_get_app_users]{db_get_app_users()}}
-\item \code{\link[=db_update_user_role]{db_update_user_role()}}
-\item \code{\link[=ui_role_edit_modal]{ui_role_edit_modal()}}
-}
-}
-
 \seealso{
-\code{\link[shiny:moduleServer]{moduleServer()}}, \code{\link[DT:renderDT]{DT::renderDT()}}
+\code{\link[shiny:moduleServer]{shiny::moduleServer()}}, \code{\link[DT:renderDT]{DT::renderDT()}}
 }
