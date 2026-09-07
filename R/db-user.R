@@ -201,3 +201,50 @@ db_get_user_by_id <- function(user_id) {
     }
   )
 }
+
+#' Update User Last Login Timestamp
+#'
+#' Sets the last_login column to the current UTC timestamp for a specific user_id.
+#'
+#' @param user_id Integer canonical user_id.
+#' @return Logical indicating whether a row was affected.
+#' @export
+db_update_user_last_login <- function(user_id) {
+  log_event(glue::glue(
+    "Starting db_update_user_last_login for user_id: {user_id}"
+  ))
+
+  uid <- suppressWarnings(as.integer(user_id))
+  if (is.na(uid)) {
+    log_event("Failed db_update_user_last_login: invalid user_id")
+    return(FALSE)
+  }
+
+  conn <- sql_manager("dit")
+  on.exit(
+    {
+      try(DBI::dbDisconnect(conn), silent = TRUE)
+      log_event("Finished db_update_user_last_login")
+    },
+    add = TRUE
+  )
+
+  query <- glue::glue_sql(
+    "
+    UPDATE {utils_resolve_schema('db_schema_01sr')}.[users]
+    SET [last_login] = SYSUTCDATETIME()
+    WHERE [user_id] = {uid};
+    ",
+    .con = conn
+  )
+
+  rows_affected <- tryCatch(
+    DBI::dbExecute(conn, query),
+    error = function(e) {
+      log_event(glue::glue("Error updating last_login: {e$message}"))
+      0L
+    }
+  )
+
+  invisible(rows_affected > 0)
+}
