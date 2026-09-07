@@ -12,7 +12,7 @@ create_ru_lead_allocation(
   rula_dateended = NULL,
   rula_active = TRUE,
   rula_comment = NULL,
-  user_id_created = Sys.getenv("USERNAME", "SYSTEM")
+  user_id_created = 1L
 )
 }
 \arguments{

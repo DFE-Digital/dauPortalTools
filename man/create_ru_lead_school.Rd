@@ -12,7 +12,7 @@ create_ru_lead_school(
   ruhl_dateended = NULL,
   ruhl_active = TRUE,
   ruhl_comment = NULL,
-  user_id_created = Sys.getenv("USERNAME", "SYSTEM")
+  user_id_created = 1L
 )
 }
 \arguments{
