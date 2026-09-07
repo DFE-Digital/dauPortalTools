@@ -7,8 +7,8 @@
 sc_render_summary(user = NULL)
 }
 \arguments{
-\item{user}{Character scalar or \code{NULL}. Optional filter restricting results
-to cases where the user is either \code{delivery_lead} or \code{RSCContact}.
+\item{user}{Optional filter restricting results to cases owned by the user.
+Can be an integer \code{user_id} (preferred) or a character username/token.
 If \code{NULL}, no user-level filtering is applied.}
 }
 \value{
@@ -32,33 +32,8 @@ The function:
 \item Calculates:
 \itemize{
 \item Total live records (\verb{all_actions_completed <> 1})
-\item Records updated within the last 30 days
+\item Records updated within the last 30 days (\code{date_edited})
 \item Open quality issues (\code{quality_status = 0})
 }
 }
-
-SQL is constructed using \code{\link[glue:glue_sql]{glue::glue_sql()}} to safely interpolate inputs.
-
-Results are rendered as a GOV.UK-styled layout using
-\code{\link[shinyGovstyle:gov_layout]{shinyGovstyle::gov_layout()}} and card components.
-}
-\section{Side Effects}{
-
-\itemize{
-\item Opens a database connection via \code{\link[=sql_manager]{sql_manager()}}
-\item Executes SQL queries using \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}
-\item Writes log entries via \code{\link[=log_event]{log_event()}}
-}
-}
-
-\examples{
-\dontrun{
-sc_render_summary()
-
-sc_render_summary(user = "BSMITH7")
-}
-
-}
-\seealso{
-\code{\link[=sc_render_status_type_charts]{sc_render_status_type_charts()}}, \code{\link[DBI:dbGetQuery]{DBI::dbGetQuery()}}
 }

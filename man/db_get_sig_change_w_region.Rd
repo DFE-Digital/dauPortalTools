@@ -14,5 +14,6 @@ A data frame of significant change records with region metadata.
 }
 \description{
 Returns all significant change records enriched with Government Office
-Region (GOR) information from the latest Edubase snapshot.
+Region (GOR) information from the latest Edubase snapshot, including
+standardized audit timestamps and canonical user ID columns.
 }
