@@ -166,7 +166,7 @@ create_ru_lead_allocation <- function(
   rula_dateended = NULL,
   rula_active = TRUE,
   rula_comment = NULL,
-  user_id_created = Sys.getenv("USERNAME", "SYSTEM")
+  user_id_created = 1L
 ) {
   clean_source_type <- toupper(trimws(as.character(support_source_type)))
   if (!clean_source_type %in% c("HUB", "EVENT")) {
