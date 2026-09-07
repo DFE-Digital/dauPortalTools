@@ -9,7 +9,8 @@
 #' @details
 #' The module performs the following operations:
 #' \itemize{
-#'   \item Retrieves application configuration and the current user
+#'   \item Retrieves application configuration and the current administrator's identity
+#'   \item Resolves the administrator's integer [user_id] via [utils_resolve_user()]
 #'   \item Loads user and role data via [db_get_app_users()]
 #'   \item Renders a selectable user table using `DT`
 #'   \item Opens a role-edit modal upon row interaction
@@ -17,73 +18,93 @@
 #'   \item Refreshes the user dataset after updates
 #' }
 #'
-#' @section Dependencies:
-#' This module expects the following functions to be available:
-#' \itemize{
-#'   \item [get_config()]
-#'   \item [get_user()]
-#'   \item [get_user_id()]
-#'   \item [sql_manager()]
-#'   \item [db_get_app_users()]
-#'   \item [db_update_user_role()]
-#'   \item [ui_role_edit_modal()]
-#' }
-#'
 #' @return Invisibly returns `NULL`, called for its side effects.
-#'
-#' @seealso [moduleServer()], [DT::renderDT()]
+#' @seealso [shiny::moduleServer()], [DT::renderDT()]
 #' @export
 server_portal_user_admin <- function(id) {
-  moduleServer(id, function(input, output, session) {
+  log_event(sprintf(
+    "Initializing server_portal_user_admin module with id '%s'",
+    id
+  ))
+
+  shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    conf <- get_config()
-    app_id <- conf$app_details$app_id
+    app_id <- utils_get_app_id()
 
-    username <- get_user(session = session, fallback = "guest")
-    a_user_id <- get_user_id(username)
+    # 1. Resolve administrator's canonical user_id
+    admin_token <- utils_get_user(session = session, fallback = "Guest")
+    admin_user_id <- utils_resolve_user(admin_token)
 
-    users_data <- reactiveVal(db_get_app_users())
+    log_event(sprintf(
+      "User Admin module active. Admin UID: %s for App ID: %s",
+      admin_user_id,
+      app_id
+    ))
 
-    active_selected_user <- reactiveVal(NULL)
+    # 2. Reactive user directory dataset scoped to the current app
+    users_data <- shiny::reactiveVal(db_get_app_users(app_id = app_id))
 
-    output$user_table <- renderDT({
-      datatable(
-        users_data(),
+    active_selected_user <- shiny::reactiveVal(NULL)
+
+    # 3. Interactive DataTables Directory
+    output$user_table <- DT::renderDT({
+      df <- users_data()
+      shiny::req(df)
+
+      DT::datatable(
+        df,
         selection = "single",
         rownames = FALSE,
-        options = list(pageLength = 20)
+        options = list(
+          pageLength = 20,
+          dom = "frtip",
+          autoWidth = TRUE
+        )
       )
     })
 
-    observeEvent(input$user_table_cell_clicked, {
+    # 4. Open Role Assignment Modal on Row Selection
+    shiny::observeEvent(input$user_table_cell_clicked, {
       click <- input$user_table_cell_clicked
-      req(click$row)
+      shiny::req(click$row)
 
       df <- users_data()
-      selected <- df[click$row, ]
+      selected <- df[click$row, , drop = FALSE]
 
       active_selected_user(selected)
 
-      showModal(ui_role_edit_modal(ns, selected))
+      shiny::showModal(ui_role_edit_modal(ns, selected))
     })
 
-    observeEvent(input$apply_role_change, {
-      req(active_selected_user(), input$selected_role_id)
+    # 5. Persist Role Modification
+    shiny::observeEvent(input$apply_role_change, {
+      shiny::req(active_selected_user(), input$selected_role_id)
 
       user_info <- active_selected_user()
+      target_uid <- as.integer(user_info$user_id[1])
+      new_role_id <- as.integer(input$selected_role_id)
+
+      log_event(sprintf(
+        "Admin UID %s updating role for target UID %s to role_id %s (app_id: %s)",
+        admin_user_id,
+        target_uid,
+        new_role_id,
+        app_id
+      ))
 
       db_update_user_role(
-        user_id = user_info$user_id,
-        role_id = input$selected_role_id,
+        user_id = target_uid,
+        role_id = new_role_id,
         app_id = app_id,
-        assigned_by = a_user_id
+        assigned_by = admin_user_id
       )
 
-      removeModal()
-
+      shiny::removeModal()
       active_selected_user(NULL)
-      users_data(db_get_app_users())
+
+      # Refresh table
+      users_data(db_get_app_users(app_id = app_id))
     })
   })
 }
