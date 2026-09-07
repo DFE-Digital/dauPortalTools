@@ -1,7 +1,8 @@
 #' Retrieve significant change records with region information
 #'
 #' Returns all significant change records enriched with Government Office
-#' Region (GOR) information from the latest Edubase snapshot.
+#' Region (GOR) information from the latest Edubase snapshot, including
+#' standardized audit timestamps and canonical user ID columns.
 #'
 #' @param db_get_query Function used to execute SQL queries.
 #'
@@ -21,7 +22,7 @@ db_get_sig_change_w_region <- function(
     add = TRUE
   )
 
-  query <- glue_sql(
+  query <- glue::glue_sql(
     "
     WITH LatestDate AS (
       SELECT MAX(DateStamp) AS MaxDate
@@ -50,6 +51,7 @@ db_get_sig_change_w_region <- function(
         s.[school_meet_iss],
         s.[g7],
         s.[delivery_lead],
+        s.[delivery_lead_user_id],
         s.[application_escalated],
         s.[application_escalated_to],
         s.[decision],
@@ -61,9 +63,14 @@ db_get_sig_change_w_region <- function(
         s.[date_fa_needed],
         s.[all_actions_completed],
         s.[actions_completed_user_name],
+        s.[actions_completed_user_id],
         s.[actions_completed_date],
-        s.[change_creation_date],
-        s.[change_edit_date],
+        s.[date_created],
+        s.[date_created] AS [change_creation_date],
+        s.[date_edited],
+        s.[date_edited] AS [change_edit_date],
+        s.[user_id_created],
+        s.[user_id_edited],
         s.[user_name_change],
         s.[user_name_edit_change],
         s.[comments],
@@ -73,9 +80,11 @@ db_get_sig_change_w_region <- function(
         s.[case_to_rcs],
         s.[retrospectivechange],
         s.[RSCContact],
+        s.[rsc_contact_user_id],
         s.[withdrawn],
         s.[decision_comment],
         s.[action_required],
+        s.[pass_case_to_rcs],
         e.[GOR (name)] AS gor_name,
         e.[DateStamp] AS edubase_datestamp
     FROM {utils_resolve_schema('db_schema_01sc')}.[tracker] s
