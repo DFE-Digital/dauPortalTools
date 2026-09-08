@@ -17,21 +17,25 @@ ru_render_summary <- function(db_get_query = utils_db_get_query) {
     add = TRUE
   )
 
-  schema <- utils_resolve_schema("db_schema_01r")
+  # Resolve schema and wrap explicitly as raw SQL so glue_sql does not quote it as a string
+  raw_schema <- utils_resolve_schema("db_schema_01r")
+  # Ensure bracket formatting is clean: [01_r]
+  clean_schema <- gsub("[\\[\\]]", "", raw_schema)
+  schema_prefix <- DBI::SQL(paste0("[", clean_schema, "]"))
 
   sql_command <- glue::glue_sql(
     "
     SELECT
       -- 1. All-Time Footprint: Combined rows from both core tracking ledgers
       (
-        SELECT (SELECT COUNT(*) FROM {schema}.[ru_events]) + 
-               (SELECT COUNT(*) FROM {schema}.[ruh_support_records])
+        SELECT (SELECT COUNT(*) FROM {schema_prefix}.[ru_events]) + 
+               (SELECT COUNT(*) FROM {schema_prefix}.[ruh_support_records])
       ) AS all_time_footprint,
       
       -- 2. Current Active Context: Combined active provisions and open/non-completed events
       (
-        SELECT (SELECT COUNT(*) FROM {schema}.[ruh_support_records] WHERE [ruhsr_active] = 1) + 
-               (SELECT COUNT(*) FROM {schema}.[ru_events] WHERE [ruev_completed] <> 1)
+        SELECT (SELECT COUNT(*) FROM {schema_prefix}.[ruh_support_records] WHERE ISNULL([ruhsr_active], 0) = 1) + 
+               (SELECT COUNT(*) FROM {schema_prefix}.[ru_events] WHERE ISNULL([ruev_completed], 0) <> 1)
       ) AS active_live_footprint,
       
       -- 3. Rolling Window: Every single creation/edit transaction across all editable tables over the last month
@@ -39,28 +43,28 @@ ru_render_summary <- function(db_get_query = utils_db_get_query) {
         SELECT ISNULL(SUM(cnt), 0)
         FROM (
           -- Core Events Logging Table
-          SELECT COUNT(*) AS cnt FROM {schema}.[ru_events] 
+          SELECT COUNT(*) AS cnt FROM {schema_prefix}.[ru_events] 
           WHERE [date_created] >= DATEADD(DAY, -30, GETDATE()) 
              OR [date_edited] >= DATEADD(DAY, -30, GETDATE())
           
           UNION ALL
           
           -- Hubs Support Provisions Records Table
-          SELECT COUNT(*) AS cnt FROM {schema}.[ruh_support_records] 
+          SELECT COUNT(*) AS cnt FROM {schema_prefix}.[ruh_support_records] 
           WHERE [date_created] >= DATEADD(DAY, -30, GETDATE()) 
              OR [date_edited] >= DATEADD(DAY, -30, GETDATE())
              
           UNION ALL
           
-          -- Hubs Management Records Table (If it tracks timeline changes)
-          SELECT COUNT(*) AS cnt FROM {schema}.[ruh_lead_schools]
+          -- Hubs Management Records Table
+          SELECT COUNT(*) AS cnt FROM {schema_prefix}.[ruh_lead_schools]
           WHERE [date_created] >= DATEADD(DAY, -30, GETDATE())
              OR [date_edited] >= DATEADD(DAY, -30, GETDATE())
              
           UNION ALL
           
           -- Sub-Varieties & Lookup Configuration Tables
-          SELECT COUNT(*) AS cnt FROM {schema}.[ru_event_sub_varieties] 
+          SELECT COUNT(*) AS cnt FROM {schema_prefix}.[ru_event_sub_varieties] 
           WHERE [date_created] >= DATEADD(DAY, -30, GETDATE())
         ) transaction_union
       ) AS updates_this_month
@@ -101,7 +105,7 @@ ru_render_summary <- function(db_get_query = utils_db_get_query) {
           style = "font-weight: bold; background: none; border: none; padding-bottom: 0;",
           "All-Time Records (Hubs & Events)"
         ),
-        tags$h2(
+        shiny::tags$h2(
           fmt(all_time),
           class = "govuk-heading-l",
           style = "margin-top: 5px; padding-left: 15px; color: #0b0c0c;"
@@ -113,7 +117,7 @@ ru_render_summary <- function(db_get_query = utils_db_get_query) {
           style = "font-weight: bold; background: none; border: none; padding-bottom: 0;",
           "Total Active Provisions"
         ),
-        tags$h2(
+        shiny::tags$h2(
           fmt(active_live),
           class = "govuk-heading-l",
           style = "margin-top: 5px; padding-left: 15px; color: #00703c;"
@@ -125,7 +129,7 @@ ru_render_summary <- function(db_get_query = utils_db_get_query) {
           style = "font-weight: bold; background: none; border: none; padding-bottom: 0;",
           "Updates This Month"
         ),
-        tags$h2(
+        shiny::tags$h2(
           fmt(updated_30d),
           class = "govuk-heading-l",
           style = "margin-top: 5px; padding-left: 15px; color: #0b0c0c;"
