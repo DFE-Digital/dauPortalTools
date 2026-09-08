@@ -3,8 +3,7 @@
 #' Writes a timestamped log message to file and optionally to the console.
 #'
 #' @param message Character scalar. Message to log.
-#' @param debug Logical scalar. If `TRUE`, message is only logged when
-#'   `logging$debug_toggle` is enabled in the configuration.
+#' @param type Int scalar. Default 0 = Info, 1 = Error, 2 = Critical Error
 #'
 #' @details
 #' Logging behaviour is controlled via the configuration returned by
@@ -31,7 +30,7 @@
 #'
 #' @export
 
-log_event <- function(message, debug = FALSE) {
+log_event <- function(message, type = 0) {
   cfg <- get_config()
   log_cfg <- cfg$logging %||% list(enabled = FALSE)
 
@@ -52,9 +51,26 @@ log_event <- function(message, debug = FALSE) {
   }
 
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-  level <- if (debug) "DEBUG" else "INFO"
 
-  log_line <- sprintf("[%s][%s] %s", timestamp, level, message)
+  # Map colors
+  level_styled <- switch(
+    as.character(type),
+    "1" = "\033[33mWarning\033[0m",
+    "2" = "\033[1;31mError\033[0m",
+    "\033[36mInfo\033[0m"
+  )
+
+  # Console line with ANSI codes
+  if (isTRUE(log_cfg$log_to_console)) {
+    console_line <- sprintf(
+      "[\033[90m%s\033[0m][%s] %s",
+      timestamp,
+      level_styled,
+      message
+    )
+    cat(console_line, "\n")
+    flush.console()
+  }
 
   write(log_line, file = log_path, append = TRUE)
 
