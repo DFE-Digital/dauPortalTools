@@ -3,7 +3,7 @@
 #' Writes a timestamped log message to file and optionally to the console.
 #'
 #' @param message Character scalar. Message to log.
-#' @param type Int scalar. Default 0 = Info, 1 = Error, 2 = Critical Error
+#' @param type Int scalar. Default 0 = Info, 1 = Warning , 2 = Error
 #'
 #' @details
 #' Logging behaviour is controlled via the configuration returned by

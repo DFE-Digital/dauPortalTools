@@ -4,13 +4,12 @@
 \alias{log_event}
 \title{Log an Event Message}
 \usage{
-log_event(message, debug = FALSE)
+log_event(message, type = 0)
 }
 \arguments{
 \item{message}{Character scalar. Message to log.}
 
-\item{debug}{Logical scalar. If \code{TRUE}, message is only logged when
-\code{logging$debug_toggle} is enabled in the configuration.}
+\item{type}{Int scalar. Default 0 = Info, 1 = Warning , 2 = Error}
 }
 \value{
 Invisibly returns \code{NULL}.
