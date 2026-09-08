@@ -17,10 +17,7 @@ utils_resolve_env_id <- function() {
     }
   )
 
-  if (is.null(host_url) || grepl("localhost|127.0.0.1", host_url)) {
-    log_event("Environment resolved to Local Development (1L).")
-    return(1L)
-  } else if (grepl("test", active_env)) {
+  if (grepl("test", active_env)) {
     log_event("Environment resolved to Test (2L).")
     return(2L)
   } else if (grepl("beta", active_env)) {
@@ -29,6 +26,9 @@ utils_resolve_env_id <- function() {
   } else if (grepl("live", active_env)) {
     log_event("Environment resolved to Live (4L).")
     return(4L)
+  } else {
+    log_event("Environment resolved to Local Development (1L).")
+    return(1L)
   }
 }
 
