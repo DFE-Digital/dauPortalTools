@@ -4,7 +4,7 @@
 \alias{db_ruh_update_support_type}
 \title{Update an Existing Support Track Configuration Blueprint}
 \usage{
-db_ruh_update_support_type(ruht_id, name, description = NULL, hub_id, user_id)
+db_ruh_update_support_type(ruht_id, name, description = NULL, user_id)
 }
 \description{
 Update an Existing Support Track Configuration Blueprint

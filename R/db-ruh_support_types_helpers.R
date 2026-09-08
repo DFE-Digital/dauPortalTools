@@ -66,7 +66,6 @@ db_ruh_update_support_type <- function(
   ruht_id,
   name,
   description = NULL,
-  hub_id,
   user_id
 ) {
   conn <- sql_manager("dit")
@@ -83,7 +82,6 @@ db_ruh_update_support_type <- function(
     UPDATE {utils_resolve_schema('db_schema_01r')}.[ruh_support_types]
     SET [ruht_name]        = {name}, 
         [ruht_description] = {desc_val}, 
-        [ruhb_id]          = {as.integer(hub_id)},
         [date_edited]      = SYSUTCDATETIME(), 
         [user_id_edited]   = {user_id}
     WHERE [ruht_id]        = {as.integer(ruht_id)};
