@@ -48,7 +48,6 @@ db_get_app_users <- function() {
   utils_db_get_query(conn, query)
 }
 
-
 #' Retrieve Available Roles
 #'
 #' Returns all roles available within the application.
