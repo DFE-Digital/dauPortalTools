@@ -7,7 +7,7 @@
 utils_resolve_env_id()
 }
 \value{
-Integer scalar matching environments_config map (1 = dev, 2 = test, 3 = prod)
+Integer scalar matching environments_config map (1 = dev, 2 = test, 3 = beta, 4 = live)
 }
 \description{
 Evaluates the application host URL strings to determine the active running environment.
