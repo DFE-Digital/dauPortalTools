@@ -4,6 +4,7 @@
 #'
 #' @return Integer scalar matching environments_config map (1 = dev, 2 = test, 3 = beta, 4 = live)
 #' @keywords internal
+#' @export
 utils_resolve_env_id <- function() {
   log_event("Starting utils_resolve_env_id")
 
