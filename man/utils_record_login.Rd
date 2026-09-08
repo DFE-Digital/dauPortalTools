@@ -10,7 +10,7 @@ utils_record_login(user = "Guest")
 \item{user}{Character scalar. Raw identity token from session headers.}
 }
 \value{
-Integer scalar. Canonical primary key \link{user_id}.
+Integer scalar. Canonical primary key \code{user_id}.
 }
 \description{
 Orchestrates resolving the user_id and recording the initial page load event.

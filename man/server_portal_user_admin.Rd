@@ -21,9 +21,7 @@ administrators to update user roles via a modal interaction.
 The module performs the following operations:
 \itemize{
 \item Retrieves application configuration and the current administrator's identity
-\item Resolves the administrator's integer \link{user_id} via \code{\link[=utils_resolve_user]{utils_resolve_user()}}
-\item Loads user and role data via \code{\link[=db_get_app_users]{db_get_app_users()}}
-\item Renders a selectable user table using \code{DT}
+\item Resolves the administrator's integer \verb{user_id`` via [utils_resolve_user()] \\item Loads user and role data via [db_get_app_users()] \\item Renders a selectable user table using }DT`
 \item Opens a role-edit modal upon row interaction
 \item Persists role updates using \code{\link[=db_update_user_role]{db_update_user_role()}}
 \item Refreshes the user dataset after updates

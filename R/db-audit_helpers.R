@@ -77,7 +77,7 @@ record_download <- function(user = "Guest", page_name, file_name) {
 #' accesses the application, resolving their unique integer ID dynamically.
 #'
 #' @param user Character scalar. Username or email of the user performing the login. Defaults to `"Guest"`.
-#' @return Integer scalar. The canonical primary key [user_id] representing the logged-in user.
+#' @return Integer scalar. The canonical primary key 'user_id' representing the logged-in user.
 #' @export
 db_record_login <- function(user = "Guest") {
   log_event("Starting db_record_login")

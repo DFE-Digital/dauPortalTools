@@ -10,7 +10,7 @@ db_record_login(user = "Guest")
 \item{user}{Character scalar. Username or email of the user performing the login. Defaults to \code{"Guest"}.}
 }
 \value{
-Integer scalar. The canonical primary key \link{user_id} representing the logged-in user.
+Integer scalar. The canonical primary key 'user_id' representing the logged-in user.
 }
 \description{
 Inserts a record into the app analytics table to track when a user

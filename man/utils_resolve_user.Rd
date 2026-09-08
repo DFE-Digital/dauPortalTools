@@ -10,7 +10,7 @@ utils_resolve_user(login_token)
 \item{login_token}{Character scalar. Authenticated email address or token.}
 }
 \value{
-Integer scalar. Canonical primary key \link{user_id}.
+Integer scalar. Canonical primary key `user_id``.
 }
 \description{
 Resolves an authenticated user token into an internal integer user_id:

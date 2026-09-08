@@ -38,7 +38,7 @@ utils_convert_email_to_ad_token <- function(email) {
 #' 3. Just-in-time provisions new profiles if neither exists.
 #'
 #' @param login_token Character scalar. Authenticated email address or token.
-#' @return Integer scalar. Canonical primary key [user_id].
+#' @return Integer scalar. Canonical primary key `user_id``.
 #' @export
 utils_resolve_user <- function(login_token) {
   log_event("Starting utils_resolve_user")
@@ -201,7 +201,7 @@ utils_user_has_permission <- function(user_id, permission_name) {
 #' Orchestrates resolving the user_id and recording the initial page load event.
 #'
 #' @param user Character scalar. Raw identity token from session headers.
-#' @return Integer scalar. Canonical primary key [user_id].
+#' @return Integer scalar. Canonical primary key `user_id`.
 #' @export
 utils_record_login <- function(user = "Guest") {
   log_event("Starting utils_record_login orchestrator")

@@ -10,7 +10,7 @@
 #' The module performs the following operations:
 #' \itemize{
 #'   \item Retrieves application configuration and the current administrator's identity
-#'   \item Resolves the administrator's integer [user_id] via [utils_resolve_user()]
+#'   \item Resolves the administrator's integer `user_id`` via [utils_resolve_user()]
 #'   \item Loads user and role data via [db_get_app_users()]
 #'   \item Renders a selectable user table using `DT`
 #'   \item Opens a role-edit modal upon row interaction
