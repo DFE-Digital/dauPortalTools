@@ -2,7 +2,7 @@
 #'
 #' Evaluates the application host URL strings to determine the active running environment.
 #'
-#' @return Integer scalar matching environments_config map (1 = dev, 2 = test, 3 = prod)
+#' @return Integer scalar matching environments_config map (1 = dev, 2 = test, 3 = beta, 4 = live)
 #' @keywords internal
 utils_resolve_env_id <- function() {
   log_event("Starting utils_resolve_env_id")
@@ -19,13 +19,16 @@ utils_resolve_env_id <- function() {
   if (is.null(host_url) || grepl("localhost|127.0.0.1", host_url)) {
     log_event("Environment resolved to Local Development (1L).")
     return(1L)
-  } else if (grepl("test|staging", host_url)) {
-    log_event("Environment resolved to Test/Staging (2L).")
+  } else if (grepl("test", active_env)) {
+    log_event("Environment resolved to Test (2L).")
     return(2L)
+  } else if (grepl("beta", active_env)) {
+    log_event("Environment resolved to beta (3L).")
+    return(3L)
+  } else if (grepl("live", active_env)) {
+    log_event("Environment resolved to Live (4L).")
+    return(4L)
   }
-
-  log_event("Environment resolved to Production (3L).")
-  return(3L)
 }
 
 
