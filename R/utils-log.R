@@ -3,7 +3,8 @@
 #' Writes a timestamped log message to file and optionally to the console.
 #'
 #' @param message Character scalar. Message to log.
-#' @param type Int scalar. Default 0 = Info, 1 = Warning , 2 = Error
+#' @param type Int scalar. Default 0 = Info, 1 = Warning, 2 = Error.
+#' @param debug Logical. If TRUE, message is only logged when debug_toggle is enabled.
 #'
 #' @details
 #' Logging behaviour is controlled via the configuration returned by
@@ -29,8 +30,7 @@
 #' @seealso [get_config()]
 #'
 #' @export
-
-log_event <- function(message, type = 0) {
+log_event <- function(message, type = 0, debug = FALSE) {
   cfg <- get_config()
   log_cfg <- cfg$logging %||% list(enabled = FALSE)
 
@@ -52,7 +52,15 @@ log_event <- function(message, type = 0) {
 
   timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
-  # Map colors
+  # Plain text level for disk logs
+  level_plain <- switch(
+    as.character(type),
+    "1" = "Warning",
+    "2" = "Error",
+    "Info"
+  )
+
+  # Colored level for Posit Connect / terminal output
   level_styled <- switch(
     as.character(type),
     "1" = "\033[33mWarning\033[0m",
@@ -60,7 +68,11 @@ log_event <- function(message, type = 0) {
     "\033[36mInfo\033[0m"
   )
 
-  # Console line with ANSI codes
+  # 1. Write clean plaintext to file
+  file_line <- sprintf("[%s][%s] %s", timestamp, level_plain, message)
+  write(file_line, file = log_path, append = TRUE)
+
+  # 2. Write colorized output to console
   if (isTRUE(log_cfg$log_to_console)) {
     console_line <- sprintf(
       "[\033[90m%s\033[0m][%s] %s",
@@ -69,13 +81,6 @@ log_event <- function(message, type = 0) {
       message
     )
     cat(console_line, "\n")
-    flush.console()
-  }
-
-  write(log_line, file = log_path, append = TRUE)
-
-  if (isTRUE(log_cfg$log_to_console)) {
-    cat(log_line, "\n")
     flush.console()
   }
 
