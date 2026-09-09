@@ -316,36 +316,69 @@ ru_portal_health_server <- function(
 #' @param data Data frame with columns: gor_name, n_hubs, n_supported_entities,
 #'   n_lead_entities, n_events, n_event_entities.
 #' @param fill_metric Metric column name (character) driving the fill gradient.
-#'   Options: "n_supported_entities", "n_lead_entities", "n_hubs", "n_events", "n_event_entities".
+#' @param geojson_source Optional path to GeoJSON file or parsed list object.
 #' @param height Canvas height in pixels. Default is 480.
 #' @return A plotly htmlwidget object.
 #' @export
 ui_ru_gor_heatmap <- function(
   data,
   fill_metric = "n_supported_entities",
+  geojson_source = NULL,
   height = 480
 ) {
   # 1. Filter out pseudo/non-English rows
   clean_data <- data %>%
     dplyr::filter(!gor_name %in% c("Not Applicable", "Wales (pseudo)", "", NA))
 
-  # 2. GeoJSON boundary resolution: package asset with ONS ArcGIS fallback
-  geojson_file <- system.file(
-    "extdata",
-    "england_regions.geojson",
-    package = "dauPortalTools"
-  )
+  # 2. Resolve GeoJSON locally without external web requests
+  gor_geojson <- NULL
 
-  if (nzchar(geojson_file) && file.exists(geojson_file)) {
-    gor_geojson <- jsonlite::fromJSON(geojson_file, simplifyVector = FALSE)
+  if (is.list(geojson_source)) {
+    gor_geojson <- geojson_source
+  } else if (is.character(geojson_source) && file.exists(geojson_source)) {
+    gor_geojson <- jsonlite::fromJSON(geojson_source, simplifyVector = FALSE)
   } else {
-    gor_geojson <- jsonlite::fromJSON(
-      "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/Regions_December_2023_Boundaries_EN_BFC/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson",
-      simplifyVector = FALSE
+    # Check package extdata first
+    pkg_path <- system.file(
+      "extdata",
+      "england_regions.geojson",
+      package = "dauPortalTools"
+    )
+
+    # Check local app fallback paths
+    local_paths <- c(
+      pkg_path,
+      "data/england_regions.geojson",
+      "../data/england_regions.geojson",
+      file.path(getwd(), "data", "england_regions.geojson")
+    )
+
+    valid_path <- local_paths[nzchar(local_paths) & file.exists(local_paths)][1]
+
+    if (!is.na(valid_path)) {
+      gor_geojson <- jsonlite::fromJSON(valid_path, simplifyVector = FALSE)
+    }
+  }
+
+  # Graceful fallback if file is completely missing on the server
+  if (is.null(gor_geojson)) {
+    return(
+      plotly::plot_ly(height = height) %>%
+        plotly::layout(
+          annotations = list(
+            list(
+              text = "Boundary map data (england_regions.geojson) not found on server.",
+              showarrow = FALSE,
+              font = list(color = "#d4351c", size = 14)
+            )
+          ),
+          xaxis = list(visible = FALSE),
+          yaxis = list(visible = FALSE)
+        )
     )
   }
 
-  # 3. Clean GOV.UK/DfE styled tooltip
+  # 3. Tooltip text formatting
   clean_data <- clean_data %>%
     dplyr::mutate(
       hover_text = glue::glue(
@@ -380,10 +413,10 @@ ui_ru_gor_heatmap <- function(
       hovertemplate = "%{text}",
       featureidkey = "properties.RGN23NM",
       colorscale = list(
-        list(0, "#f3f2f1"), # GOV.UK light grey
+        list(0, "#f3f2f1"),
         list(0.25, "#bdd7ee"),
         list(0.65, "#2b8cc4"),
-        list(1, "#003078") # DfE deep navy
+        list(1, "#003078")
       ),
       marker = list(
         line = list(width = 1.2, color = "#0b0c0c")
