@@ -37,6 +37,11 @@ db_insert_app_analytics <- function(
   tryCatch(
     utils_db_execute(conn, query),
     error = function(e) {
+      log_event(
+        paste0("db_insert_app_analytics failed to log telemetry: ", e$message),
+        2,
+        FALSE
+      )
       warning("db_insert_app_analytics failed to log telemetry: ", e$message)
       0L
     }
