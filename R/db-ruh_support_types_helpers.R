@@ -16,7 +16,7 @@ db_ruh_get_support_types <- function(
   query <- glue_sql(
     "
     SELECT [ruht_id], [ruhb_id], [ruht_name], [ruht_description],
-           [date_created], [user_id_created], [date_edited], [user_id_edited]
+           [created_date], [created_by], [modified_date], [modified_by]
     FROM {utils_resolve_schema('db_schema_01r')}.[ruh_support_types]
     {where_clause}
     ORDER BY [ruhb_id] ASC, [ruht_name] ASC;
@@ -48,7 +48,7 @@ db_ruh_add_support_type <- function(
   query <- glue_sql(
     "
     INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ruh_support_types] (
-      [ruhb_id], [ruht_name], [ruht_description], [date_created], [user_id_created]
+      [ruhb_id], [ruht_name], [ruht_description], [created_date], [created_by]
     ) 
     OUTPUT INSERTED.[ruht_id]
     VALUES ({as.integer(hub_id)}, {name}, {desc_val}, SYSUTCDATETIME(), {user_id});
@@ -82,8 +82,8 @@ db_ruh_update_support_type <- function(
     UPDATE {utils_resolve_schema('db_schema_01r')}.[ruh_support_types]
     SET [ruht_name]        = {name}, 
         [ruht_description] = {desc_val}, 
-        [date_edited]      = SYSUTCDATETIME(), 
-        [user_id_edited]   = {user_id}
+        [modified_date]      = SYSUTCDATETIME(), 
+        [modified_by]   = {user_id}
     WHERE [ruht_id]        = {as.integer(ruht_id)};
     ",
     .con = conn

@@ -71,7 +71,7 @@ db_ruh_get_support_records <- function(
     SELECT s.[ruhsr_id], s.[ruhl_id], s.[ruhb_id], s.[ruht_id], 
            s.[ruhsr_entity_type], s.[ruhsr_entity_id], 
            s.[ruhsr_dateactive], s.[ruhsr_dateended], s.[ruhsr_active], s.[ruhsr_comment],
-           s.[date_created], s.[user_id_created], s.[date_edited], s.[user_id_edited],
+           s.[created_date], s.[created_by], s.[modified_date], s.[modified_by],
            h.[ruhb_name], 
            t.[ruht_name] AS [support_type_name]
     FROM  {utils_resolve_schema('db_schema_01r')}.[ruh_support_records] s
@@ -130,7 +130,7 @@ db_ruh_add_blank_support_record <- function(
     "
     INSERT INTO  {utils_resolve_schema('db_schema_01r')}.[ruh_support_records] (
       [ruhl_id], [ruhb_id], [ruht_id], [ruhsr_entity_type], [ruhsr_entity_id], 
-      [ruhsr_dateactive], [ruhsr_active], [ruhsr_comment], [date_created], [user_id_created]
+      [ruhsr_dateactive], [ruhsr_active], [ruhsr_comment], [created_date], [created_by]
     ) 
     OUTPUT INSERTED.[ruhsr_id]
     VALUES (
@@ -203,8 +203,8 @@ db_ruh_update_support_record <- function(
       [ruhsr_dateended]   = {ended_val},
       [ruhsr_active]      = {as.integer(is_active)},
       [ruhsr_comment]     = {comm_val},
-      [date_edited]       = SYSUTCDATETIME(),
-      [user_id_edited]    = {user_id}
+      [modified_date]       = SYSUTCDATETIME(),
+      [modified_by]    = {user_id}
     WHERE [ruhsr_id]      = {as.integer(ruhsr_id)};
     ",
     .con = conn

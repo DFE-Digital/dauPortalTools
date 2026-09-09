@@ -27,7 +27,7 @@ db_ruh_get_hubs <- function(hub_id = NULL, db_get_query = utils_db_get_query) {
   query <- glue_sql(
     "
     SELECT [ruhb_id], [ruhb_name], 
-           [date_created], [user_id_created], [date_edited], [user_id_edited]
+           [created_date], [created_by], [modified_date], [modified_by]
     FROM {utils_resolve_schema('db_schema_01r')}.[ruh_hubs]
     {hub_filter}
     ORDER BY [ruhb_name] ASC;
@@ -54,7 +54,7 @@ db_ruh_add_hub <- function(
   query <- glue_sql(
     "
     INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ruh_hubs] (
-      [ruhb_name], [user_id_created], [date_created]
+      [ruhb_name], [created_by], [created_date]
     ) 
     OUTPUT INSERTED.[ruhb_id]
     VALUES ({hub_name}, {user_id}, SYSUTCDATETIME());
@@ -77,8 +77,8 @@ db_ruh_update_hub <- function(hub_id, hub_name, user_id) {
     "
     UPDATE {utils_resolve_schema('db_schema_01r')}.[ruh_hubs]
     SET [ruhb_name]      = {hub_name},
-        [date_edited]    = SYSUTCDATETIME(),
-        [user_id_edited] = {user_id}
+        [modified_date]    = SYSUTCDATETIME(),
+        [modified_by] = {user_id}
     WHERE [ruhb_id]      = {as.integer(hub_id)};
     ",
     .con = conn

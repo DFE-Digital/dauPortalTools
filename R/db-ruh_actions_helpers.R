@@ -19,7 +19,7 @@ db_ruh_get_actions <- function(
            ISNULL(h.[ruhb_name], 'Global Framework Scope') AS [hub_name],
            ISNULL(t.[ruht_name], 'Unassigned / General') AS [support_type_name],
            a.[ruha_name], a.[ruha_description],
-           a.[date_created], a.[user_id_created], a.[date_edited], a.[user_id_edited]
+           a.[created_date], a.[created_by], a.[modified_date], a.[modified_by]
     FROM {utils_resolve_schema('db_schema_01r')}.[ruh_actions] a
     LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_hubs] h ON a.[ruhb_id] = h.[ruhb_id]
     LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_support_types] t ON a.[ruht_id] = t.[ruht_id]
@@ -47,7 +47,7 @@ db_ruh_add_action <- function(
   query <- glue_sql(
     "
     INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ruh_actions] (
-      [ruhb_id], [ruht_id], [ruha_name], [ruha_description], [date_created], [user_id_created]
+      [ruhb_id], [ruht_id], [ruha_name], [ruha_description], [created_date], [created_by]
     ) 
     OUTPUT INSERTED.[ruha_id]
     VALUES ({as.integer(hub_id)}, {as.integer(ruht_id)}, {action_name}, {description}, SYSUTCDATETIME(), {user_id});
@@ -80,8 +80,8 @@ db_ruh_update_action <- function(
         [ruht_id]          = {as.integer(ruht_id)},
         [ruha_name]        = {action_name}, 
         [ruha_description] = {description}, 
-        [date_edited]      = SYSUTCDATETIME(), 
-        [user_id_edited]   = {user_id}
+        [modified_date]      = SYSUTCDATETIME(), 
+        [modified_by]   = {user_id}
     WHERE [ruha_id]        = {as.integer(ruha_id)};
     ",
     .con = conn

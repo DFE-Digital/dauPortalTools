@@ -19,7 +19,7 @@ db_ru_get_event_types <- function(
   query <- glue_sql(
     "
     SELECT [ruevt_id], [ruevt_name], [ruevt_description],
-           [date_created], [user_id_created], [date_edited], [user_id_edited]
+           [created_date], [created_by], [modified_date], [modified_by]
     FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_types]
     {filter_clause}
     ORDER BY [ruevt_name] ASC;
@@ -51,7 +51,7 @@ db_ru_add_event_type <- function(
   query <- glue_sql(
     "
     INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_event_types] (
-      [ruevt_name], [ruevt_description], [date_created], [user_id_created]
+      [ruevt_name], [ruevt_description], [created_date], [created_by]
     )
     OUTPUT INSERTED.[ruevt_id]
     VALUES ({name}, {desc_val}, SYSUTCDATETIME(), {user_id});
@@ -79,8 +79,8 @@ db_ru_update_event_type <- function(
     "UPDATE {utils_resolve_schema('db_schema_01r')}.[ru_event_types]
      SET [ruevt_name] = {name},
          [ruevt_description] = {description},
-         [date_edited] = GETDATE(),
-         [user_id_edited] = {user_id}
+         [modified_date] = GETDATE(),
+         [modified_by] = {user_id}
      WHERE [ruevt_id] = {as.integer(ruevt_id)};",
     .con = conn
   )
@@ -148,7 +148,7 @@ db_ru_get_events <- function(
     "
     SELECT e.[ruev_id], e.[ruevt_id], e.[ruesv_id], e.[ruev_entity_type], e.[ruev_entity_id],
            e.[ruev_date], e.[ruev_completed], e.[ruev_summary_notes],
-           e.[date_created], e.[user_id_created], e.[date_edited], e.[user_id_edited],
+           e.[created_date], e.[created_by], e.[modified_date], e.[modified_by],
            t.[ruevt_name]  AS [event_type_name],
            sv.[ruesv_name] AS [event_sub_variety_name]
     FROM {utils_resolve_schema('db_schema_01r')}.[ru_events] e
@@ -157,7 +157,7 @@ db_ru_get_events <- function(
     LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ru_event_sub_varieties] sv
       ON e.[ruesv_id] = sv.[ruesv_id]
     {where_clause}
-    ORDER BY e.[ruev_date] DESC, e.[date_created] DESC;
+    ORDER BY e.[ruev_date] DESC, e.[created_date] DESC;
     ",
     .con = conn
   )
@@ -182,7 +182,7 @@ db_ru_add_event <- function(
 
   query <- glue_sql(
     "INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_events] 
-     ([ruevt_id], [ruesv_id], [ruev_entity_id], [ruev_entity_type], [ruev_date], [ruev_summary_notes], [user_id_created])
+     ([ruevt_id], [ruesv_id], [ruev_entity_id], [ruev_entity_type], [ruev_date], [ruev_summary_notes], [created_by])
      OUTPUT INSERTED.[ruev_id]
      VALUES ({event_type_id}, {event_sub_variety_id}, {as.character(entity_id)}, {entity_type}, {event_date}, {summary_notes}, {user_id});",
     .con = conn
@@ -216,8 +216,8 @@ db_ru_update_event <- function(
     SET [ruev_date]          = {event_date},
         [ruev_completed]     = {as.integer(is_completed)},
         [ruev_summary_notes] = {notes_val},
-        [date_edited]        = SYSUTCDATETIME(),
-        [user_id_edited]     = {user_id}
+        [modified_date]        = SYSUTCDATETIME(),
+        [modified_by]     = {user_id}
     WHERE [ruev_id]          = {as.integer(ruev_id)};
     ",
     .con = conn
@@ -264,7 +264,7 @@ db_ru_add_event_action <- function(
 
   query <- glue_sql(
     "INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_event_actions]
-     ([ruevt_id], [ruesv_id], [rueva_name], [rueva_description], [rueva_rule_type], [rueva_required], [user_id_created])
+     ([ruevt_id], [ruesv_id], [rueva_name], [rueva_description], [rueva_rule_type], [rueva_required], [created_by])
      VALUES ({as.integer(event_type_id)}, {as.integer(ruesv_id)}, {action_name}, {description}, {rule_type}, {as.integer(is_required)}, {user_id});",
     .con = conn
   )
@@ -345,8 +345,8 @@ db_ru_save_event_action_response <- function(
       "
       UPDATE {utils_resolve_schema('db_schema_01r')}.[ru_event_action_responses]
       SET [ruevar_value]   = {val_string},
-          [date_edited]    = SYSUTCDATETIME(),
-          [user_id_edited] = {user_id}
+          [modified_date]    = SYSUTCDATETIME(),
+          [modified_by] = {user_id}
       WHERE [ruevar_id]    = {existing$ruevar_id[1]};
       ",
       .con = conn
@@ -355,7 +355,7 @@ db_ru_save_event_action_response <- function(
     query <- glue_sql(
       "
       INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_event_action_responses] (
-        [ruev_id], [rueva_id], [ruevar_value], [date_created], [user_id_created]
+        [ruev_id], [rueva_id], [ruevar_value], [created_date], [created_by]
       )
       VALUES (
         {as.integer(event_id)}, {as.integer(rueva_id)}, {val_string}, SYSUTCDATETIME(), {user_id}
@@ -377,7 +377,7 @@ db_ru_get_event_sub_varieties <- function(ruevt_id = NULL) {
   conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
-  base_query <- "SELECT [ruesv_id], [ruevt_id], [ruesv_name], [ruesv_description], [date_created], [user_id_created] 
+  base_query <- "SELECT [ruesv_id], [ruevt_id], [ruesv_name], [ruesv_description], [created_date], [created_by] 
                  FROM {utils_resolve_schema('db_schema_01r')}.[ru_event_sub_varieties]"
 
   if (!is.null(ruevt_id)) {
@@ -412,7 +412,7 @@ db_ru_add_event_sub_variety <- function(
 
   query <- glue_sql(
     "INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_event_sub_varieties]
-     ([ruevt_id], [ruesv_name], [ruesv_description], [user_id_created])
+     ([ruevt_id], [ruesv_name], [ruesv_description], [created_by])
      VALUES ({as.integer(ruevt_id)}, {name}, {description}, {user_id});",
     .con = conn
   )
@@ -425,7 +425,7 @@ db_ru_add_event_sub_variety <- function(
 #' Pulls row parameters for a specific category or top-level event type.
 #'
 #' @param event_master_id Integer. Passed from the router (maps to ruevt_id).
-#' @return A data.frame containing columns `ruevt_id`, `ruevt_name`, and `user_id_created`.
+#' @return A data.frame containing columns `ruevt_id`, `ruevt_name`, and `created_by`.
 #' @export
 db_ru_get_event_master_record <- function(event_master_id) {
   req(event_master_id)

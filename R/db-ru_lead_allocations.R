@@ -155,7 +155,8 @@ select_ru_lead_allocations_by_source <- function(source_type, source_id) {
 #' @param rula_dateended Date or character (\code{'YYYY-MM-DD'}). Optional.
 #' @param rula_active Logical. Default is \code{TRUE}.
 #' @param rula_comment Character. Optional notes or context.
-#' @param user_id_created Character. Username or audit identifier.
+#' @param created_by Character. Username or audit identifier.
+#' @param created_by Character. Deprecated alias for \code{created_by}.
 #' @return Integer \code{rula_id} of the inserted record, or NULL on error.
 #' @export
 create_ru_lead_allocation <- function(
@@ -166,8 +167,14 @@ create_ru_lead_allocation <- function(
   rula_dateended = NULL,
   rula_active = TRUE,
   rula_comment = NULL,
-  user_id_created = 1L
+  created_by = Sys.getenv("USERNAME", "SYSTEM"),
+  created_by = NULL
 ) {
+  # Maintain backwards compatibility if legacy param was passed explicitly
+  if (!is.null(created_by)) {
+    created_by <- created_by
+  }
+
   clean_source_type <- toupper(trimws(as.character(support_source_type)))
   if (!clean_source_type %in% c("HUB", "EVENT")) {
     shiny::showModal(shiny::modalDialog(
@@ -187,18 +194,18 @@ create_ru_lead_allocation <- function(
     {
       query <- glue::glue(
         "INSERT INTO {utils_resolve_schema('db_schema_01r')}.[ru_lead_allocations] (
-         [ruhl_id],
-         [support_source_type],
-         [support_source_id],
-         [rula_dateactive],
-         [rula_dateended],
-         [rula_active],
-         [rula_comment],
-         [date_created],
-         [user_id_created]
-       )
-       OUTPUT INSERTED.rula_id
-       VALUES (?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME(), ?);"
+           [ruhl_id],
+           [support_source_type],
+           [support_source_id],
+           [rula_dateactive],
+           [rula_dateended],
+           [rula_active],
+           [rula_comment],
+           [created_date],
+           [created_by]
+         )
+         OUTPUT INSERTED.rula_id
+         VALUES (?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME(), ?);"
       )
 
       params <- list(
@@ -221,7 +228,7 @@ create_ru_lead_allocation <- function(
         } else {
           NA_character_
         },
-        as.character(user_id_created)
+        as.character(created_by)
       )
 
       res <- DBI::dbGetQuery(conn, query, params = params)
@@ -252,7 +259,8 @@ create_ru_lead_allocation <- function(
 #' @param rula_dateended Date or character (\code{'YYYY-MM-DD'}). Optional.
 #' @param rula_active Logical. Optional.
 #' @param rula_comment Character. Optional.
-#' @param user_id_edited Character. Username or audit identifier.
+#' @param modified_by Character. Username or audit identifier.
+#' @param modified_by Character. Deprecated alias for \code{modified_by}.
 #' @return Integer number of affected rows, or NULL on error.
 #' @export
 update_ru_lead_allocation <- function(
@@ -264,8 +272,13 @@ update_ru_lead_allocation <- function(
   rula_dateended = NULL,
   rula_active = NULL,
   rula_comment = NULL,
-  user_id_edited = Sys.getenv("USERNAME", "SYSTEM")
+  modified_by = Sys.getenv("USERNAME", "SYSTEM"),
+  modified_by = NULL
 ) {
+  if (!is.null(modified_by)) {
+    modified_by <- modified_by
+  }
+
   set_clauses <- character()
   params <- list()
 
@@ -353,10 +366,10 @@ update_ru_lead_allocation <- function(
 
   set_clauses <- c(
     set_clauses,
-    "[date_edited] = SYSUTCDATETIME()",
-    "[user_id_edited] = ?"
+    "[modified_date] = SYSUTCDATETIME()",
+    "[modified_by] = ?"
   )
-  params <- append(params, list(as.character(user_id_edited)))
+  params <- append(params, list(as.character(modified_by)))
   params <- append(params, list(as.integer(rula_id)))
 
   conn <- sql_manager("dit")
@@ -366,8 +379,8 @@ update_ru_lead_allocation <- function(
     {
       query <- glue::glue(
         "UPDATE {utils_resolve_schema('db_schema_01r')}.[ru_lead_allocations]
-       SET {paste(set_clauses, collapse = ', ')}
-       WHERE [rula_id] = ?;"
+         SET {paste(set_clauses, collapse = ', ')}
+         WHERE [rula_id] = ?;"
       )
       DBI::dbExecute(conn, query, params = params)
     },
@@ -385,18 +398,18 @@ update_ru_lead_allocation <- function(
 #' Soft delete / deactivate a lead allocation record
 #'
 #' @param rula_id Integer. The primary key ID to deactivate.
-#' @param user_id_edited Character. Username or audit identifier.
+#' @param modified_by Character. Username or audit identifier.
 #' @return Integer number of affected rows, or NULL on error.
 #' @export
 deactivate_ru_lead_allocation <- function(
   rula_id,
-  user_id_edited = Sys.getenv("USERNAME", "SYSTEM")
+  user_id
 ) {
   update_ru_lead_allocation(
     rula_id = rula_id,
     rula_active = FALSE,
     rula_dateended = Sys.Date(),
-    user_id_edited = user_id_edited
+    modified_by = user_id
   )
 }
 

@@ -35,10 +35,10 @@ select_ru_lead_allocations_with_school_by_source <- function(
          la.[rula_dateended],
          la.[rula_active],
          la.[rula_comment],
-         la.[date_created],
-         la.[user_id_created],
-         la.[date_edited],
-         la.[user_id_edited]
+         la.[created_date],
+         la.[created_by],
+         la.[modified_date],
+         la.[modified_by]
        FROM {utils_resolve_schema('db_schema_01r')}.[ru_lead_allocations] la
        INNER JOIN {utils_resolve_schema('db_schema_01r')}.[ru_lead_schools] ls 
          ON la.[ruhl_id] = ls.[ruhl_id]
@@ -92,10 +92,10 @@ select_ru_lead_allocations_by_lead_with_targets <- function(ruhl_id) {
          la.[rula_dateended],
          la.[rula_active],
          la.[rula_comment],
-         la.[date_created],
-         la.[user_id_created],
-         la.[date_edited],
-         la.[user_id_edited]
+         la.[created_date],
+         la.[created_by],
+         la.[modified_date],
+         la.[modified_by]
        FROM {utils_resolve_schema('db_schema_01r')}.[ru_lead_allocations] la
        LEFT JOIN {utils_resolve_schema('db_schema_01r')}.[ruh_support_records] sr 
          ON la.[support_source_id] = sr.[ruhsr_id] AND la.[support_source_type] = 'HUB'

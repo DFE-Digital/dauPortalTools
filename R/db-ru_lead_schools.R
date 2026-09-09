@@ -142,7 +142,7 @@ select_ru_lead_schools_by_hub <- function(ruhb_id) {
 #' @param ruhl_dateended Date or character (\code{'YYYY-MM-DD'}). Optional.
 #' @param ruhl_active Logical. Default is \code{TRUE}.
 #' @param ruhl_comment Character. Optional notes/context.
-#' @param user_id_created Character. Username or audit identifier.
+#' @param created_by Character. Username or audit identifier.
 #' @return Integer \code{ruhl_id} of the inserted record, or NULL on error.
 #' @export
 create_ru_lead_school <- function(
@@ -153,7 +153,7 @@ create_ru_lead_school <- function(
   ruhl_dateended = NULL,
   ruhl_active = TRUE,
   ruhl_comment = NULL,
-  user_id_created = 1L
+  created_by = 1L
 ) {
   if (
     missing(ruhl_entity_type) ||
@@ -187,8 +187,8 @@ create_ru_lead_school <- function(
          [ruhl_dateended],
          [ruhl_active],
          [ruhl_comment],
-         [date_created],
-         [user_id_created]
+         [created_date],
+         [created_by]
        )
        OUTPUT INSERTED.ruhl_id
        VALUES (?, ?, ?, ?, ?, ?, ?, SYSUTCDATETIME(), ?);"
@@ -214,7 +214,7 @@ create_ru_lead_school <- function(
         } else {
           NA_character_
         },
-        as.character(user_id_created)
+        as.character(created_by)
       )
 
       res <- DBI::dbGetQuery(conn, query, params = params)
@@ -245,7 +245,7 @@ create_ru_lead_school <- function(
 #' @param ruhl_dateended Date or character (\code{'YYYY-MM-DD'}). Optional.
 #' @param ruhl_active Logical. Optional.
 #' @param ruhl_comment Character. Optional.
-#' @param user_id_edited Character. Username or audit identifier.
+#' @param modified_by Character. Username or audit identifier.
 #' @return Integer number of affected rows, or NULL on error.
 #' @export
 update_ru_lead_school <- function(
@@ -257,7 +257,7 @@ update_ru_lead_school <- function(
   ruhl_dateended = NULL,
   ruhl_active = NULL,
   ruhl_comment = NULL,
-  user_id_edited = Sys.getenv("USERNAME", "SYSTEM")
+  modified_by = Sys.getenv("USERNAME", "SYSTEM")
 ) {
   set_clauses <- character()
   params <- list()
@@ -341,10 +341,10 @@ update_ru_lead_school <- function(
 
   set_clauses <- c(
     set_clauses,
-    "[date_edited] = SYSUTCDATETIME()",
-    "[user_id_edited] = ?"
+    "[modified_date] = SYSUTCDATETIME()",
+    "[modified_by] = ?"
   )
-  params <- append(params, list(as.character(user_id_edited)))
+  params <- append(params, list(as.character(modified_by)))
   params <- append(params, list(as.integer(ruhl_id)))
 
   conn <- sql_manager("dit")
@@ -373,18 +373,18 @@ update_ru_lead_school <- function(
 #' Soft delete / deactivate a lead school record
 #'
 #' @param ruhl_id Integer. The primary key ID to deactivate.
-#' @param user_id_edited Character. Username or audit identifier.
+#' @param modified_by Character. Username or audit identifier.
 #' @return Integer number of affected rows, or NULL on error.
 #' @export
 deactivate_ru_lead_school <- function(
   ruhl_id,
-  user_id_edited = Sys.getenv("USERNAME", "SYSTEM")
+  modified_by = Sys.getenv("USERNAME", "SYSTEM")
 ) {
   update_ru_lead_school(
     ruhl_id = ruhl_id,
     ruhl_active = FALSE,
     ruhl_dateended = Sys.Date(),
-    user_id_edited = user_id_edited
+    modified_by = modified_by
   )
 }
 

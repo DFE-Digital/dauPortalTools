@@ -44,28 +44,28 @@ ru_render_summary <- function(db_get_query = utils_db_get_query) {
         FROM (
           -- Core Events Logging Table
           SELECT COUNT(*) AS cnt FROM {schema_prefix}.[ru_events] 
-          WHERE [date_created] >= DATEADD(DAY, -30, GETDATE()) 
-             OR [date_edited] >= DATEADD(DAY, -30, GETDATE())
+          WHERE [created_date] >= DATEADD(DAY, -30, GETDATE()) 
+             OR [modified_date] >= DATEADD(DAY, -30, GETDATE())
           
           UNION ALL
           
           -- Hubs Support Provisions Records Table
           SELECT COUNT(*) AS cnt FROM {schema_prefix}.[ruh_support_records] 
-          WHERE [date_created] >= DATEADD(DAY, -30, GETDATE()) 
-             OR [date_edited] >= DATEADD(DAY, -30, GETDATE())
+          WHERE [created_date] >= DATEADD(DAY, -30, GETDATE()) 
+             OR [modified_date] >= DATEADD(DAY, -30, GETDATE())
              
           UNION ALL
           
           -- Hubs Management Records Table
           SELECT COUNT(*) AS cnt FROM {schema_prefix}.[ruh_lead_schools]
-          WHERE [date_created] >= DATEADD(DAY, -30, GETDATE())
-             OR [date_edited] >= DATEADD(DAY, -30, GETDATE())
+          WHERE [created_date] >= DATEADD(DAY, -30, GETDATE())
+             OR [modified_date] >= DATEADD(DAY, -30, GETDATE())
              
           UNION ALL
           
           -- Sub-Varieties & Lookup Configuration Tables
           SELECT COUNT(*) AS cnt FROM {schema_prefix}.[ru_event_sub_varieties] 
-          WHERE [date_created] >= DATEADD(DAY, -30, GETDATE())
+          WHERE [created_date] >= DATEADD(DAY, -30, GETDATE())
         ) transaction_union
       ) AS updates_this_month
     ",
