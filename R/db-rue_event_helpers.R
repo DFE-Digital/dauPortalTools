@@ -79,7 +79,7 @@ db_ru_update_event_type <- function(
     "UPDATE {utils_resolve_schema('db_schema_01r')}.[ru_event_types]
      SET [ruevt_name] = {name},
          [ruevt_description] = {description},
-         [modified_date] = GETDATE(),
+         [modified_date] = SYSUTCDATETIME(),
          [modified_by] = {user_id}
      WHERE [ruevt_id] = {as.integer(ruevt_id)};",
     .con = conn
