@@ -156,7 +156,6 @@ select_ru_lead_allocations_by_source <- function(source_type, source_id) {
 #' @param rula_active Logical. Default is \code{TRUE}.
 #' @param rula_comment Character. Optional notes or context.
 #' @param created_by Character. Username or audit identifier.
-#' @param created_by Character. Deprecated alias for \code{created_by}.
 #' @return Integer \code{rula_id} of the inserted record, or NULL on error.
 #' @export
 create_ru_lead_allocation <- function(
@@ -167,7 +166,6 @@ create_ru_lead_allocation <- function(
   rula_dateended = NULL,
   rula_active = TRUE,
   rula_comment = NULL,
-  created_by = Sys.getenv("USERNAME", "SYSTEM"),
   created_by = NULL
 ) {
   # Maintain backwards compatibility if legacy param was passed explicitly
@@ -260,7 +258,6 @@ create_ru_lead_allocation <- function(
 #' @param rula_active Logical. Optional.
 #' @param rula_comment Character. Optional.
 #' @param modified_by Character. Username or audit identifier.
-#' @param modified_by Character. Deprecated alias for \code{modified_by}.
 #' @return Integer number of affected rows, or NULL on error.
 #' @export
 update_ru_lead_allocation <- function(
@@ -272,7 +269,6 @@ update_ru_lead_allocation <- function(
   rula_dateended = NULL,
   rula_active = NULL,
   rula_comment = NULL,
-  modified_by = Sys.getenv("USERNAME", "SYSTEM"),
   modified_by = NULL
 ) {
   if (!is.null(modified_by)) {
