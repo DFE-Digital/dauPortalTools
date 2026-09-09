@@ -13,7 +13,7 @@ update_ru_lead_allocation(
   rula_dateended = NULL,
   rula_active = NULL,
   rula_comment = NULL,
-  user_id_edited = Sys.getenv("USERNAME", "SYSTEM")
+  modified_by = NULL
 )
 }
 \arguments{
@@ -33,7 +33,7 @@ update_ru_lead_allocation(
 
 \item{rula_comment}{Character. Optional.}
 
-\item{user_id_edited}{Character. Username or audit identifier.}
+\item{modified_by}{Character. Username or audit identifier.}
 }
 \value{
 Integer number of affected rows, or NULL on error.

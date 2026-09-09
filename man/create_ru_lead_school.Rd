@@ -12,7 +12,7 @@ create_ru_lead_school(
   ruhl_dateended = NULL,
   ruhl_active = TRUE,
   ruhl_comment = NULL,
-  user_id_created = 1L
+  created_by = 1L
 )
 }
 \arguments{
@@ -30,7 +30,7 @@ create_ru_lead_school(
 
 \item{ruhl_comment}{Character. Optional notes/context.}
 
-\item{user_id_created}{Character. Username or audit identifier.}
+\item{created_by}{Character. Username or audit identifier.}
 }
 \value{
 Integer \code{ruhl_id} of the inserted record, or NULL on error.

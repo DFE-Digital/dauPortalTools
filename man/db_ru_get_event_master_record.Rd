@@ -10,7 +10,7 @@ db_ru_get_event_master_record(event_master_id)
 \item{event_master_id}{Integer. Passed from the router (maps to ruevt_id).}
 }
 \value{
-A data.frame containing columns \code{ruevt_id}, \code{ruevt_name}, and \code{user_id_created}.
+A data.frame containing columns \code{ruevt_id}, \code{ruevt_name}, and \code{created_by}.
 }
 \description{
 Pulls row parameters for a specific category or top-level event type.

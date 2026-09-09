@@ -6,13 +6,13 @@
 \usage{
 deactivate_ru_lead_school(
   ruhl_id,
-  user_id_edited = Sys.getenv("USERNAME", "SYSTEM")
+  modified_by = Sys.getenv("USERNAME", "SYSTEM")
 )
 }
 \arguments{
 \item{ruhl_id}{Integer. The primary key ID to deactivate.}
 
-\item{user_id_edited}{Character. Username or audit identifier.}
+\item{modified_by}{Character. Username or audit identifier.}
 }
 \value{
 Integer number of affected rows, or NULL on error.

@@ -13,7 +13,7 @@ update_ru_lead_school(
   ruhl_dateended = NULL,
   ruhl_active = NULL,
   ruhl_comment = NULL,
-  user_id_edited = Sys.getenv("USERNAME", "SYSTEM")
+  modified_by = Sys.getenv("USERNAME", "SYSTEM")
 )
 }
 \arguments{
@@ -33,7 +33,7 @@ update_ru_lead_school(
 
 \item{ruhl_comment}{Character. Optional.}
 
-\item{user_id_edited}{Character. Username or audit identifier.}
+\item{modified_by}{Character. Username or audit identifier.}
 }
 \value{
 Integer number of affected rows, or NULL on error.

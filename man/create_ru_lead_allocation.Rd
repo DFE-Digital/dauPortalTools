@@ -12,7 +12,7 @@ create_ru_lead_allocation(
   rula_dateended = NULL,
   rula_active = TRUE,
   rula_comment = NULL,
-  user_id_created = 1L
+  created_by = NULL
 )
 }
 \arguments{
@@ -30,7 +30,7 @@ create_ru_lead_allocation(
 
 \item{rula_comment}{Character. Optional notes or context.}
 
-\item{user_id_created}{Character. Username or audit identifier.}
+\item{created_by}{Character. Username or audit identifier.}
 }
 \value{
 Integer \code{rula_id} of the inserted record, or NULL on error.
