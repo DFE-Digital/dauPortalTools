@@ -16,7 +16,7 @@ db_insert_role_assignment <- function(
   app_id,
   assigned_by
 ) {
-  log_event("Starting db_insert_role_assignment")
+  log_event("Starting db_insert_role_assignment", debug = TRUE)
   on.exit(log_event("Finished db_insert_role_assignment"), add = TRUE)
 
   shiny::req(conn, user_id, role_id, app_id, assigned_by)
@@ -36,6 +36,10 @@ db_insert_role_assignment <- function(
   tryCatch(
     utils_db_execute(conn, query),
     error = function(e) {
+      log_event(
+        paste0("db_insert_role_assignment failed: ", e$message),
+        2
+      )
       warning("db_insert_role_assignment failed: ", e$message)
       0L
     }
@@ -60,7 +64,7 @@ db_revoke_role_assignment <- function(
   app_id,
   revoked_by
 ) {
-  log_event("Starting db_revoke_role_assignment")
+  log_event("Starting db_revoke_role_assignment", debug = TRUE)
   on.exit(log_event("Finished db_revoke_role_assignment"), add = TRUE)
 
   shiny::req(conn, user_id, role_id, app_id, revoked_by)
@@ -78,6 +82,8 @@ db_revoke_role_assignment <- function(
   tryCatch(
     utils_db_execute(conn, query),
     error = function(e) {
+      log_event(paste0("db_revoke_role_assignment failed: ", e$message), 2)
+
       warning("db_revoke_role_assignment failed: ", e$message)
       0L
     }

@@ -19,7 +19,7 @@ db_insert_app_analytics <- function(
   action_type,
   action_sub_type = NULL
 ) {
-  log_event("Starting db_insert_app_analytics")
+  log_event("Starting db_insert_app_analytics", debug = TRUE)
   on.exit(log_event("Finished db_insert_app_analytics"), add = TRUE)
 
   conn <- sql_manager("dit")
@@ -72,7 +72,7 @@ db_insert_audit_log <- function(
   record_id = NULL,
   action_summary
 ) {
-  log_event("Starting db_insert_audit_log")
+  log_event("Starting db_insert_audit_log", debug = TRUE)
   on.exit(log_event("Finished db_insert_audit_log"), add = TRUE)
 
   conn <- sql_manager("dit")
@@ -100,6 +100,10 @@ db_insert_audit_log <- function(
   tryCatch(
     utils_db_execute(conn, query),
     error = function(e) {
+      log_event(
+        paste0("db_insert_audit_log failed: ", e$message),
+        2
+      )
       warning("db_insert_audit_log failed to write log entry: ", e$message)
       0L
     }
@@ -116,7 +120,7 @@ db_insert_audit_log <- function(
 #' @return A data frame with unique users, total hits, and top active pages.
 #' @export
 db_get_analytics_summary <- function(conn, app_id, days_back = 30) {
-  log_event("Starting db_get_analytics_summary")
+  log_event("Starting db_get_analytics_summary", debug = TRUE)
   on.exit(log_event("Finished db_get_analytics_summary"), add = TRUE)
 
   conn <- sql_manager("dit")
@@ -139,6 +143,10 @@ db_get_analytics_summary <- function(conn, app_id, days_back = 30) {
   tryCatch(
     utils_db_get_query(conn, query),
     error = function(e) {
+      log_event(
+        paste0("db_get_analytics_summary failed: ", e$message),
+        2
+      )
       warning("db_get_analytics_summary failed: ", e$message)
       data.frame()
     }

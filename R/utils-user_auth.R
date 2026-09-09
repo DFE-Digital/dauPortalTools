@@ -50,7 +50,9 @@ utils_resolve_user <- function(login_token) {
       identical(login_token, "Guest")
   ) {
     log_event(
-      "Login token is missing or 'Guest'. Defaulting to guest user_id = 1L."
+      "Login token is missing or 'Guest'. Defaulting to guest user_id = 1L.",
+      3,
+      FALSE
     )
     return(1L)
   }
@@ -60,12 +62,18 @@ utils_resolve_user <- function(login_token) {
   # --------------------------------------------------------------------------
   # 1. Check if user already exists by Email
   # --------------------------------------------------------------------------
-  log_event(paste0("Checking user table for existing email: ", login_email))
+  log_event(
+    paste0("Checking user table for existing email: ", login_email),
+    debug = TRUE
+  )
   email_profile <- db_get_user_by_email(login_email)
 
   if (nrow(email_profile) > 0) {
     target_uid <- as.integer(email_profile$user_id[1])
-    log_event(paste0("Found existing record by email. user_id: ", target_uid))
+    log_event(
+      paste0("Found existing record by email. user_id: ", target_uid),
+      debug = TRUE
+    )
 
     # =========================================================================
     # TODO: Downstream verified email login tasks (claims sync, session auditing)
@@ -81,15 +89,21 @@ utils_resolve_user <- function(login_token) {
   ad_token_guess <- utils_convert_email_to_ad_token(login_email)
 
   if (!is.null(ad_token_guess)) {
-    log_event(paste0("Derived AD username heuristic: ", ad_token_guess))
+    log_event(
+      paste0("Derived AD username heuristic: ", ad_token_guess),
+      debug = TRUE
+    )
     ad_profile <- db_get_user_by_username(ad_token_guess)
 
     if (nrow(ad_profile) > 0) {
       target_uid <- as.integer(ad_profile$user_id[1])
-      log_event(paste0(
-        "Matched legacy AD record. Linking email to user_id: ",
-        target_uid
-      ))
+      log_event(
+        paste0(
+          "Matched legacy AD record. Linking email to user_id: ",
+          target_uid
+        ),
+        debug = TRUE
+      )
 
       db_update_user_email(user_id = target_uid, email = login_email)
 
@@ -104,10 +118,13 @@ utils_resolve_user <- function(login_token) {
   # --------------------------------------------------------------------------
   # 3. Neither exists: Just-in-Time Provisioning
   # --------------------------------------------------------------------------
-  log_event(paste0(
-    "No existing account found. JIT provisioning user for: ",
-    login_email
-  ))
+  log_event(
+    paste0(
+      "No existing account found. JIT provisioning user for: ",
+      login_email
+    ),
+    debug = TRUE
+  )
 
   default_username <- if (!is.null(ad_token_guess)) {
     ad_token_guess
@@ -137,7 +154,7 @@ utils_resolve_user <- function(login_token) {
 #' @return Character scalar representing the active identity token.
 #' @export
 utils_get_user <- function(session = NULL, fallback = "Guest") {
-  log_event("Starting utils_get_user session resolution")
+  log_event("Starting utils_get_user session resolution", debug = TRUE)
 
   if (is.null(session)) {
     session <- tryCatch(shiny::getDefaultReactiveDomain(), error = function(e) {
@@ -165,7 +182,7 @@ utils_get_user <- function(session = NULL, fallback = "Guest") {
 #' @return Character vector of active roles.
 #' @export
 utils_get_user_roles <- function(user_id) {
-  log_event("Starting utils_get_user_roles")
+  log_event("Starting utils_get_user_roles", debug = TRUE)
   on.exit(log_event("Finished utils_get_user_roles"), add = TRUE)
 
   if (is.null(user_id) || identical(as.integer(user_id), 1L)) {
@@ -183,7 +200,7 @@ utils_get_user_roles <- function(user_id) {
 #' @return Logical scalar. TRUE if authorized, FALSE otherwise.
 #' @export
 utils_user_has_permission <- function(user_id, permission_name) {
-  log_event("Starting utils_user_has_permission check")
+  log_event("Starting utils_user_has_permission check", debug = TRUE)
   on.exit(log_event("Finished utils_user_has_permission check"), add = TRUE)
 
   if (is.null(user_id) || identical(as.integer(user_id), 1L)) {
@@ -204,7 +221,7 @@ utils_user_has_permission <- function(user_id, permission_name) {
 #' @return Integer scalar. Canonical primary key `user_id`.
 #' @export
 utils_record_login <- function(user = "Guest") {
-  log_event("Starting utils_record_login orchestrator")
+  log_event("Starting utils_record_login orchestrator", debug = TRUE)
   on.exit(log_event("Finished utils_record_login orchestrator"), add = TRUE)
 
   target_user_id <- utils_resolve_user(user)

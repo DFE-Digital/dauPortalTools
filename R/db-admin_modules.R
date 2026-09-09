@@ -7,7 +7,7 @@
 #' @return Data frame listing assigned users, current roles, and assignees.
 #' @export
 db_get_app_users_matrix <- function(conn, app_id) {
-  log_event("Starting db_get_app_users_matrix")
+  log_event("Starting db_get_app_users_matrix", debug = TRUE)
   on.exit(log_event("Finished db_get_app_users_matrix"), add = TRUE)
 
   shiny::req(conn, app_id)
@@ -30,6 +30,10 @@ db_get_app_users_matrix <- function(conn, app_id) {
   tryCatch(
     utils_db_get_query(conn, query),
     error = function(e) {
+      log_event(
+        paste0("db_get_app_users_matrix failed: ", e$message),
+        2
+      )
       warning("db_get_app_users_matrix failed: ", e$message)
       data.frame()
     }
@@ -42,7 +46,7 @@ db_get_app_users_matrix <- function(conn, app_id) {
 #' @return Data frame containing available configurations under roles_config lookup.
 #' @export
 db_get_available_roles <- function(conn) {
-  log_event("Starting db_get_available_roles")
+  log_event("Starting db_get_available_roles", debug = TRUE)
   on.exit(log_event("Finished db_get_available_roles"), add = TRUE)
 
   shiny::req(conn)
@@ -57,6 +61,10 @@ db_get_available_roles <- function(conn) {
   tryCatch(
     utils_db_get_query(conn, query),
     error = function(e) {
+      log_event(
+        paste0("db_get_available_roles failed: ", e$message),
+        2
+      )
       warning("db_get_available_roles failed: ", e$message)
       data.frame()
     }
@@ -72,7 +80,7 @@ db_get_available_roles <- function(conn) {
 #' @return A [`data.frame`] containing the assignment history ledger.
 #' @export
 db_get_user_role_history <- function(app_id) {
-  log_event("Starting db_get_user_role_history")
+  log_event("Starting db_get_user_role_history", debug = TRUE)
 
   shiny::req(app_id)
   conn <- sql_manager("dit")
@@ -108,6 +116,10 @@ db_get_user_role_history <- function(app_id) {
   tryCatch(
     utils_db_get_query(conn, query),
     error = function(e) {
+      log_event(
+        paste0("db_get_user_role_history failed: ", e$message),
+        2
+      )
       warning("db_get_user_role_history failed: ", e$message)
       data.frame()
     }

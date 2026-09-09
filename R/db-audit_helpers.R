@@ -9,7 +9,7 @@
 #' @return `NULL`, invisibly.
 #' @export
 db_record_download <- function(user = "Guest", page_name, file_name) {
-  log_event("Starting record_download")
+  log_event("Starting record_download", debug = TRUE)
 
   app_id <- utils_get_app_id()
   env_id <- utils_resolve_env_id()
@@ -80,7 +80,7 @@ record_download <- function(user = "Guest", page_name, file_name) {
 #' @return Integer scalar. The canonical primary key 'user_id' representing the logged-in user.
 #' @export
 db_record_login <- function(user = "Guest") {
-  log_event("Starting db_record_login")
+  log_event("Starting db_record_login", debug = TRUE)
 
   app_id <- utils_get_app_id()
   env_id <- utils_resolve_env_id()
@@ -157,7 +157,7 @@ db_write_audit_log <- function(
   record_id = NULL,
   action_summary
 ) {
-  log_event("Starting db_write_audit_log")
+  log_event("Starting db_write_audit_log", debug = TRUE)
   on.exit(log_event("Finished db_write_audit_log"), add = TRUE)
 
   shiny::req(user_id, action_type, target_table, action_summary)
@@ -191,6 +191,10 @@ db_write_audit_log <- function(
       utils_db_execute(conn, query)
     },
     error = function(e) {
+      log_event(
+        paste0("db_write_audit_log failed: ", e$message),
+        2
+      )
       warning("Global system audit logger dropped transaction: ", e$message)
       return(0L)
     }

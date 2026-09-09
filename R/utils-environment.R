@@ -18,16 +18,16 @@ utils_resolve_env_id <- function() {
   )
 
   if (grepl("test", active_env)) {
-    log_event("Environment resolved to Test (2L).")
+    log_event("Environment resolved to Test (2L).", 2, TRUE)
     return(2L)
   } else if (grepl("beta", active_env)) {
-    log_event("Environment resolved to beta (3L).")
+    log_event("Environment resolved to beta (3L).", 2, TRUE)
     return(3L)
   } else if (grepl("live", active_env)) {
-    log_event("Environment resolved to Live (4L).")
+    log_event("Environment resolved to Live (1L).", debug = TRUE)
     return(1L)
   } else {
-    log_event("Environment resolved to Local Development (1L).")
+    log_event("Environment resolved to Local Development (4L).", 2, TRUE)
     return(4L)
   }
 }

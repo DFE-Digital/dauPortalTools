@@ -12,7 +12,7 @@
 #' @return A [`data.frame`] containing user information and role details.
 #' @export
 db_get_app_users <- function() {
-  log_event("Starting db_get_app_users")
+  log_event("Starting db_get_app_users", debug = TRUE)
 
   conn <- sql_manager("dit")
   on.exit(
@@ -55,7 +55,7 @@ db_get_app_users <- function() {
 #' @return A [`data.frame`] with role configurations.
 #' @export
 db_get_roles <- function() {
-  log_event("Starting db_get_roles")
+  log_event("Starting db_get_roles", debug = TRUE)
 
   conn <- sql_manager("dit")
   on.exit(
