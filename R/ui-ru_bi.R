@@ -311,130 +311,90 @@ ru_portal_health_server <- function(
   })
 }
 
-#' Render England GOR Heatmap for RISE Universal Hubs
+#' Render Fast England GOR Choropleth Heatmap
 #'
 #' @param data Data frame with columns: gor_name, n_hubs, n_supported_entities,
 #'   n_lead_entities, n_events, n_event_entities.
-#' @param fill_metric Metric column name (character) driving the fill gradient.
-#' @param geojson_source Optional path to GeoJSON file or parsed list object.
+#' @param geojson_source Pre-parsed GeoJSON list or file path.
 #' @param height Canvas height in pixels. Default is 480.
-#' @return A plotly htmlwidget object.
+#' @return An interactive plotly htmlwidget object.
 #' @export
-ui_ru_gor_heatmap <- function(
-  data,
-  fill_metric = "n_supported_entities",
-  geojson_source = NULL,
-  height = 480
-) {
-  # 1. Filter out pseudo/non-English rows
+ui_ru_gor_heatmap <- function(data, geojson_source = NULL, height = 480) {
+  # 1. Standardize and compute total activity metric
   clean_data <- data %>%
-    dplyr::filter(!gor_name %in% c("Not Applicable", "Wales (pseudo)", "", NA))
-
-  # 2. Resolve GeoJSON locally without external web requests
-  gor_geojson <- NULL
-
-  if (is.list(geojson_source)) {
-    gor_geojson <- geojson_source
-  } else if (is.character(geojson_source) && file.exists(geojson_source)) {
-    gor_geojson <- jsonlite::fromJSON(geojson_source, simplifyVector = FALSE)
-  } else {
-    # Check package extdata first
-    pkg_path <- system.file(
-      "extdata",
-      "england_regions.geojson",
-      package = "dauPortalTools"
-    )
-
-    # Check local app fallback paths
-    local_paths <- c(
-      pkg_path,
-      "data/england_regions.geojson",
-      "../data/england_regions.geojson",
-      file.path(getwd(), "data", "england_regions.geojson")
-    )
-
-    valid_path <- local_paths[nzchar(local_paths) & file.exists(local_paths)][1]
-
-    if (!is.na(valid_path)) {
-      gor_geojson <- jsonlite::fromJSON(valid_path, simplifyVector = FALSE)
-    }
-  }
-
-  # Graceful fallback if file is completely missing on the server
-  if (is.null(gor_geojson)) {
-    return(
-      plotly::plot_ly(height = height) %>%
-        plotly::layout(
-          annotations = list(
-            list(
-              text = "Boundary map data (england_regions.geojson) not found on server.",
-              showarrow = FALSE,
-              font = list(color = "#d4351c", size = 14)
-            )
-          ),
-          xaxis = list(visible = FALSE),
-          yaxis = list(visible = FALSE)
-        )
-    )
-  }
-
-  # 3. Tooltip text formatting
-  clean_data <- clean_data %>%
+    dplyr::filter(
+      !gor_name %in% c("Not Applicable", "Wales (pseudo)", "", NA)
+    ) %>%
     dplyr::mutate(
+      total_activity = n_events + n_supported_entities,
+      # Harmonize Yorkshire name to match ONS boundary conventions
+      match_name = ifelse(
+        tolower(gor_name) == "yorkshire and the humber",
+        "Yorkshire and the Humber",
+        gor_name
+      ),
       hover_text = glue::glue(
         "<b>{gor_name}</b><br>",
         "<span style='color:#b1b4b6;'>━━━━━━━━━━━━━━━━━━━━</span><br>",
-        "<b>Active Hubs Serving:</b> {format(n_hubs, big.mark = ',')}<br>",
-        "<b>Supported Entities:</b> {format(n_supported_entities, big.mark = ',')}<br>",
-        "<b>Lead Entities:</b> {format(n_lead_entities, big.mark = ',')}<br>",
-        "<b>Events (Past Year/Live):</b> {format(n_events, big.mark = ',')}<br>",
-        "<b>Participating Entities:</b> {format(n_event_entities, big.mark = ',')}<extra></extra>"
+        "<b>Total Activity:</b> {format(total_activity, big.mark = ',')}<br>",
+        "  • Supported Entities: {format(n_supported_entities, big.mark = ',')}<br>",
+        "  • Events: {format(n_events, big.mark = ',')}<br>",
+        "<b>Active Hubs:</b> {format(n_hubs, big.mark = ',')}<br>",
+        "<b>Lead Entities:</b> {format(n_lead_entities, big.mark = ',')}<extra></extra>"
       )
     )
 
-  metric_titles <- c(
-    "n_supported_entities" = "Supported Entities",
-    "n_lead_entities" = "Lead Entities",
-    "n_hubs" = "Active Hubs",
-    "n_events" = "Active Events",
-    "n_event_entities" = "Participating Entities"
-  )
+  # 2. Resolve cached GeoJSON (avoiding disk reads if passed from global.R)
+  gor_geojson <- if (is.list(geojson_source)) {
+    geojson_source
+  } else if (is.character(geojson_source) && file.exists(geojson_source)) {
+    jsonlite::fromJSON(geojson_source, simplifyVector = FALSE)
+  } else {
+    jsonlite::fromJSON("data/england_regions.geojson", simplifyVector = FALSE)
+  }
 
-  legend_label <- metric_titles[[fill_metric]] %||% fill_metric
-
-  # 4. Plotly Choropleth
+  # 3. Fast Plotly trace with static geographic bounds
   plotly::plot_ly(height = height) %>%
     plotly::add_trace(
       type = "choropleth",
       geojson = gor_geojson,
-      locations = clean_data$gor_name,
-      z = clean_data[[fill_metric]],
+      locations = clean_data$match_name,
+      z = clean_data$total_activity,
       text = clean_data$hover_text,
       hovertemplate = "%{text}",
       featureidkey = "properties.RGN23NM",
       colorscale = list(
-        list(0, "#f3f2f1"),
-        list(0.25, "#bdd7ee"),
-        list(0.65, "#2b8cc4"),
-        list(1, "#003078")
+        list(0, "#f3f2f1"), # GOV.UK light grey
+        list(0.3, "#bdd7ee"),
+        list(0.7, "#2b8cc4"),
+        list(1, "#003078") # DfE deep navy
       ),
       marker = list(
-        line = list(width = 1.2, color = "#0b0c0c")
+        line = list(width = 1, color = "#0b0c0c")
       )
     ) %>%
     plotly::colorbar(
-      title = list(text = legend_label, font = list(size = 11)),
-      len = 0.75,
-      thickness = 15
+      title = list(
+        text = "Total Activity<br>(Events + Support)",
+        font = list(size = 11)
+      ),
+      len = 0.7,
+      thickness = 14
     ) %>%
     plotly::layout(
       geo = list(
         scope = "europe",
-        fitbounds = "locations",
+        projection = list(type = "mercator"),
+        center = list(lon = -1.5, lat = 52.8),
+        lataxis = list(range = c(50.0, 55.8)),
+        lonaxis = list(range = c(-6.0, 2.0)),
         visible = FALSE,
         showland = FALSE
       ),
       margin = list(l = 0, r = 0, t = 5, b = 0)
     ) %>%
-    plotly::config(displayModeBar = FALSE)
+    plotly::config(
+      displayModeBar = FALSE,
+      responsive = TRUE
+    )
 }
