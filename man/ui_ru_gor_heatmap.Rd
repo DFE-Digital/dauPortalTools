@@ -2,22 +2,21 @@
 % Please edit documentation in R/ui-ru_bi.R
 \name{ui_ru_gor_heatmap}
 \alias{ui_ru_gor_heatmap}
-\title{Render England GOR Heatmap for RISE Universal Hubs}
+\title{Render Fast England GOR Choropleth Heatmap}
 \usage{
-ui_ru_gor_heatmap(data, fill_metric = "n_supported_entities", height = 480)
+ui_ru_gor_heatmap(data, geojson_source = NULL, height = 480)
 }
 \arguments{
 \item{data}{Data frame with columns: gor_name, n_hubs, n_supported_entities,
 n_lead_entities, n_events, n_event_entities.}
 
-\item{fill_metric}{Metric column name (character) driving the fill gradient.
-Options: "n_supported_entities", "n_lead_entities", "n_hubs", "n_events", "n_event_entities".}
+\item{geojson_source}{Pre-parsed GeoJSON list or file path.}
 
 \item{height}{Canvas height in pixels. Default is 480.}
 }
 \value{
-A plotly htmlwidget object.
+An interactive plotly htmlwidget object.
 }
 \description{
-Render England GOR Heatmap for RISE Universal Hubs
+Render Fast England GOR Choropleth Heatmap
 }

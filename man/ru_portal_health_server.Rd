@@ -4,18 +4,10 @@
 \alias{ru_portal_health_server}
 \title{RISE Universal Hubs Portal Health Server}
 \usage{
-ru_portal_health_server(
-  id,
-  con,
-  schema = utils_resolve_schema("db_schema_01r")
-)
+ru_portal_health_server(id)
 }
 \arguments{
 \item{id}{Character module namespace ID.}
-
-\item{con}{DBI SQL Server connection or reactive returning a connection.}
-
-\item{schema}{Character target RISE schema (e.g., "\link{01_RISE}" or "\link{01_RISE_b}").}
 }
 \description{
 RISE Universal Hubs Portal Health Server

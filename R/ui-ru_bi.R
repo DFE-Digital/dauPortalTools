@@ -212,8 +212,6 @@ ru_portal_health_ui <- function(id) {
 #' RISE Universal Hubs Portal Health Server
 #'
 #' @param id Character module namespace ID.
-#' @param con DBI SQL Server connection or reactive returning a connection.
-#' @param schema Character target RISE schema (e.g., "[01_RISE]" or "[01_RISE_b]").
 #' @export
 ru_portal_health_server <- function(
   id
