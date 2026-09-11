@@ -216,8 +216,7 @@ ru_portal_health_ui <- function(id) {
 #' @param schema Character target RISE schema (e.g., "[01_RISE]" or "[01_RISE_b]").
 #' @export
 ru_portal_health_server <- function(
-  id,
-  schema = utils_resolve_schema("db_schema_01r")
+  id
 ) {
   shiny::moduleServer(id, function(input, output, session) {
     conn <- sql_manager("dit")
@@ -230,6 +229,7 @@ ru_portal_health_server <- function(
 
     health_metrics <- shiny::reactive({
       start_of_month <- as.character(lubridate::floor_date(Sys.Date(), "month"))
+      schema <- utils_resolve_schema("db_schema_01r")
 
       query <- glue::glue(
         "
