@@ -217,16 +217,18 @@ ru_portal_health_ui <- function(id) {
 #' @export
 ru_portal_health_server <- function(
   id,
-  con,
   schema = utils_resolve_schema("db_schema_01r")
 ) {
   shiny::moduleServer(id, function(input, output, session) {
-    get_con <- function() {
-      if (shiny::is.reactive(con)) con() else con
-    }
+    conn <- sql_manager("dit")
+    on.exit(
+      {
+        try(DBI::dbDisconnect(conn), silent = TRUE)
+      },
+      add = TRUE
+    )
 
     health_metrics <- shiny::reactive({
-      conn <- get_con()
       start_of_month <- as.character(lubridate::floor_date(Sys.Date(), "month"))
 
       query <- glue::glue(
@@ -389,7 +391,7 @@ ui_ru_gor_heatmap <- function(data, geojson_source = NULL, height = 480) {
         lataxis = list(range = c(50.0, 55.8)),
         lonaxis = list(range = c(-6.0, 2.0)),
         visible = FALSE,
-        showland = FALSE
+        showland = TRUE
       ),
       margin = list(l = 0, r = 0, t = 5, b = 0)
     ) %>%
