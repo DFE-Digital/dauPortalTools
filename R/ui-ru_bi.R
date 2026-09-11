@@ -327,10 +327,10 @@ ui_ru_gor_heatmap <- function(data, geojson_source = NULL, height = 480) {
     ) %>%
     dplyr::mutate(
       total_activity = n_events + n_supported_entities,
-      # Harmonize Yorkshire name to match ONS boundary conventions
+      # Harmonize Yorkshire name to match ONS boundary conventions (Capital 'The')
       match_name = ifelse(
         tolower(gor_name) == "yorkshire and the humber",
-        "Yorkshire and the Humber",
+        "Yorkshire and The Humber",
         gor_name
       ),
       hover_text = glue::glue(
@@ -389,7 +389,7 @@ ui_ru_gor_heatmap <- function(data, geojson_source = NULL, height = 480) {
         lataxis = list(range = c(50.0, 55.8)),
         lonaxis = list(range = c(-6.0, 2.0)),
         visible = FALSE,
-        showland = TRUE
+        showland = FALSE
       ),
       margin = list(l = 0, r = 0, t = 5, b = 0)
     ) %>%
