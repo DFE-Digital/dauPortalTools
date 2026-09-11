@@ -213,17 +213,13 @@ ru_portal_health_ui <- function(id) {
 #'
 #' @param id Character module namespace ID.
 #' @export
-ru_portal_health_server <- function(
-  id
-) {
+ru_portal_health_server <- function(id) {
   shiny::moduleServer(id, function(input, output, session) {
+    # Establish connection and register disconnection on session teardown
     conn <- sql_manager("dit")
-    on.exit(
-      {
-        try(DBI::dbDisconnect(conn), silent = TRUE)
-      },
-      add = TRUE
-    )
+    session$onSessionEnded(function() {
+      try(DBI::dbDisconnect(conn), silent = TRUE)
+    })
 
     health_metrics <- shiny::reactive({
       start_of_month <- as.character(lubridate::floor_date(Sys.Date(), "month"))
@@ -239,8 +235,8 @@ ru_portal_health_server <- function(
           (SELECT COUNT(DISTINCT CONCAT(ruhsr_entity_type, '_', CAST(ruhsr_entity_id AS NVARCHAR(30)))) 
            FROM {schema}.[ruh_support_records] WHERE ruhsr_active = 1) AS n_hub_entities,
           
-          -- Active lead schools
-          (SELECT COUNT(DISTINCT ruhl_id) FROM {schema}.[ruh_lead_schools] WHERE ruhl_active = 1) AS n_leads,
+          -- Active lead schools (corrected table name)
+          (SELECT COUNT(DISTINCT ruhl_id) FROM {schema}.[ru_lead_schools] WHERE ruhl_active = 1) AS n_leads,
           
           -- Active schools supported through records
           (SELECT COUNT(DISTINCT ruhsr_entity_id) FROM {schema}.[ruh_support_records] 
