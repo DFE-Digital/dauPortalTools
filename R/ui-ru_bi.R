@@ -147,64 +147,48 @@ ru_render_summary <- function(db_get_query = utils_db_get_query) {
 #' RISE Universal Hubs Portal Health UI
 #'
 #' @param id Character module namespace ID.
-#' @return A Shiny tagList of bslib value boxes.
 #' @export
 ru_portal_health_ui <- function(id) {
   ns <- shiny::NS(id)
 
-  shiny::tagList(
-    bslib::layout_column_wrap(
-      width = "250px",
-      fill = FALSE,
-      class = "mb-3",
+  bslib::layout_columns(
+    col_widths = c(3, 3, 3, 3),
+    gap = "1rem",
 
-      # 1. Designated Hubs & Entity Reach
-      bslib::value_box(
-        title = "Designated Hubs",
-        value = shiny::textOutput(ns("n_hubs")),
-        showcase = shiny::icon("building-columns"),
-        theme = "primary",
-        p(
-          class = "text-muted mb-0 small",
-          shiny::textOutput(ns("n_hub_entities"))
-        )
-      ),
+    # 1. Designated Hubs
+    bslib::value_box(
+      title = "Designated Hubs",
+      value = shiny::textOutput(ns("n_hubs")),
+      shiny::textOutput(ns("n_hub_entities")),
+      showcase = shiny::icon("building-columns"),
+      theme = "primary"
+    ),
 
-      # 2. Lead Schools & Direct School Interventions
-      bslib::value_box(
-        title = "Lead Schools",
-        value = shiny::textOutput(ns("n_leads")),
-        showcase = shiny::icon("school"),
-        theme = "info",
-        p(
-          class = "text-muted mb-0 small",
-          shiny::textOutput(ns("n_supported_schools"))
-        )
-      ),
+    # 2. Lead Schools
+    bslib::value_box(
+      title = "Active Lead Entities",
+      value = shiny::textOutput(ns("n_leads")),
+      shiny::textOutput(ns("n_supported_schools")),
+      showcase = shiny::icon("school"),
+      theme = "info"
+    ),
 
-      # 3. Point-in-Time Events Logged
-      bslib::value_box(
-        title = "Events Logged",
-        value = shiny::textOutput(ns("n_events")),
-        showcase = shiny::icon("calendar-check"),
-        theme = "teal",
-        p(
-          class = "text-muted mb-0 small",
-          shiny::textOutput(ns("n_event_entities"))
-        )
-      ),
+    # 3. Events & Engagements
+    bslib::value_box(
+      title = "Recorded Engagements",
+      value = shiny::textOutput(ns("n_events")),
+      shiny::textOutput(ns("n_event_entities")),
+      showcase = shiny::icon("calendar-check"),
+      theme = "light"
+    ),
 
-      # 4. Pipeline Velocity & Attention Metric
-      bslib::value_box(
-        title = "Updates This Month",
-        value = shiny::textOutput(ns("n_month_updates")),
-        showcase = shiny::icon("arrow-trend-up"),
-        theme = "secondary",
-        p(
-          class = "text-muted mb-0 small",
-          shiny::textOutput(ns("n_unassigned_leads"))
-        )
-      )
+    # 4. Activity & Assurance
+    bslib::value_box(
+      title = "Monthly Activity",
+      value = shiny::textOutput(ns("n_month_updates")),
+      shiny::textOutput(ns("n_unassigned_leads")),
+      showcase = shiny::icon("clock-rotate-left"),
+      theme = "warning"
     )
   )
 }
