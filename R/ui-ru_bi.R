@@ -249,9 +249,9 @@ ru_portal_health_server <- function(id) {
           
           -- Updates logged this month across matrices
           ((SELECT COUNT(*) FROM {schema}.[ruh_support_records] 
-            WHERE date_created >= '{start_of_month}' OR date_edited >= '{start_of_month}') +
+            WHERE created_date >= '{start_of_month}' OR modified_date >= '{start_of_month}') +
            (SELECT COUNT(*) FROM {schema}.[ru_events] 
-            WHERE date_created >= '{start_of_month}' OR date_edited >= '{start_of_month}')
+            WHERE created_date >= '{start_of_month}' OR modified_date >= '{start_of_month}')
           ) AS n_month_updates,
           
           -- Attention: Active support records missing an allocated lead school
