@@ -9,9 +9,6 @@ ru_portal_health_ui(id)
 \arguments{
 \item{id}{Character module namespace ID.}
 }
-\value{
-A Shiny tagList of bslib value boxes.
-}
 \description{
 RISE Universal Hubs Portal Health UI
 }
