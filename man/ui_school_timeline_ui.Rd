@@ -7,10 +7,10 @@
 ui_school_timeline_ui(id)
 }
 \arguments{
-\item{id}{Shiny namespace identifier}
+\item{id}{Character scalar. Shiny namespace identifier.}
 }
 \value{
-A Shiny UI element
+A Shiny UI element.
 }
 \description{
 School Timeline Module UI

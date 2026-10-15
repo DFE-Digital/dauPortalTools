@@ -2,11 +2,13 @@
 % Please edit documentation in R/ui-school_timeline.R
 \name{.timeline_assets}
 \alias{.timeline_assets}
-\title{Timeline Stylesheet (GOV.UK aligned)}
+\title{Timeline Stylesheet & Visual Assets}
 \usage{
 .timeline_assets()
 }
 \description{
-Timeline Stylesheet (GOV.UK aligned)
+Provides full CSS styling for the GOV.UK vertical timeline,
+new/legacy Ofsted grade pills, category of concern/safeguarding alert banners,
+and the responsive sub-judgement card grid.
 }
 \keyword{internal}

@@ -598,3 +598,145 @@ ui_school_ofsted_history <- function(urn) {
   ))
   ui
 }
+
+#' Render Compact Ofsted Outcome Card
+#'
+#' @description
+#' Generates a slimmed-down, card-based Ofsted outcome panel with conditional
+#' top warning banners for Safeguarding (Not Met) and Category of Concern (CoC).
+#'
+#' @param row A single-row data frame containing Ofsted outcome fields.
+#' @return An htmltools tagList or div UI element.
+#' @export
+render_slim_ofsted_panel <- function(row) {
+  if (is.null(row) || nrow(row) == 0) {
+    return(htmltools::tags$div(
+      class = "ofsted-slim-empty",
+      htmltools::tags$p("No inspection records available.")
+    ))
+  }
+
+  `%||%` <- function(a, b) {
+    if (is.null(a) || length(a) == 0 || is.na(a)) b else a
+  }
+
+  # Pill formatter matching new 5-tier framework
+  grade_pill <- function(value) {
+    val <- trimws(as.character(value %||% "Unknown"))
+    cls <- switch(
+      tolower(val),
+      "exceptional" = "ofsted-exceptional",
+      "strong standard" = "ofsted-strong",
+      "expected standard" = "ofsted-expected",
+      "needs attention" = "ofsted-needs-attention",
+      "urgent improvement" = "ofsted-urgent",
+      "ofsted-unknown"
+    )
+    htmltools::tags$span(
+      class = paste("ofsted-pill", cls),
+      role = "text",
+      `aria-label` = paste0("Grade: ", val),
+      val
+    )
+  }
+
+  # --- Data extraction ---
+  safeguarding_val <- tolower(trimws(as.character(
+    row$safeguarding_standards %||% ""
+  )))
+  is_sg_not_met <- safeguarding_val %in%
+    c("not met", "no", "not effective", "false", "0")
+
+  coc_raw <- row$coc %||% NA
+  has_coc <- !is.na(coc_raw) &&
+    nzchar(trimws(as.character(coc_raw))) &&
+    tolower(trimws(as.character(coc_raw))) != "none"
+  coc_text <- trimws(as.character(coc_raw))
+
+  insp_date_raw <- row$inspection_date %||% NA
+  insp_date_str <- tryCatch(
+    format(as.Date(insp_date_raw), "%d %B %Y"),
+    error = function(e) as.character(insp_date_raw %||% "Date unavailable")
+  )
+
+  # --- Banners ---
+  banners <- list()
+
+  if (is_sg_not_met) {
+    banners <- append(
+      banners,
+      list(
+        htmltools::tags$div(
+          class = "ofsted-alert-banner",
+          htmltools::tags$strong("Safeguarding: Not Met"),
+          htmltools::tags$span(
+            " — Safeguarding requirements do not meet the required standards."
+          )
+        )
+      )
+    )
+  }
+
+  if (has_coc) {
+    banners <- append(
+      banners,
+      list(
+        htmltools::tags$div(
+          class = "ofsted-alert-banner",
+          htmltools::tags$strong("Category of Concern: "),
+          htmltools::tags$span(coc_text)
+        )
+      )
+    )
+  }
+
+  # --- Sub-judgement Boxes ---
+  judgements <- list(
+    "Inclusion" = row$inclusion,
+    "Curriculum & Teaching" = row$curriculum_and_teaching,
+    "Achievement" = row$achievement,
+    "Attendance & Behaviour" = row$attendance_and_behaviour,
+    "Personal Development & Well-being" = row$personal_development_and_wellbeing,
+    "Leadership & Governance" = row$leadership_and_governance
+  )
+
+  judgement_cards <- lapply(names(judgements), function(area_name) {
+    val <- judgements[[area_name]]
+    htmltools::tags$div(
+      class = "ofsted-subjudgement-card",
+      htmltools::tags$div(class = "ofsted-card-label", area_name),
+      htmltools::tags$div(class = "ofsted-card-value", grade_pill(val))
+    )
+  })
+
+  # --- Wrapper Output ---
+  htmltools::tags$div(
+    class = "ofsted-slim-container",
+    # Conditional Alerts
+    if (length(banners) > 0) htmltools::tagList(banners),
+
+    # Meta Header (Inspection Date + Safeguarding status if Met)
+    htmltools::tags$div(
+      class = "ofsted-slim-header",
+      htmltools::tags$div(
+        htmltools::tags$span(
+          class = "ofsted-slim-date-label",
+          "Inspection Date: "
+        ),
+        htmltools::tags$strong(insp_date_str)
+      ),
+      if (!is_sg_not_met) {
+        htmltools::tags$div(
+          class = "ofsted-safeguarding-met-tag",
+          "Safeguarding: Met"
+        )
+      }
+    ),
+
+    # Grid of Sub-Judgements
+    htmltools::tags$div(
+      class = "ofsted-judgements-grid",
+      judgement_cards
+    )
+  )
+}

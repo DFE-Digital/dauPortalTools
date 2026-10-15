@@ -7,12 +7,12 @@
 server_school_timeline(id, urn)
 }
 \arguments{
-\item{id}{Shiny namespace identifier}
+\item{id}{Character scalar. Shiny namespace identifier.}
 
 \item{urn}{Reactive expression or value yielding the school's numeric/character URN.}
 }
 \value{
-Module server instance
+Module server instance.
 }
 \description{
 School Timeline Module Server

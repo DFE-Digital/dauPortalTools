@@ -1,8 +1,17 @@
-#' Timeline Stylesheet (GOV.UK aligned)
+#' Timeline Stylesheet & Visual Assets
+#'
+#' @description
+#' Provides full CSS styling for the GOV.UK vertical timeline,
+#' new/legacy Ofsted grade pills, category of concern/safeguarding alert banners,
+#' and the responsive sub-judgement card grid.
+#'
 #' @keywords internal
 .timeline_assets <- function() {
   htmltools::tags$style(shiny::HTML(
     "
+    /* ==========================================================================
+       GOV.UK Vertical Timeline
+       ========================================================================== */
     .govuk-timeline {
       position: relative;
       margin: 20px 0;
@@ -12,13 +21,13 @@
     }
     .govuk-timeline-item {
       position: relative;
-      margin-bottom: 30px;
+      margin-bottom: 28px;
     }
     .govuk-timeline-item::before {
       content: '';
       position: absolute;
       left: -30px;
-      top: 3px;
+      top: 4px;
       width: 10px;
       height: 10px;
       border-radius: 50%;
@@ -65,24 +74,113 @@
       padding: 14px 16px;
       margin-top: 6px;
     }
-    .timeline-ofsted-wrapper {
-      margin-top: 14px;
-      border-top: 2px solid #b1b4b6;
-      padding-top: 12px;
+
+    /* ==========================================================================
+       Ofsted Slim Card & Top Alert Banners
+       ========================================================================== */
+    .ofsted-slim-container {
+      background: #ffffff;
+      border: 1px solid #b1b4b6;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 12px;
     }
+    .ofsted-alert-banner {
+      background-color: #d4351c;
+      color: #ffffff;
+      padding: 8px 14px;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      border-bottom: 1px solid #ffffff;
+    }
+    .ofsted-alert-banner strong {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .ofsted-slim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background-color: #f3f2f1;
+      border-bottom: 1px solid #b1b4b6;
+      font-size: 0.95rem;
+    }
+    .ofsted-slim-date-label {
+      color: #505a5f;
+    }
+    .ofsted-safeguarding-met-tag {
+      background: #00703c;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+
+    /* Sub-judgements Box Grid */
+    .ofsted-judgements-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      padding: 12px;
+      background: #ffffff;
+    }
+    .ofsted-subjudgement-card {
+      background: #f8f8f8;
+      border: 1px solid #d8d8d8;
+      border-radius: 3px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 68px;
+    }
+    .ofsted-card-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #505a5f;
+      margin-bottom: 6px;
+      line-height: 1.2;
+    }
+    .ofsted-card-value {
+      margin-top: auto;
+    }
+
+    /* ==========================================================================
+       Ofsted Grade Pills
+       ========================================================================== */
+    .ofsted-pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      border: 1px solid transparent;
+      text-align: center;
+    }
+    .ofsted-exceptional     { background: #00703c; color: #fff; }
+    .ofsted-strong          { background: #28a197; color: #fff; }
+    .ofsted-expected        { background: #1d70b8; color: #fff; }
+    .ofsted-needs-attention { background: #ffdd00; color: #0b0c0c; }
+    .ofsted-urgent          { background: #d4351c; color: #fff; }
+    .ofsted-unknown         { background: #f3f2f1; color: #0b0c0c; border-color: #b1b4b6; }
+    .ofsted-note            { color: #505a5f; margin: 6px 0 0 0; font-size: 0.9rem; }
   "
   ))
 }
 
-#' Internal sub-renderer for Ofsted outcome card in timeline
+#' Internal sub-renderer for slim Ofsted outcome card in timeline
 #' @keywords internal
-.render_timeline_ofsted_panel <- function(row) {
+.render_slim_ofsted_panel <- function(row) {
   `%||%` <- function(a, b) {
     if (is.null(a) || length(a) == 0 || is.na(a)) b else a
   }
 
-  # Pill formatter consistent with ui_school_ofsted_history
-  pill <- function(value) {
+  # Pill badge helper
+  grade_pill <- function(value) {
     val <- trimws(as.character(value %||% "Unknown"))
     cls <- switch(
       tolower(val),
@@ -101,103 +199,121 @@
     )
   }
 
-  # Safeguarding indicator
-  safeguarding <- function(flag) {
-    raw <- tolower(trimws(as.character(flag %||% "Not known")))
-    state <- if (raw %in% c("met", "yes", "effective", "true", "1")) {
-      "met"
-    } else if (raw %in% c("not met", "no", "not effective", "false", "0")) {
-      "not-met"
-    } else {
-      "unknown"
-    }
-
-    txt <- if (state == "unknown") "Not known" else tools::toTitleCase(state)
-
-    htmltools::tags$div(
-      class = paste("ofsted-safeguarding-panel", state),
-      role = "group",
-      `aria-label` = paste0("Safeguarding standards: ", txt),
-      htmltools::tags$div(
-        class = "ofsted-safeguarding-title",
-        "Safeguarding standards"
-      ),
-      htmltools::tags$div(
-        class = "ofsted-safeguarding-value",
-        htmltools::tags$strong(txt)
-      )
-    )
-  }
-
-  # If no joined ofsted record found matching the publication date
+  # Safe check on inspection_date
   val <- row[["inspection_date"]]
   if (is.null(val) || length(val) == 0 || is.na(val[1])) {
     return(htmltools::tags$div(
-      class = "timeline-ofsted-wrapper",
-      htmltools::tags$p(
-        class = "ofsted-note",
-        "No inspection details matched for this publication date."
+      class = "ofsted-slim-container",
+      htmltools::tags$div(
+        style = "padding: 10px 14px;",
+        htmltools::tags$p(
+          class = "ofsted-note",
+          "No inspection details matched for this publication date."
+        )
       )
     ))
   }
 
+  # Evaluate Safeguarding flag
+  safeguarding_raw <- tolower(trimws(as.character(
+    row$safeguarding_standards %||% ""
+  )))
+  is_sg_not_met <- safeguarding_raw %in%
+    c("not met", "no", "not effective", "false", "0")
+
+  # Evaluate Category of Concern
+  coc_raw <- row$coc %||% NA
+  has_coc <- !is.na(coc_raw) &&
+    nzchar(trimws(as.character(coc_raw))) &&
+    tolower(trimws(as.character(coc_raw))) != "none"
+  coc_text <- trimws(as.character(coc_raw))
+
   insp_date_str <- tryCatch(
-    format(as.Date(row$inspection_date), "%d %B %Y"),
-    error = function(e) as.character(row$inspection_date)
+    format(as.Date(val[1]), "%d %B %Y"),
+    error = function(e) as.character(val[1])
   )
 
-  areas <- c(
-    "Inclusion" = row$inclusion,
-    "Curriculum & teaching" = row$curriculum_and_teaching,
-    "Achievement" = row$achievement,
-    "Attendance & behaviour" = row$attendance_and_behaviour,
-    "Personal development & well-being" = row$personal_development_and_wellbeing,
-    "Leadership & governance" = row$leadership_and_governance
-  )
-
-  grade_rows <- Map(
-    function(k, v) {
-      htmltools::tags$tr(
-        htmltools::tags$th(scope = "row", k),
-        htmltools::tags$td(pill(v))
+  # Conditional Warning Banners
+  banners <- list()
+  if (is_sg_not_met) {
+    banners <- append(
+      banners,
+      list(
+        htmltools::tags$div(
+          class = "ofsted-alert-banner",
+          htmltools::tags$strong("Safeguarding: Not Met"),
+          htmltools::tags$span(
+            " — Safeguarding requirements do not meet the expected standard."
+          )
+        )
       )
-    },
-    names(areas),
-    unname(areas)
+    )
+  }
+
+  if (has_coc) {
+    banners <- append(
+      banners,
+      list(
+        htmltools::tags$div(
+          class = "ofsted-alert-banner",
+          htmltools::tags$strong("Category of Concern: "),
+          htmltools::tags$span(coc_text)
+        )
+      )
+    )
+  }
+
+  # Sub-judgement cards
+  judgements <- list(
+    "Inclusion" = row$inclusion,
+    "Curriculum & Teaching" = row$curriculum_and_teaching,
+    "Achievement" = row$achievement,
+    "Attendance & Behaviour" = row$attendance_and_behaviour,
+    "Personal Development & Well-being" = row$personal_development_and_wellbeing,
+    "Leadership & Governance" = row$leadership_and_governance
   )
+
+  cards <- lapply(names(judgements), function(area_name) {
+    htmltools::tags$div(
+      class = "ofsted-subjudgement-card",
+      htmltools::tags$div(class = "ofsted-card-label", area_name),
+      htmltools::tags$div(
+        class = "ofsted-card-value",
+        grade_pill(judgements[[area_name]])
+      )
+    )
+  })
 
   htmltools::tags$div(
-    class = "timeline-ofsted-wrapper",
+    class = "ofsted-slim-container",
+    if (length(banners) > 0) htmltools::tagList(banners),
     htmltools::tags$div(
-      class = "ofsted-top-row",
+      class = "ofsted-slim-header",
       htmltools::tags$div(
-        class = "ofsted-inspection-date",
-        htmltools::tags$div(class = "ofsted-label", "Inspection date"),
-        htmltools::tags$div(class = "ofsted-date", insp_date_str)
+        htmltools::tags$span(
+          class = "ofsted-slim-date-label",
+          "Inspection Date: "
+        ),
+        htmltools::tags$strong(insp_date_str)
       ),
-      safeguarding(row$safeguarding_standards)
+      if (!is_sg_not_met) {
+        htmltools::tags$div(
+          class = "ofsted-safeguarding-met-tag",
+          "Safeguarding: Met"
+        )
+      }
     ),
     htmltools::tags$div(
-      class = "ofsted-section",
-      htmltools::tags$h4(class = "ofsted-h3", "Inspection grades"),
-      htmltools::tags$table(
-        class = "ofsted-grades-table",
-        htmltools::tags$thead(
-          htmltools::tags$tr(
-            htmltools::tags$th(scope = "col", "Area"),
-            htmltools::tags$th(scope = "col", "Grade")
-          )
-        ),
-        htmltools::tags$tbody(htmltools::tagList(grade_rows))
-      )
+      class = "ofsted-judgements-grid",
+      cards
     )
   )
 }
 
 #' School Timeline Module UI
 #'
-#' @param id Shiny namespace identifier
-#' @return A Shiny UI element
+#' @param id Character scalar. Shiny namespace identifier.
+#' @return A Shiny UI element.
 #' @export
 ui_school_timeline_ui <- function(id) {
   ns <- shiny::NS(id)
@@ -209,9 +325,9 @@ ui_school_timeline_ui <- function(id) {
 
 #' School Timeline Module Server
 #'
-#' @param id Shiny namespace identifier
+#' @param id Character scalar. Shiny namespace identifier.
 #' @param urn Reactive expression or value yielding the school's numeric/character URN.
-#' @return Module server instance
+#' @return Module server instance.
 #' @export
 server_school_timeline <- function(id, urn) {
   shiny::moduleServer(id, function(input, output, session) {
@@ -246,8 +362,11 @@ server_school_timeline <- function(id, urn) {
           "govuk-timeline-item"
         }
 
-        date_label <- if (!is.na(row$record_date)) {
-          format(as.Date(row$record_date), "%d %B %Y")
+        date_val <- row[["record_date"]]
+        date_label <- if (!is.null(date_val) && !is.na(date_val)) {
+          tryCatch(format(as.Date(date_val), "%d %B %Y"), error = function(e) {
+            as.character(date_val)
+          })
         } else {
           "Undated"
         }
@@ -286,7 +405,7 @@ server_school_timeline <- function(id, urn) {
                 )
               )
             },
-            if (is_ofsted) .render_timeline_ofsted_panel(row)
+            if (is_ofsted) .render_slim_ofsted_panel(row)
           )
         )
       })
