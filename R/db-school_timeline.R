@@ -1,9 +1,10 @@
-#' Fetch School Timeline Records with Optional Ofsted Inspection Data
+#' Fetch School Timeline Records with Linked Ofsted Inspection Data
 #'
 #' @description
 #' Queries `aggregate_records` for a given URN ordered chronologically. If any
-#' event records have `lead == 'Ofsted'`, it queries `ofsted_weekly_graded` and joins
-#' the inspection details where `record_date = publication_date`.
+#' event records have `lead == 'Ofsted'`, it queries `ofsted_weekly_graded` and
+#' joins the inspection details by URN and publication date (accounting for
+#' UTC/BST timezone shifts and near-date scraper tolerances).
 #'
 #' @param urn Numeric or character scalar. Unique Reference Number of the school.
 #' @param conn An active DBI database connection. If `NULL`, uses `sql_manager("dit")`.
@@ -13,7 +14,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' db_get_school_timeline(urn = 123456)
+#' db_get_school_timeline(urn = 100384)
 #' }
 db_get_school_timeline <- function(urn, conn = NULL) {
   start_time <- Sys.time()
@@ -62,7 +63,15 @@ db_get_school_timeline <- function(urn, conn = NULL) {
     return(data.frame())
   }
 
-  df_agg$record_date <- suppressWarnings(as.Date(df_agg$record_date))
+  # Defensive typo cleanup in case legacy records exist
+  df_agg$lead <- gsub("(?i)ofsed", "Ofsted", df_agg$lead, perl = TRUE)
+  df_agg$category <- gsub("(?i)ofsed", "Ofsted", df_agg$category, perl = TRUE)
+
+  # Convert record_date via Europe/London to correctly bump 23:00 UTC to next-day BST
+  df_agg$record_date <- as.Date(
+    as.POSIXct(df_agg$record_date, tz = "UTC"),
+    tz = "Europe/London"
+  )
 
   # 2. Check for Ofsted records
   has_ofsted <- any(tolower(trimws(df_agg$lead)) == "ofsted", na.rm = TRUE)
@@ -107,19 +116,38 @@ db_get_school_timeline <- function(urn, conn = NULL) {
   )
 
   if (nrow(df_ofsted) > 0) {
-    df_ofsted$publication_date <- suppressWarnings(as.Date(
-      df_ofsted$publication_date
-    ))
-    df_ofsted$inspection_date <- suppressWarnings(as.Date(
-      df_ofsted$inspection_date
-    ))
+    df_ofsted$publication_date <- as.Date(df_ofsted$publication_date)
+    df_ofsted$inspection_date <- as.Date(df_ofsted$inspection_date)
 
-    # Match urn = urn and record_date = publication_date
-    df_merged <- dplyr::left_join(
-      df_agg,
-      df_ofsted,
-      by = c("urn" = "urn", "record_date" = "publication_date")
-    )
+    # Separate Ofsted records from other providers to perform tolerance join
+    ofsted_rows <- df_agg |>
+      dplyr::filter(tolower(trimws(lead)) == "ofsted")
+
+    other_rows <- df_agg |>
+      dplyr::filter(tolower(trimws(lead)) != "ofsted" | is.na(lead))
+
+    if (nrow(ofsted_rows) > 0) {
+      # Match on URN and pair with the closest publication_date within a 2-day window
+      matched_ofsted <- ofsted_rows |>
+        dplyr::left_join(df_ofsted, by = "urn") |>
+        dplyr::mutate(
+          date_diff = abs(as.numeric(difftime(
+            record_date,
+            publication_date,
+            units = "days"
+          )))
+        ) |>
+        dplyr::filter(is.na(date_diff) | date_diff <= 2) |>
+        dplyr::group_by(urn, record_date) |>
+        dplyr::slice_min(order_by = date_diff, n = 1, with_ties = FALSE) |>
+        dplyr::ungroup() |>
+        dplyr::select(-date_diff)
+
+      df_merged <- dplyr::bind_rows(matched_ofsted, other_rows) |>
+        dplyr::arrange(record_date)
+    } else {
+      df_merged <- df_agg
+    }
   } else {
     df_merged <- df_agg
   }
