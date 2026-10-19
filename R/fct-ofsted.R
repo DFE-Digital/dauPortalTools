@@ -249,14 +249,10 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
 
 #' Render Ofsted Single Headline Judgement (SHJ) Card
 #'
-#' @description
-#' Independent UI component displaying an overall effectiveness score using
-#' the legacy 4-point pill scale with inspection date and safeguarding headers.
-#'
-#' @param urn Numeric or character scalar. Unique Reference Number of the school.
+#' @param urn Numeric or character scalar. Unique Reference Number.
 #' @param publication_date Optional Date or character scalar.
 #'
-#' @return Shiny HTML tag element, or NULL if no record found.
+#' @return Shiny HTML tag element.
 #' @export
 render_ofsted_shj_card <- function(urn, publication_date = NULL) {
   if (missing(urn) || is.null(urn) || is.na(urn)) {
@@ -265,26 +261,33 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
 
   df <- db_get_ofsted_shj_inspection(
     urn = urn,
-    publication_date = publication_date
+    published_date = publication_date
   )
   if (is.null(df) || nrow(df) == 0) {
     return(NULL)
   }
   row <- df[1, ]
 
+  # Safeguarding evaluation
   has_sg <- "safeguarding_effective" %in%
     names(row) &&
+    !is.null(row$safeguarding_effective) &&
     !is.na(row$safeguarding_effective) &&
-    nzchar(trimws(row$safeguarding_effective))
-  sg_val <- if (has_sg) trimws(row$safeguarding_effective) else ""
+    nzchar(trimws(as.character(row$safeguarding_effective)))
+  sg_val <- if (has_sg) trimws(as.character(row$safeguarding_effective)) else ""
   sg_is_not_met <- grepl("no|not", tolower(sg_val))
   sg_bg <- if (sg_is_not_met) "#d4351c" else "#005a30"
 
+  # Category of Concern evaluation
   has_coc <- "category_of_concern" %in%
     names(row) &&
+    !is.null(row$category_of_concern) &&
     !is.na(row$category_of_concern) &&
-    nzchar(trimws(row$category_of_concern)) &&
-    !grepl("^none$|^no category", tolower(trimws(row$category_of_concern)))
+    nzchar(trimws(as.character(row$category_of_concern))) &&
+    !grepl(
+      "^none$|^no category",
+      tolower(trimws(as.character(row$category_of_concern)))
+    )
 
   shiny::tags$div(
     style = paste(
@@ -295,7 +298,7 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
       "overflow: hidden;"
     ),
 
-    # Header Bar
+    # --- Header Bar: Date, CoC Alert, Safeguarding Badge ---
     shiny::tags$div(
       style = paste(
         "display: flex;",
@@ -330,7 +333,8 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
               "padding: 3px 10px;",
               "border-radius: 3px;",
               "font-size: 12px;",
-              "font-weight: 700;"
+              "font-weight: 700;",
+              "letter-spacing: 0.3px;"
             ),
             glue::glue("Category of Concern: {row$category_of_concern}")
           )
@@ -342,7 +346,7 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
               sg_bg,
               "; color: #ffffff;",
               "padding: 4px 12px; border-radius: 3px;",
-              "font-size: 12px; font-weight: bold;"
+              "font-size: 12px; font-weight: bold; letter-spacing: 0.3px;"
             ),
             glue::glue("Safeguarding: {sg_val}")
           )
@@ -350,34 +354,35 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
       )
     ),
 
-    # Overall Effectiveness Judgement Row
+    # --- Body: Single Headline Pill Tile ---
     shiny::tags$div(
-      style = paste(
-        "padding: 16px;",
-        "display: flex;",
-        "align-items: center;",
-        "justify-content: space-between;",
-        "background-color: #fafafa;"
-      ),
-      shiny::tags$span(
-        style = "font-size: 15px; font-weight: 600; color: #0b0c0c;",
-        "Overall Effectiveness"
-      ),
-      .ofsted_4point_badge(row$overall_effectiveness)
+      style = "padding: 16px; background-color: #ffffff;",
+      shiny::tags$div(
+        style = paste(
+          "background-color: #f8f8f8;",
+          "border: 1px solid #e2e2e2;",
+          "border-radius: 4px;",
+          "padding: 14px 18px;",
+          "display: flex;",
+          "align-items: center;",
+          "justify-content: space-between;"
+        ),
+        shiny::tags$span(
+          style = "font-size: 15px; font-weight: 600; color: #0b0c0c;",
+          "Overall Effectiveness"
+        ),
+        shiny::tags$div(.ofsted_4point_badge(row$overall_effectiveness))
+      )
     )
   )
 }
 
 #' Render Ofsted Sub-Judgements (SJ) Card (Pre-09/25 Interim Format)
 #'
-#' @description
-#' Independent UI component displaying the 4 legacy sub-judgements in a 2x2 grid
-#' using standard 4-point scale pills without a single headline judgement.
-#'
-#' @param urn Numeric or character scalar. Unique Reference Number of the school.
+#' @param urn Numeric or character scalar. Unique Reference Number.
 #' @param publication_date Optional Date or character scalar.
 #'
-#' @return Shiny HTML tag element, or NULL if no record found.
+#' @return Shiny HTML tag element.
 #' @export
 render_ofsted_sj_card <- function(urn, publication_date = NULL) {
   if (missing(urn) || is.null(urn) || is.na(urn)) {
@@ -386,26 +391,33 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
 
   df <- db_get_ofsted_sj_inspection(
     urn = urn,
-    publication_date = publication_date
+    published_date = publication_date
   )
   if (is.null(df) || nrow(df) == 0) {
     return(NULL)
   }
   row <- df[1, ]
 
+  # Safeguarding evaluation
   has_sg <- "safeguarding_effective" %in%
     names(row) &&
+    !is.null(row$safeguarding_effective) &&
     !is.na(row$safeguarding_effective) &&
-    nzchar(trimws(row$safeguarding_effective))
-  sg_val <- if (has_sg) trimws(row$safeguarding_effective) else ""
+    nzchar(trimws(as.character(row$safeguarding_effective)))
+  sg_val <- if (has_sg) trimws(as.character(row$safeguarding_effective)) else ""
   sg_is_not_met <- grepl("no|not", tolower(sg_val))
   sg_bg <- if (sg_is_not_met) "#d4351c" else "#005a30"
 
+  # Category of Concern evaluation
   has_coc <- "category_of_concern" %in%
     names(row) &&
+    !is.null(row$category_of_concern) &&
     !is.na(row$category_of_concern) &&
-    nzchar(trimws(row$category_of_concern)) &&
-    !grepl("^none$|^no category", tolower(trimws(row$category_of_concern)))
+    nzchar(trimws(as.character(row$category_of_concern))) &&
+    !grepl(
+      "^none$|^no category",
+      tolower(trimws(as.character(row$category_of_concern)))
+    )
 
   shiny::tags$div(
     style = paste(
@@ -416,7 +428,7 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
       "overflow: hidden;"
     ),
 
-    # Header Bar
+    # --- Header Bar: Date, CoC Alert, Safeguarding Badge ---
     shiny::tags$div(
       style = paste(
         "display: flex;",
@@ -451,7 +463,8 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
               "padding: 3px 10px;",
               "border-radius: 3px;",
               "font-size: 12px;",
-              "font-weight: 700;"
+              "font-weight: 700;",
+              "letter-spacing: 0.3px;"
             ),
             glue::glue("Category of Concern: {row$category_of_concern}")
           )
@@ -463,7 +476,7 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
               sg_bg,
               "; color: #ffffff;",
               "padding: 4px 12px; border-radius: 3px;",
-              "font-size: 12px; font-weight: bold;"
+              "font-size: 12px; font-weight: bold; letter-spacing: 0.3px;"
             ),
             glue::glue("Safeguarding: {sg_val}")
           )
@@ -471,7 +484,7 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
       )
     ),
 
-    # 4 Sub-judgements 2x2 Grid
+    # --- 2x2 Sub-Judgements Grid ---
     shiny::tags$div(
       style = "display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px;",
       .ofsted_metric_tile(

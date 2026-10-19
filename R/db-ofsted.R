@@ -60,10 +60,10 @@ db_get_latest_ofsted_inspection <- function(urn, publication_date = NULL) {
 #' Fetch Ofsted Single Headline Judgement (SHJ) Record
 #'
 #' @param urn Numeric or character scalar.
-#' @param publication_date Optional Date or character scalar.
+#' @param published_date Optional Date or character scalar.
 #' @return Single-row data frame or empty data frame.
 #' @export
-db_get_ofsted_shj_inspection <- function(urn, publication_date = NULL) {
+db_get_ofsted_shj_inspection <- function(urn, published_date = NULL) {
   conn <- sql_manager("dit")
   on.exit(
     tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
@@ -72,7 +72,7 @@ db_get_ofsted_shj_inspection <- function(urn, publication_date = NULL) {
 
   urn_val <- as.numeric(as.character(urn))
 
-  sql <- if (is.null(publication_date)) {
+  sql <- if (is.null(published_date) || is.na(published_date)) {
     glue::glue_sql(
       "
       SELECT TOP (1)
@@ -96,23 +96,28 @@ db_get_ofsted_shj_inspection <- function(urn, publication_date = NULL) {
              [school_type], [phase], [published_date]
       FROM [Data_Insight_Team].[01_AIDT].[ofsted_weekly_published]
       WHERE [urn] = {urn_val}
-        AND ABS(DATEDIFF(day, [published_date], {as.character(publication_date)})) <= 2
-      ORDER BY ABS(DATEDIFF(day, [published_date], {as.character(publication_date)})) ASC
+        AND ABS(DATEDIFF(day, [published_date], {as.character(published_date)})) <= 5
+      ORDER BY ABS(DATEDIFF(day, [published_date], {as.character(published_date)})) ASC
       ",
       .con = conn
     )
   }
 
-  tryCatch(DBI::dbGetQuery(conn, sql), error = function(e) data.frame())
+  df <- tryCatch(DBI::dbGetQuery(conn, sql), error = function(e) data.frame())
+  if (nrow(df) > 0) {
+    df$inspection_date <- as.Date(df$inspection_date)
+    df$published_date <- as.Date(df$published_date)
+  }
+  df
 }
 
-#' Fetch Ofsted Sub-Judgement (SJ) Record (Pre-09/25 Interim Format)
+#' Fetch Ofsted Sub-Judgements (SJ) Record (Pre-09/25 Interim Format)
 #'
 #' @param urn Numeric or character scalar.
-#' @param publication_date Optional Date or character scalar.
+#' @param published_date Optional Date or character scalar.
 #' @return Single-row data frame or empty data frame.
 #' @export
-db_get_ofsted_sj_inspection <- function(urn, publication_date = NULL) {
+db_get_ofsted_sj_inspection <- function(urn, published_date = NULL) {
   conn <- sql_manager("dit")
   on.exit(
     tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
@@ -121,7 +126,7 @@ db_get_ofsted_sj_inspection <- function(urn, publication_date = NULL) {
 
   urn_val <- as.numeric(as.character(urn))
 
-  sql <- if (is.null(publication_date)) {
+  sql <- if (is.null(published_date) || is.na(published_date)) {
     glue::glue_sql(
       "
       SELECT TOP (1)
@@ -147,12 +152,17 @@ db_get_ofsted_sj_inspection <- function(urn, publication_date = NULL) {
              [school_ofsted_link], [published_date]
       FROM [Data_Insight_Team].[01_AIDT].[ofsted_weekly_graded_pre0925]
       WHERE [urn] = {urn_val}
-        AND ABS(DATEDIFF(day, [published_date], {as.character(publication_date)})) <= 2
-      ORDER BY ABS(DATEDIFF(day, [published_date], {as.character(publication_date)})) ASC
+        AND ABS(DATEDIFF(day, [published_date], {as.character(published_date)})) <= 5
+      ORDER BY ABS(DATEDIFF(day, [published_date], {as.character(published_date)})) ASC
       ",
       .con = conn
     )
   }
 
-  tryCatch(DBI::dbGetQuery(conn, sql), error = function(e) data.frame())
+  df <- tryCatch(DBI::dbGetQuery(conn, sql), error = function(e) data.frame())
+  if (nrow(df) > 0) {
+    df$inspection_date <- as.Date(df$inspection_date)
+    df$published_date <- as.Date(df$published_date)
+  }
+  df
 }

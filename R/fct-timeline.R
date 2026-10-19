@@ -165,7 +165,6 @@ render_timeline_items <- function(cards) {
     ))
   }
 
-  # Helper mapping to ensure full colour persistence across custom tags
   get_tag_style <- function(colour_name) {
     switch(
       tolower(colour_name),
@@ -175,7 +174,7 @@ render_timeline_items <- function(cards) {
       "red" = "background-color: #d4351c; color: #ffffff;",
       "orange" = "background-color: #f47738; color: #ffffff;",
       "green" = "background-color: #00703c; color: #ffffff;",
-      "background-color: #f3f2f1; color: #0b0c0c;" # grey fallback
+      "background-color: #f3f2f1; color: #0b0c0c;"
     )
   }
 
@@ -188,7 +187,7 @@ render_timeline_items <- function(cards) {
       "red" = "#d4351c",
       "orange" = "#f47738",
       "green" = "#00703c",
-      "#b1b4b6" # default grey
+      "#b1b4b6"
     )
   }
 
@@ -196,8 +195,8 @@ render_timeline_items <- function(cards) {
     style = "display: flex; flex-direction: column; gap: 24px;",
     lapply(seq_len(nrow(cards)), function(i) {
       row <- cards[i, ]
-      is_inspection <- tolower(trimws(row$type)) == "inspection"
       has_urn <- !is.na(row$urn) && nzchar(trimws(as.character(row$urn)))
+      norm_type <- tolower(trimws(as.character(row$type)))
 
       badge_col <- if (
         "badge_colour" %in% names(row) && !is.na(row$badge_colour)
@@ -209,10 +208,23 @@ render_timeline_items <- function(cards) {
       tag_css <- get_tag_style(badge_col)
       border_c <- get_border_colour(badge_col)
 
+      # Determine URL (prioritize uri, fallback to Ofsted reports portal if inspection-related)
+      report_url <- if (
+        !is.na(row$uri) && nzchar(trimws(as.character(row$uri)))
+      ) {
+        trimws(as.character(row$uri))
+      } else if (
+        norm_type %in% c("inspection", "ofsted shj", "ofsted sj") && has_urn
+      ) {
+        glue::glue("https://reports.ofsted.gov.uk/provider/21/{row$urn}")
+      } else {
+        NULL
+      }
+
       shiny::tags$div(
         class = "timeline-event-card",
 
-        # 1. Top Meta Header: [Date] [Colored Type Tag] [URN] [Lead] [Status]
+        # 1. Top Meta Header: [Date] [Colored Type Tag] [URN] [Lead] [Status][cite: 1, 2, 3]
         shiny::tags$div(
           style = "display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;",
           shiny::tags$span(
@@ -220,7 +232,6 @@ render_timeline_items <- function(cards) {
             format(as.Date(row$record_date), "%d %B %Y")
           ),
 
-          # Distinct Colored Badge for the Event Type
           shiny::tags$span(
             style = paste0(
               "display: inline-block; padding: 4px 10px; border-radius: 3px; ",
@@ -230,7 +241,6 @@ render_timeline_items <- function(cards) {
             row$type
           ),
 
-          # URN Badge (for Trust / Diocese / LA aggregation)
           if (has_urn) {
             shiny::tags$span(
               style = paste(
@@ -241,16 +251,14 @@ render_timeline_items <- function(cards) {
             )
           },
 
-          # Lead
-          if (!is.na(row$lead) && nzchar(trimws(row$lead))) {
+          if (!is.na(row$lead) && nzchar(trimws(as.character(row$lead)))) {
             shiny::tags$span(
               style = "border: 1px solid #b1b4b6; background: #ffffff; color: #0b0c0c; padding: 2px 8px; font-size: 13px; border-radius: 2px;",
               row$lead
             )
           },
 
-          # Status
-          if (!is.na(row$status) && nzchar(trimws(row$status))) {
+          if (!is.na(row$status) && nzchar(trimws(as.character(row$status)))) {
             shiny::tags$span(
               style = "border: 1px solid #b1b4b6; background: #ffffff; color: #0b0c0c; padding: 2px 8px; font-size: 13px; border-radius: 2px;",
               row$status
@@ -258,7 +266,7 @@ render_timeline_items <- function(cards) {
           }
         ),
 
-        # 2. Outer Container Box with matching left-accent color
+        # 2. Outer Container Box with colored left-accent border
         shiny::tags$div(
           style = paste0(
             "border: 1px solid #b1b4b6; border-left: 6px solid ",
@@ -271,7 +279,7 @@ render_timeline_items <- function(cards) {
           shiny::tags$div(
             style = "font-size: 16px; margin-bottom: 12px;",
             shiny::tags$strong("Category: "),
-            if (!is.na(row$category) && nzchar(row$category)) {
+            if (!is.na(row$category) && nzchar(as.character(row$category))) {
               row$category
             } else {
               row$type
@@ -281,10 +289,10 @@ render_timeline_items <- function(cards) {
           # View Document Link
           shiny::tags$div(
             style = "margin-bottom: 12px;",
-            if (!is.na(row$uri) && nzchar(row$uri)) {
+            if (!is.null(report_url)) {
               shiny::tags$a(
                 class = "govuk-link",
-                href = row$uri,
+                href = report_url,
                 target = "_blank",
                 rel = "noopener noreferrer",
                 style = "font-size: 14px; text-decoration: underline;",
@@ -298,12 +306,24 @@ render_timeline_items <- function(cards) {
             }
           ),
 
-          # 3. Scorecard Box (Rendered for Inspections)
-          if (is_inspection && has_urn) {
-            render_ofsted_inspection_card(
-              urn = row$urn,
-              publication_date = row$record_date
-            )
+          # 3. Scorecard Box (Modern Inspection / Ofsted SHJ / Ofsted SJ)
+          if (has_urn) {
+            if (norm_type == "inspection") {
+              render_ofsted_inspection_card(
+                urn = row$urn,
+                publication_date = row$record_date
+              )
+            } else if (norm_type == "ofsted shj") {
+              render_ofsted_shj_card(
+                urn = row$urn,
+                publication_date = row$record_date
+              )
+            } else if (norm_type == "ofsted sj") {
+              render_ofsted_sj_card(
+                urn = row$urn,
+                publication_date = row$record_date
+              )
+            }
           }
         )
       )
