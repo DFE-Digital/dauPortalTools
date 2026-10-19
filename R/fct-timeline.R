@@ -165,71 +165,83 @@ render_timeline_items <- function(cards) {
     ))
   }
 
-  shiny::tags$ul(
-    class = "govuk-list",
+  shiny::tags$div(
+    style = "display: flex; flex-direction: column; gap: 24px;",
     lapply(seq_len(nrow(cards)), function(i) {
       row <- cards[i, ]
       is_inspection <- tolower(trimws(row$type)) == "inspection"
 
-      shiny::tags$li(
-        style = "border-left: 4px solid #1d70b8; padding-left: 15px; margin-bottom: 25px;",
+      shiny::tags$div(
+        class = "timeline-event-card",
 
-        # Header Row: Date | Type Badge | Status Badge
+        # 1. Top Meta Header: [Date] [Type (Bold)] [Lead Badge] [Status Badge]
         shiny::tags$div(
-          style = "display: flex; align-items: center; flex-wrap: wrap; gap: 8px;",
-          shiny::tags$strong(
-            style = "font-size: 16px; margin-right: 4px;",
+          style = "display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px;",
+          shiny::tags$span(
+            style = "font-size: 16px; font-weight: 500; color: #0b0c0c;",
             format(as.Date(row$record_date), "%d %B %Y")
           ),
           shiny::tags$span(
-            class = paste0("govuk-tag govuk-tag--", row$badge_colour),
+            style = "font-size: 18px; font-weight: 700; color: #0b0c0c;",
             row$type
           ),
+          if (!is.na(row$lead) && nzchar(trimws(row$lead))) {
+            shiny::tags$span(
+              style = "border: 1px solid #b1b4b6; background: #ffffff; color: #0b0c0c; padding: 2px 8px; font-size: 13px; border-radius: 2px;",
+              row$lead
+            )
+          },
           if (!is.na(row$status) && nzchar(trimws(row$status))) {
             shiny::tags$span(
-              class = "govuk-tag govuk-tag--grey",
+              style = "border: 1px solid #b1b4b6; background: #ffffff; color: #0b0c0c; padding: 2px 8px; font-size: 13px; border-radius: 2px;",
               row$status
             )
           }
         ),
 
-        # Title / Category
+        # 2. Outer Container Box
         shiny::tags$div(
-          class = "govuk-body",
-          style = "margin: 6px 0 2px 0; font-weight: 600;",
-          row$display_title
-        ),
+          style = "border: 1px solid #b1b4b6; border-radius: 4px; padding: 16px; background-color: #ffffff;",
 
-        # Lead Meta Information
-        if (!is.na(row$lead) && nzchar(trimws(row$lead))) {
+          # Category
           shiny::tags$div(
-            class = "govuk-hint",
-            style = "margin-bottom: 4px; font-size: 14px;",
-            glue::glue("Lead: {row$lead}")
-          )
-        },
+            style = "font-size: 16px; margin-bottom: 12px;",
+            shiny::tags$strong("Category: "),
+            if (!is.na(row$category) && nzchar(row$category)) {
+              row$category
+            } else {
+              "Ofsted"
+            }
+          ),
 
-        # Reinstated Ofsted Details (if Inspection)
-        if (is_inspection && !is.na(row$urn)) {
-          render_ofsted_inspection_card(
-            urn = row$urn,
-            publication_date = row$record_date
-          )
-        },
-
-        # Link to Document / External URI
-        if (!is.na(row$uri) && nzchar(row$uri)) {
+          # View Document Link
           shiny::tags$div(
-            style = "margin-top: 6px;",
-            shiny::tags$a(
-              class = "govuk-link",
-              href = row$uri,
-              target = "_blank",
-              rel = "noopener noreferrer",
-              "View Document"
+            style = "margin-bottom: 12px;",
+            if (!is.na(row$uri) && nzchar(row$uri)) {
+              shiny::tags$a(
+                class = "govuk-link",
+                href = row$uri,
+                target = "_blank",
+                rel = "noopener noreferrer",
+                style = "font-size: 14px; text-decoration: underline;",
+                "View document / external reference"
+              )
+            } else {
+              shiny::tags$span(
+                style = "color: #505a5f; font-size: 14px;",
+                "No external document reference"
+              )
+            }
+          ),
+
+          # 3. Scorecard Box (Rendered for Inspections)
+          if (is_inspection && !is.na(row$urn)) {
+            render_ofsted_inspection_card(
+              urn = row$urn,
+              publication_date = row$record_date
             )
-          )
-        }
+          }
+        )
       )
     })
   )
