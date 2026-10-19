@@ -172,22 +172,44 @@ render_timeline_items <- function(cards) {
       is_inspection <- tolower(trimws(row$type)) == "inspection"
 
       shiny::tags$li(
-        style = "border-left: 4px solid #b1b4b6; padding-left: 15px; margin-bottom: 20px;",
+        style = "border-left: 4px solid #1d70b8; padding-left: 15px; margin-bottom: 25px;",
+
+        # Header Row: Date | Type Badge | Status Badge
         shiny::tags$div(
-          shiny::tags$strong(format(as.Date(row$record_date), "%d %B %Y")),
+          style = "display: flex; align-items: center; flex-wrap: wrap; gap: 8px;",
+          shiny::tags$strong(
+            style = "font-size: 16px; margin-right: 4px;",
+            format(as.Date(row$record_date), "%d %B %Y")
+          ),
           shiny::tags$span(
             class = paste0("govuk-tag govuk-tag--", row$badge_colour),
-            style = "margin-left: 10px;",
             row$type
-          )
+          ),
+          if (!is.na(row$status) && nzchar(trimws(row$status))) {
+            shiny::tags$span(
+              class = "govuk-tag govuk-tag--grey",
+              row$status
+            )
+          }
         ),
+
+        # Title / Category
         shiny::tags$div(
-          class = "govuk-body-s",
-          style = "margin-top: 5px; font-weight: bold;",
+          class = "govuk-body",
+          style = "margin: 6px 0 2px 0; font-weight: 600;",
           row$display_title
         ),
 
-        # Render standardized card directly by URN and publication/record date
+        # Lead Meta Information
+        if (!is.na(row$lead) && nzchar(trimws(row$lead))) {
+          shiny::tags$div(
+            class = "govuk-hint",
+            style = "margin-bottom: 4px; font-size: 14px;",
+            glue::glue("Lead: {row$lead}")
+          )
+        },
+
+        # Reinstated Ofsted Details (if Inspection)
         if (is_inspection && !is.na(row$urn)) {
           render_ofsted_inspection_card(
             urn = row$urn,
@@ -195,10 +217,10 @@ render_timeline_items <- function(cards) {
           )
         },
 
-        # External Link
+        # Link to Document / External URI
         if (!is.na(row$uri) && nzchar(row$uri)) {
           shiny::tags$div(
-            style = "margin-top: 5px;",
+            style = "margin-top: 6px;",
             shiny::tags$a(
               class = "govuk-link",
               href = row$uri,
