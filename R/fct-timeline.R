@@ -68,25 +68,32 @@ build_timeline_cards <- function(df) {
     return(data.frame())
   }
 
+  # Defensively check whether school_name was linked or present
+  has_school_name <- "school_name" %in% names(df)
+
   df |>
     dplyr::mutate(
-      display_title = dplyr::case_when(
-        !is.na(school_name) & school_name != "" ~ glue::glue(
-          "{school_name} - {category}"
-        ),
-        TRUE ~ category
-      ),
+      display_title = if (has_school_name) {
+        dplyr::case_when(
+          !is.na(.data$school_name) & .data$school_name != "" ~ glue::glue(
+            "{.data$school_name} - {.data$category}"
+          ),
+          TRUE ~ as.character(.data$category)
+        )
+      } else {
+        as.character(.data$category)
+      },
       badge_colour = dplyr::case_when(
-        tolower(trimws(type)) == "rise universal hubs" ~ "teal",
-        tolower(trimws(type)) == "significant change" ~ "blue",
-        tolower(trimws(type)) == "dao" ~ "purple",
-        tolower(trimws(type)) == "warning notice" ~ "red",
-        tolower(trimws(type)) == "inspection" ~ "orange",
-        tolower(trimws(type)) == "rise universal event" ~ "green",
+        tolower(trimws(.data$type)) == "rise universal hubs" ~ "teal",
+        tolower(trimws(.data$type)) == "significant change" ~ "blue",
+        tolower(trimws(.data$type)) == "dao" ~ "purple",
+        tolower(trimws(.data$type)) == "warning notice" ~ "red",
+        tolower(trimws(.data$type)) == "inspection" ~ "orange",
+        tolower(trimws(.data$type)) == "rise universal event" ~ "green",
         TRUE ~ "grey"
       )
     ) |>
-    dplyr::arrange(dplyr::desc(record_date))
+    dplyr::arrange(dplyr::desc(.data$record_date))
 }
 
 #' Export Timeline Data to CSV

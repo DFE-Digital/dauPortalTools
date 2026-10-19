@@ -583,7 +583,7 @@ ui_school_ofsted_history <- function(urn) {
     "
   ))
 
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     tab_css,
     htmltools::tags$div(
       class = "ofsted-root",
