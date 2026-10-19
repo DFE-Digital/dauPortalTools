@@ -55,7 +55,7 @@ db_get_school_timeline <- function(urn) {
 #' Fetch Trust Timeline Records
 #'
 #' @param trust_ref Character scalar. The Trust Reference (e.g., 'TR00123').
-#' @return Data frame of timeline records for all schools in the specified trust.
+#' @return Data frame of timeline records.
 #' @export
 db_get_trust_timeline <- function(trust_ref) {
   start_time <- Sys.time()
@@ -73,7 +73,7 @@ db_get_trust_timeline <- function(trust_ref) {
            [uri], [type], [trust_ref], [region], [la], [diocese]
     FROM [Data_Insight_Team].[01_AIDT].[aggregate_records]
     WHERE [trust_ref] = {trust_ref}
-    ORDER BY [record_date] ASC
+    ORDER BY [record_date] DESC
     ",
     .con = conn
   )
@@ -102,7 +102,8 @@ db_get_trust_timeline <- function(trust_ref) {
   log_event(glue::glue(
     "Completed db_get_trust_timeline for Trust: {trust_ref} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
   ))
-  res
+
+  df_agg
 }
 
 #' Fetch Diocese Timeline Records
@@ -155,7 +156,7 @@ db_get_diocese_timeline <- function(diocese) {
   log_event(glue::glue(
     "Completed db_get_diocese_timeline for Diocese: {diocese} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
   ))
-  res
+  df_agg
 }
 
 #' Fetch Local Authority Timeline Records
@@ -208,5 +209,5 @@ db_get_la_timeline <- function(la) {
   log_event(glue::glue(
     "Completed db_get_la_timeline for LA: {la} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
   ))
-  res
+  df_agg
 }
