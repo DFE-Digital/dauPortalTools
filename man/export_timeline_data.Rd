@@ -9,7 +9,7 @@ export_timeline_data(df, file)
 \arguments{
 \item{df}{Data frame returned by \code{get_timeline_data} or \code{build_timeline_cards}.}
 
-\item{file}{Target path string where the CSV should be saved (typically passed from Shiny's \code{downloadHandler}).}
+\item{file}{Target path string where the CSV should be saved.}
 }
 \value{
 The file path invisibly.
@@ -17,17 +17,4 @@ The file path invisibly.
 \description{
 Cleans, sorts, and writes timeline records directly to a CSV file.
 Drops UI-internal rendering fields and sorts chronologically from latest to oldest.
-}
-\examples{
-\dontrun{
-# Inside a Shiny server or module:
-output$dl_timeline <- downloadHandler(
-  filename = function() {
-    glue::glue("{tolower(input$entity_type)}_{input$entity_id}_timeline_{format(Sys.Date(), '\%Y\%m\%d')}.csv")
-  },
-  content = function(file) {
-    export_timeline_data(r_timeline_data(), file = file)
-  }
-)
-}
 }
