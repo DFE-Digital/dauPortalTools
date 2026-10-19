@@ -29,7 +29,7 @@
 #'
 #' SQL is constructed using [glue::glue_sql()] for safe parameter interpolation.
 #'
-#' Results are displayed using [shinyGovstyle::gov_layout()] and card-based
+#' Results are displayed using [shinyGovstyle::gov_main_layout()] and card-based
 #' components for a GOV.UK-style presentation.
 #'
 #' @section Side Effects:
@@ -112,7 +112,7 @@ wn_render_summary <- function(region = NULL) {
     ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
   }
 
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     layout_column_wrap(
       width = 1 / 3,
       card(
@@ -282,7 +282,7 @@ wn_render_status_type_charts <- function(region = NULL) {
     } else {
       glue::glue("Warning Notice status & type — {region}")
     }
-    ui_empty <- shinyGovstyle::gov_layout(
+    ui_empty <- shinyGovstyle::gov_main_layout(
       size = "two-thirds",
       shinyGovstyle::heading_text(heading, size = "l"),
       shinyGovstyle::label_hint("wn_st_hint", "No data available to plot.")
@@ -492,7 +492,7 @@ wn_render_status_type_charts <- function(region = NULL) {
     )
 
   # --- Compose UI
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     shiny::tabsetPanel(
       id = paste0("wn_tabs_", rand_id),
       type = "tabs",

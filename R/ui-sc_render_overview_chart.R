@@ -120,7 +120,7 @@ sc_render_status_type_charts <- function(region = NULL) {
     } else {
       glue::glue("Warning Notice status & type — {region}")
     }
-    ui_empty <- shinyGovstyle::gov_layout(
+    ui_empty <- shinyGovstyle::gov_main_layout(
       size = "two-thirds",
       shinyGovstyle::heading_text(heading, size = "l"),
       shinyGovstyle::label_hint("wn_st_hint", "No data available to plot.")
@@ -414,7 +414,7 @@ sc_render_status_type_charts <- function(region = NULL) {
   }
 
   # --- Compose UI ---
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     size = "full",
     shinyGovstyle::heading_text(heading, size = "l"),
     shinyGovstyle::label_hint(

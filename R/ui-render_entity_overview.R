@@ -264,7 +264,7 @@ entity_render_overview <- function(
   "
   )))
 
-  ui_layout <- shinyGovstyle::gov_layout(
+  ui_layout <- shinyGovstyle::gov_main_layout(
     wide_layout_css,
     header_title_block,
     shiny::div(

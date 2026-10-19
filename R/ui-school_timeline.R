@@ -345,7 +345,7 @@ server_school_timeline <- function(id, urn) {
       data <- timeline_df()
 
       if (is.null(data) || nrow(data) == 0) {
-        return(shinyGovstyle::gov_layout(
+        return(shinyGovstyle::gov_main_layout(
           htmltools::tags$p(
             class = "govuk-body",
             "No timeline records found for this school."
@@ -410,7 +410,7 @@ server_school_timeline <- function(id, urn) {
         )
       })
 
-      shinyGovstyle::gov_layout(
+      shinyGovstyle::gov_main_layout(
         htmltools::tags$ul(class = "govuk-timeline", nodes)
       )
     })

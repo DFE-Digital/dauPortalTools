@@ -26,7 +26,7 @@
 #' SQL queries are constructed using [glue::glue_sql()] to ensure safe
 #' interpolation of input parameters.
 #'
-#' The UI is wrapped using [shinyGovstyle::gov_layout()].
+#' The UI is wrapped using [shinyGovstyle::gov_main_layout()].
 #'
 #' @section Side Effects:
 #' \itemize{
@@ -172,7 +172,7 @@ quality_render_live <- function(
     )
   )
 
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     tabPanel(
       "Quality Issues Identified",
       shiny::fluidRow(
@@ -224,7 +224,7 @@ quality_render_live <- function(
 #' SQL is constructed using [glue::glue_sql()] to safely interpolate
 #' parameters.
 #'
-#' The UI is wrapped using [shinyGovstyle::gov_layout()].
+#' The UI is wrapped using [shinyGovstyle::gov_main_layout()].
 #'
 #' @section Side Effects:
 #' \itemize{
@@ -303,7 +303,7 @@ quality_render_tests <- function(app_id = NULL) {
     )
   )
 
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     tabPanel(
       "Quality Tests",
       shiny::fluidRow(

@@ -36,7 +36,7 @@
 #'
 #' @seealso
 #' \itemize{
-#'   \item \code{\link[shinyGovstyle]{gov_layout}}
+#'   \item \code{\link[shinyGovstyle]{gov_main_layout}}
 #'   \item \code{\link[shinyGovstyle]{govTabs}}
 #' }
 #'
@@ -61,7 +61,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
         "No URN or Trust_ID provided; returning fallback UI"
       )
       return(
-        shinyGovstyle::gov_layout(
+        shinyGovstyle::gov_main_layout(
           size = "two-thirds",
           shinyGovstyle::heading_text("Trust Overview", size = "l"),
           shinyGovstyle::label_hint(
@@ -96,7 +96,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
     if (nrow(trust_row) == 0 || is.na(trust_row$Trust_ID[1])) {
       log_event("No Trust_ID found for URN in latest snapshot")
       return(
-        shinyGovstyle::gov_layout(
+        shinyGovstyle::gov_main_layout(
           size = "two-thirds",
           shinyGovstyle::heading_text(
             glue::glue("Trust Overview for URN {urn}"),
@@ -140,7 +140,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
   if (nrow(trust_details) == 0) {
     log_event("Trust details not found in latest snapshot")
     return(
-      shinyGovstyle::gov_layout(
+      shinyGovstyle::gov_main_layout(
         size = "two-thirds",
         shinyGovstyle::heading_text(
           glue::glue("Trust Overview ({trust_id})"),
@@ -269,7 +269,7 @@ trust_render_overview <- function(urn = NULL, trust_id = NULL) {
     )
   )
 
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     size = "two-thirds",
     shinyGovstyle::heading_text(heading, size = "l"),
     shinyGovstyle::label_hint(

@@ -303,7 +303,7 @@ school_render_overview <- function(
     status_tag
   )
 
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     header_title_block,
     tab_css,
     shiny::div(

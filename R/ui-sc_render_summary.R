@@ -107,7 +107,7 @@ sc_render_summary <- function(user = NULL) {
     ifelse(is.na(x), "—", prettyNum(x, big.mark = ",", preserve.width = "none"))
   }
 
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     bslib::layout_column_wrap(
       width = 1 / 3,
       bslib::card(

@@ -96,7 +96,7 @@ ru_render_summary <- function(db_get_query = utils_db_get_query) {
     if (is.na(x)) "—" else prettyNum(x, big.mark = ",", preserve.width = "none")
   }
 
-  ui <- shinyGovstyle::gov_layout(
+  ui <- shinyGovstyle::gov_main_layout(
     bslib::layout_column_wrap(
       width = 1 / 3,
       bslib::card(
