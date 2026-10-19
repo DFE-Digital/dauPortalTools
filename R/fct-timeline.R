@@ -165,6 +165,33 @@ render_timeline_items <- function(cards) {
     ))
   }
 
+  # Helper mapping to ensure full colour persistence across custom tags
+  get_tag_style <- function(colour_name) {
+    switch(
+      tolower(colour_name),
+      "teal" = "background-color: #28a197; color: #ffffff;",
+      "blue" = "background-color: #1d70b8; color: #ffffff;",
+      "purple" = "background-color: #4c2c92; color: #ffffff;",
+      "red" = "background-color: #d4351c; color: #ffffff;",
+      "orange" = "background-color: #f47738; color: #ffffff;",
+      "green" = "background-color: #00703c; color: #ffffff;",
+      "background-color: #f3f2f1; color: #0b0c0c;" # grey fallback
+    )
+  }
+
+  get_border_colour <- function(colour_name) {
+    switch(
+      tolower(colour_name),
+      "teal" = "#28a197",
+      "blue" = "#1d70b8",
+      "purple" = "#4c2c92",
+      "red" = "#d4351c",
+      "orange" = "#f47738",
+      "green" = "#00703c",
+      "#b1b4b6" # default grey
+    )
+  }
+
   shiny::tags$div(
     style = "display: flex; flex-direction: column; gap: 24px;",
     lapply(seq_len(nrow(cards)), function(i) {
@@ -172,21 +199,38 @@ render_timeline_items <- function(cards) {
       is_inspection <- tolower(trimws(row$type)) == "inspection"
       has_urn <- !is.na(row$urn) && nzchar(trimws(as.character(row$urn)))
 
+      badge_col <- if (
+        "badge_colour" %in% names(row) && !is.na(row$badge_colour)
+      ) {
+        row$badge_colour
+      } else {
+        "grey"
+      }
+      tag_css <- get_tag_style(badge_col)
+      border_c <- get_border_colour(badge_col)
+
       shiny::tags$div(
         class = "timeline-event-card",
 
-        # 1. Top Meta Header: [Date] [Type (Bold)] [URN] [Lead] [Status]
+        # 1. Top Meta Header: [Date] [Colored Type Tag] [URN] [Lead] [Status]
         shiny::tags$div(
-          style = "display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;",
+          style = "display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;",
           shiny::tags$span(
             style = "font-size: 16px; font-weight: 500; color: #0b0c0c;",
             format(as.Date(row$record_date), "%d %B %Y")
           ),
+
+          # Distinct Colored Badge for the Event Type
           shiny::tags$span(
-            style = "font-size: 18px; font-weight: 700; color: #0b0c0c;",
+            style = paste0(
+              "display: inline-block; padding: 4px 10px; border-radius: 3px; ",
+              "font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; ",
+              tag_css
+            ),
             row$type
           ),
-          # Explicit URN identifier for Trust / Diocese / LA aggregation
+
+          # URN Badge (for Trust / Diocese / LA aggregation)
           if (has_urn) {
             shiny::tags$span(
               style = paste(
@@ -196,12 +240,16 @@ render_timeline_items <- function(cards) {
               glue::glue("URN: {row$urn}")
             )
           },
+
+          # Lead
           if (!is.na(row$lead) && nzchar(trimws(row$lead))) {
             shiny::tags$span(
               style = "border: 1px solid #b1b4b6; background: #ffffff; color: #0b0c0c; padding: 2px 8px; font-size: 13px; border-radius: 2px;",
               row$lead
             )
           },
+
+          # Status
           if (!is.na(row$status) && nzchar(trimws(row$status))) {
             shiny::tags$span(
               style = "border: 1px solid #b1b4b6; background: #ffffff; color: #0b0c0c; padding: 2px 8px; font-size: 13px; border-radius: 2px;",
@@ -210,9 +258,14 @@ render_timeline_items <- function(cards) {
           }
         ),
 
-        # 2. Outer Container Box
+        # 2. Outer Container Box with matching left-accent color
         shiny::tags$div(
-          style = "border: 1px solid #b1b4b6; border-radius: 4px; padding: 16px; background-color: #ffffff;",
+          style = paste0(
+            "border: 1px solid #b1b4b6; border-left: 6px solid ",
+            border_c,
+            "; ",
+            "border-radius: 4px; padding: 16px; background-color: #ffffff;"
+          ),
 
           # Category
           shiny::tags$div(
@@ -221,7 +274,7 @@ render_timeline_items <- function(cards) {
             if (!is.na(row$category) && nzchar(row$category)) {
               row$category
             } else {
-              "Ofsted"
+              row$type
             }
           ),
 
@@ -245,7 +298,7 @@ render_timeline_items <- function(cards) {
             }
           ),
 
-          # 3. Scorecard Box
+          # 3. Scorecard Box (Rendered for Inspections)
           if (is_inspection && has_urn) {
             render_ofsted_inspection_card(
               urn = row$urn,
