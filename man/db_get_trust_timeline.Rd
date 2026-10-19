@@ -10,7 +10,7 @@ db_get_trust_timeline(trust_ref)
 \item{trust_ref}{Character scalar. The Trust Reference (e.g., 'TR00123').}
 }
 \value{
-Data frame of timeline records for all schools in the specified trust.
+Data frame of timeline records.
 }
 \description{
 Fetch Trust Timeline Records
