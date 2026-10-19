@@ -41,7 +41,7 @@ The function:
 SQL queries are constructed using \code{\link[glue:glue_sql]{glue::glue_sql()}} to ensure safe
 interpolation of input parameters.
 
-The UI is wrapped using \code{\link[shinyGovstyle:gov_layout]{shinyGovstyle::gov_layout()}}.
+The UI is wrapped using \code{\link[shinyGovstyle:gov_main_layout]{shinyGovstyle::gov_main_layout()}}.
 }
 \section{Side Effects}{
 

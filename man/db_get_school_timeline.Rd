@@ -16,7 +16,7 @@ db_get_school_timeline(urn)
 \value{
 A data frame containing ordered timeline records and joined Ofsted judgements where available.
 
-Data frame of timeline records with joined Ofsted details.
+Data frame of timeline records.
 }
 \description{
 Queries \code{aggregate_records} for a given URN ordered chronologically. If any

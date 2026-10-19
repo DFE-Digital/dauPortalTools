@@ -46,7 +46,7 @@ for monitoring and diagnostics.
 }
 \seealso{
 \itemize{
-\item \code{\link[shinyGovstyle]{gov_layout}}
+\item \code{\link[shinyGovstyle]{gov_main_layout}}
 \item \code{\link[shinyGovstyle]{govTabs}}
 }
 }

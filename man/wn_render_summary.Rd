@@ -40,7 +40,7 @@ The function:
 
 SQL is constructed using \code{\link[glue:glue_sql]{glue::glue_sql()}} for safe parameter interpolation.
 
-Results are displayed using \code{\link[shinyGovstyle:gov_layout]{shinyGovstyle::gov_layout()}} and card-based
+Results are displayed using \code{\link[shinyGovstyle:gov_main_layout]{shinyGovstyle::gov_main_layout()}} and card-based
 components for a GOV.UK-style presentation.
 }
 \section{Side Effects}{
