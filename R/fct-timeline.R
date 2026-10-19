@@ -162,6 +162,8 @@ render_timeline_items <- function(cards) {
     class = "govuk-list",
     lapply(seq_len(nrow(cards)), function(i) {
       row <- cards[i, ]
+      is_inspection <- tolower(trimws(row$type)) == "inspection"
+
       shiny::tags$li(
         style = "border-left: 4px solid #b1b4b6; padding-left: 15px; margin-bottom: 20px;",
         shiny::tags$div(
@@ -174,16 +176,29 @@ render_timeline_items <- function(cards) {
         ),
         shiny::tags$div(
           class = "govuk-body-s",
-          style = "margin-top: 5px;",
+          style = "margin-top: 5px; font-weight: bold;",
           row$display_title
         ),
+
+        # Render standardized card directly by URN and publication/record date
+        if (is_inspection && !is.na(row$urn)) {
+          render_ofsted_inspection_card(
+            urn = row$urn,
+            publication_date = row$record_date
+          )
+        },
+
+        # External Link
         if (!is.na(row$uri) && nzchar(row$uri)) {
-          shiny::tags$a(
-            class = "govuk-link",
-            href = row$uri,
-            target = "_blank",
-            rel = "noopener noreferrer",
-            "View Document"
+          shiny::tags$div(
+            style = "margin-top: 5px;",
+            shiny::tags$a(
+              class = "govuk-link",
+              href = row$uri,
+              target = "_blank",
+              rel = "noopener noreferrer",
+              "View Document"
+            )
           )
         }
       )
