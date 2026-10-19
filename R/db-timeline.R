@@ -1,7 +1,7 @@
 #' Fetch School Timeline Records
 #'
 #' @param urn Numeric or character. School URN.
-#' @return Data frame of timeline records with joined Ofsted details.
+#' @return Data frame of timeline records.
 #' @export
 db_get_school_timeline <- function(urn) {
   start_time <- Sys.time()
@@ -19,7 +19,7 @@ db_get_school_timeline <- function(urn) {
            [uri], [type], [trust_ref], [region], [la], [diocese]
     FROM [Data_Insight_Team].[01_AIDT].[aggregate_records]
     WHERE [urn] = {urn}
-    ORDER BY [record_date] ASC
+    ORDER BY [record_date] DESC
     ",
     .con = conn
   )
@@ -45,11 +45,11 @@ db_get_school_timeline <- function(urn) {
     tz = "Europe/London"
   )
 
-  res <- .link_timeline_ofsted(df_agg, conn)
   log_event(glue::glue(
     "Completed db_get_school_timeline for URN: {urn} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
   ))
-  res
+
+  df_agg
 }
 
 #' Fetch Trust Timeline Records
@@ -99,7 +99,6 @@ db_get_trust_timeline <- function(trust_ref) {
     tz = "Europe/London"
   )
 
-  res <- .link_timeline_ofsted(df_agg, conn)
   log_event(glue::glue(
     "Completed db_get_trust_timeline for Trust: {trust_ref} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
   ))
@@ -153,7 +152,6 @@ db_get_diocese_timeline <- function(diocese) {
     tz = "Europe/London"
   )
 
-  res <- .link_timeline_ofsted(df_agg, conn)
   log_event(glue::glue(
     "Completed db_get_diocese_timeline for Diocese: {diocese} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
   ))
@@ -207,7 +205,6 @@ db_get_la_timeline <- function(la) {
     tz = "Europe/London"
   )
 
-  res <- .link_timeline_ofsted(df_agg, conn)
   log_event(glue::glue(
     "Completed db_get_la_timeline for LA: {la} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
   ))
