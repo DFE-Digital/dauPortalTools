@@ -170,13 +170,14 @@ render_timeline_items <- function(cards) {
     lapply(seq_len(nrow(cards)), function(i) {
       row <- cards[i, ]
       is_inspection <- tolower(trimws(row$type)) == "inspection"
+      has_urn <- !is.na(row$urn) && nzchar(trimws(as.character(row$urn)))
 
       shiny::tags$div(
         class = "timeline-event-card",
 
-        # 1. Top Meta Header: [Date] [Type (Bold)] [Lead Badge] [Status Badge]
+        # 1. Top Meta Header: [Date] [Type (Bold)] [URN] [Lead] [Status]
         shiny::tags$div(
-          style = "display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px;",
+          style = "display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;",
           shiny::tags$span(
             style = "font-size: 16px; font-weight: 500; color: #0b0c0c;",
             format(as.Date(row$record_date), "%d %B %Y")
@@ -185,6 +186,16 @@ render_timeline_items <- function(cards) {
             style = "font-size: 18px; font-weight: 700; color: #0b0c0c;",
             row$type
           ),
+          # Explicit URN identifier for Trust / Diocese / LA aggregation
+          if (has_urn) {
+            shiny::tags$span(
+              style = paste(
+                "border: 1px solid #1d70b8; background: #f0f4f9; color: #1d70b8;",
+                "padding: 2px 8px; font-size: 13px; font-weight: 600; border-radius: 2px;"
+              ),
+              glue::glue("URN: {row$urn}")
+            )
+          },
           if (!is.na(row$lead) && nzchar(trimws(row$lead))) {
             shiny::tags$span(
               style = "border: 1px solid #b1b4b6; background: #ffffff; color: #0b0c0c; padding: 2px 8px; font-size: 13px; border-radius: 2px;",
@@ -234,8 +245,8 @@ render_timeline_items <- function(cards) {
             }
           ),
 
-          # 3. Scorecard Box (Rendered for Inspections)
-          if (is_inspection && !is.na(row$urn)) {
+          # 3. Scorecard Box
+          if (is_inspection && has_urn) {
             render_ofsted_inspection_card(
               urn = row$urn,
               publication_date = row$record_date
