@@ -7,14 +7,13 @@
 render_ofsted_shj_card(urn, publication_date = NULL)
 }
 \arguments{
-\item{urn}{Numeric or character scalar. Unique Reference Number of the school.}
+\item{urn}{Numeric or character scalar. Unique Reference Number.}
 
 \item{publication_date}{Optional Date or character scalar.}
 }
 \value{
-Shiny HTML tag element, or NULL if no record found.
+Shiny HTML tag element.
 }
 \description{
-Independent UI component displaying an overall effectiveness score using
-the legacy 4-point pill scale with inspection date and safeguarding headers.
+Render Ofsted Single Headline Judgement (SHJ) Card
 }

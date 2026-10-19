@@ -4,12 +4,12 @@
 \alias{db_get_ofsted_shj_inspection}
 \title{Fetch Ofsted Single Headline Judgement (SHJ) Record}
 \usage{
-db_get_ofsted_shj_inspection(urn, publication_date = NULL)
+db_get_ofsted_shj_inspection(urn, published_date = NULL)
 }
 \arguments{
 \item{urn}{Numeric or character scalar.}
 
-\item{publication_date}{Optional Date or character scalar.}
+\item{published_date}{Optional Date or character scalar.}
 }
 \value{
 Single-row data frame or empty data frame.

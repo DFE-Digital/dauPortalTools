@@ -2,18 +2,18 @@
 % Please edit documentation in R/db-ofsted.R
 \name{db_get_ofsted_sj_inspection}
 \alias{db_get_ofsted_sj_inspection}
-\title{Fetch Ofsted Sub-Judgement (SJ) Record (Pre-09/25 Interim Format)}
+\title{Fetch Ofsted Sub-Judgements (SJ) Record (Pre-09/25 Interim Format)}
 \usage{
-db_get_ofsted_sj_inspection(urn, publication_date = NULL)
+db_get_ofsted_sj_inspection(urn, published_date = NULL)
 }
 \arguments{
 \item{urn}{Numeric or character scalar.}
 
-\item{publication_date}{Optional Date or character scalar.}
+\item{published_date}{Optional Date or character scalar.}
 }
 \value{
 Single-row data frame or empty data frame.
 }
 \description{
-Fetch Ofsted Sub-Judgement (SJ) Record (Pre-09/25 Interim Format)
+Fetch Ofsted Sub-Judgements (SJ) Record (Pre-09/25 Interim Format)
 }

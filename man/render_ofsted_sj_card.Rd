@@ -7,14 +7,13 @@
 render_ofsted_sj_card(urn, publication_date = NULL)
 }
 \arguments{
-\item{urn}{Numeric or character scalar. Unique Reference Number of the school.}
+\item{urn}{Numeric or character scalar. Unique Reference Number.}
 
 \item{publication_date}{Optional Date or character scalar.}
 }
 \value{
-Shiny HTML tag element, or NULL if no record found.
+Shiny HTML tag element.
 }
 \description{
-Independent UI component displaying the 4 legacy sub-judgements in a 2x2 grid
-using standard 4-point scale pills without a single headline judgement.
+Render Ofsted Sub-Judgements (SJ) Card (Pre-09/25 Interim Format)
 }
