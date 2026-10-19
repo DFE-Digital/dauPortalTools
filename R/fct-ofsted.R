@@ -6,11 +6,16 @@
 #' Internal Helper: Style Judgment Badges (Modern Framework)
 #' @noRd
 .ofsted_badge <- function(val) {
-  if (is.na(val) || !nzchar(trimws(val))) {
+  if (
+    is.null(val) ||
+      length(val) == 0 ||
+      is.na(val[1]) ||
+      !nzchar(trimws(as.character(val[1])))
+  ) {
     return(NULL)
   }
 
-  val_clean <- trimws(val)
+  val_clean <- trimws(as.character(val[1]))
   val_lower <- tolower(val_clean)
 
   style <- if (grepl("exceptional", val_lower)) {
@@ -18,15 +23,15 @@
   } else if (grepl("strong standard|exemplary", val_lower)) {
     "background-color: #003078; color: #ffffff; font-weight: 600;"
   } else if (grepl("expected standard|expected", val_lower)) {
-    "background-color: #1d70b8; color: #ffffff; font-weight: 500;"[cite:1]
+    "background-color: #1d70b8; color: #ffffff; font-weight: 500;"
   } else if (grepl("needs attention", val_lower)) {
-    "background-color: #ffdd00; color: #0b0c0c; font-weight: 700;"[cite:1]
+    "background-color: #ffdd00; color: #0b0c0c; font-weight: 700;"
   } else if (grepl("urgent improvement|urgent", val_lower)) {
     "background-color: #d4351c; color: #ffffff; font-weight: 700;"
   } else if (grepl("^not met$", val_lower)) {
     "background-color: #d4351c; color: #ffffff; font-weight: 700;"
   } else if (grepl("^met$", val_lower)) {
-    "background-color: #00703c; color: #ffffff; font-weight: 700;"[cite:1]
+    "background-color: #00703c; color: #ffffff; font-weight: 700;"
   } else {
     "background-color: #f3f2f1; color: #0b0c0c; border: 1px solid #b1b4b6;"
   }
@@ -44,11 +49,16 @@
 #' Internal Helper: Style 4-Point Scale Pills (SHJ and SJ eras)
 #' @noRd
 .ofsted_4point_badge <- function(val) {
-  if (is.na(val) || !nzchar(trimws(val))) {
+  if (
+    is.null(val) ||
+      length(val) == 0 ||
+      is.na(val[1]) ||
+      !nzchar(trimws(as.character(val[1])))
+  ) {
     return(NULL)
   }
 
-  val_clean <- trimws(val)
+  val_clean <- trimws(as.character(val[1]))
   val_lower <- tolower(val_clean)
 
   style <- if (grepl("outstanding", val_lower)) {
@@ -76,14 +86,19 @@
 #' Internal Helper: Render Individual Scorecard Tile
 #' @noRd
 .ofsted_metric_tile <- function(label, value, is_four_point = FALSE) {
-  if (is.na(value) || !nzchar(trimws(value))) {
+  if (
+    is.null(value) ||
+      length(value) == 0 ||
+      is.na(value[1]) ||
+      !nzchar(trimws(as.character(value[1])))
+  ) {
     return(NULL)
   }
 
   badge_el <- if (is_four_point) {
-    .ofsted_4point_badge(value)
+    .ofsted_4point_badge(value[1])
   } else {
-    .ofsted_badge(value)
+    .ofsted_badge(value[1])
   }
 
   shiny::tags$div(
