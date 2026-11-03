@@ -90,6 +90,8 @@ build_timeline_cards <- function(df) {
         tolower(trimws(.data$type)) == "warning notice" ~ "red",
         tolower(trimws(.data$type)) == "inspection" ~ "orange",
         tolower(trimws(.data$type)) == "rise universal event" ~ "green",
+        tolower(trimws(.data$type)) %in%
+          c("targeted rise", "rise targeted") ~ "plum",
         TRUE ~ "grey"
       )
     ) |>
@@ -174,6 +176,7 @@ render_timeline_items <- function(cards) {
       "red" = "background-color: #d4351c; color: #ffffff;",
       "orange" = "background-color: #f47738; color: #ffffff;",
       "green" = "background-color: #00703c; color: #ffffff;",
+      "plum" = "background-color: #6f42c1; color: #ffffff;",
       "background-color: #f3f2f1; color: #0b0c0c;"
     )
   }
@@ -187,6 +190,7 @@ render_timeline_items <- function(cards) {
       "red" = "#d4351c",
       "orange" = "#f47738",
       "green" = "#00703c",
+      "plum" = "#6f42c1",
       "#b1b4b6"
     )
   }
