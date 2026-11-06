@@ -3,6 +3,137 @@
 # Timeline business logic, orchestrator, badge styling, export, and UI modules
 # ==============================================================================
 
+#' Internal Query Helper for Aggregate Timeline Records
+#'
+#' @param filter_col Unquoted column name string ('urn', 'trust_ref', 'diocese', 'la').
+#' @param filter_val Scalar value to filter against.
+#' @param log_label Label for telemetry logging.
+#'
+#' @return Data frame of timeline records.
+#' @noRd
+.db_fetch_aggregate_timeline <- function(filter_col, filter_val, log_label) {
+  start_time <- Sys.time()
+  log_event(glue::glue(
+    "Fetching timeline records for {log_label}: {filter_val}"
+  ))
+
+  conn <- sql_manager("dit")
+  on.exit(
+    tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
+    add = TRUE
+  )
+
+  sql_agg <- glue::glue_sql(
+    "
+    SELECT 
+        ar.[urn],
+        ar.[title],
+        ar.[status],
+        ar.[lead],
+        u.[username] AS [lead_name],
+        ar.[record_date],
+        ar.[end_date],
+        ar.[uri],
+        ar.[type],
+        ar.[trust_ref],
+        ar.[region],
+        ar.[la],
+        ar.[diocese],
+        ar.[quality_issue_count]
+    FROM [Data_Insight_Team].[01_SSSR].[aggregate_records] ar
+    LEFT JOIN [Data_Insight_Team].[01_SSSR].[users] u
+        ON ar.[lead] = u.[user_id]
+    WHERE ar.{`filter_col`} = {filter_val}
+    ORDER BY ar.[record_date] DESC
+    ",
+    .con = conn
+  )
+
+  df_agg <- tryCatch(
+    DBI::dbGetQuery(conn, sql_agg),
+    error = function(e) {
+      log_event(glue::glue(
+        "Error fetching aggregate_records for {log_label} {filter_val}: {e$message}"
+      ))
+      data.frame()
+    }
+  )
+
+  if (nrow(df_agg) == 0) {
+    return(data.frame())
+  }
+
+  df_agg$record_date <- as.Date(
+    as.POSIXct(df_agg$record_date, tz = "UTC"),
+    tz = "Europe/London"
+  )
+
+  if ("end_date" %in% names(df_agg) && !all(is.na(df_agg$end_date))) {
+    df_agg$end_date <- as.Date(
+      as.POSIXct(df_agg$end_date, tz = "UTC"),
+      tz = "Europe/London"
+    )
+  }
+
+  log_event(glue::glue(
+    "Completed timeline query for {log_label}: {filter_val} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
+  ))
+
+  df_agg
+}
+
+#' Fetch School Timeline Records
+#'
+#' @param urn Numeric or character. School URN.
+#' @return Data frame of timeline records.
+#' @export
+db_get_school_timeline <- function(urn) {
+  .db_fetch_aggregate_timeline(
+    filter_col = "urn",
+    filter_val = as.integer(urn),
+    log_label = "URN"
+  )
+}
+
+#' Fetch Trust Timeline Records
+#'
+#' @param trust_ref Character scalar. The Trust Reference (e.g., 'TR00123').
+#' @return Data frame of timeline records.
+#' @export
+db_get_trust_timeline <- function(trust_ref) {
+  .db_fetch_aggregate_timeline(
+    filter_col = "trust_ref",
+    filter_val = as.character(trust_ref),
+    log_label = "Trust"
+  )
+}
+
+#' Fetch Diocese Timeline Records
+#'
+#' @param diocese Character scalar. Diocese name (e.g., 'Diocese of London').
+#' @return Data frame of timeline records for all schools in the specified diocese.
+#' @export
+db_get_diocese_timeline <- function(diocese) {
+  .db_fetch_aggregate_timeline(
+    filter_col = "diocese",
+    filter_val = as.character(diocese),
+    log_label = "Diocese"
+  )
+}
+
+#' Fetch Local Authority Timeline Records
+#'
+#' @param la Character scalar. Local Authority name or code (e.g., 'Camden').
+#' @return Data frame of timeline records for all schools in the specified LA.
+#' @export
+db_get_la_timeline <- function(la) {
+  .db_fetch_aggregate_timeline(
+    filter_col = "la",
+    filter_val = as.character(la),
+    log_label = "Local Authority"
+  )
+}
+
 #' Orchestrate Entity Timeline Retrieval
 #'
 #' @description
@@ -64,7 +195,6 @@ build_timeline_cards <- function(df) {
 
   has_school_name <- "school_name" %in% names(df)
 
-  # Accommodate title fallback if legacy queries still supply category
   if (!"title" %in% names(df) && "category" %in% names(df)) {
     df$title <- df$category
   }
@@ -216,22 +346,91 @@ render_timeline_items <- function(cards) {
       tag_css <- get_tag_style(badge_col)
       border_c <- get_border_colour(badge_col)
 
-      # Determine URL (prioritize uri, fallback to Ofsted portal if inspection-related)
+      # Determine if this row is an Ofsted Inspection
+      is_inspection_type <- norm_type %in%
+        c(
+          "inspection",
+          "ofstedinspection",
+          "ofsted inspection",
+          "ofsted shj",
+          "ofsted_shj",
+          "ofstedshj",
+          "ofsted sj",
+          "ofsted_sj",
+          "ofstedsj"
+        )
+
+      # ------------------------------------------------------------------------
+      # 1. Inspection Intercept Check: Swap to Dedicated Scorecard
+      # ------------------------------------------------------------------------
+      if (has_urn && is_inspection_type) {
+        pub_date_str <- format(as.Date(row$record_date), "%Y-%m-%d")
+
+        ofsted_card <- if (
+          norm_type %in%
+            c("inspection", "ofstedinspection", "ofsted inspection")
+        ) {
+          render_ofsted_inspection_card(
+            urn = row$urn,
+            publication_date = pub_date_str
+          )
+        } else if (norm_type %in% c("ofsted shj", "ofsted_shj", "ofstedshj")) {
+          render_ofsted_shj_card(
+            urn = row$urn,
+            publication_date = pub_date_str
+          )
+        } else if (norm_type %in% c("ofsted sj", "ofsted_sj", "ofstedsj")) {
+          render_ofsted_sj_card(
+            urn = row$urn,
+            publication_date = pub_date_str
+          )
+        } else {
+          NULL
+        }
+
+        # If scorecard rendered, return it as the card
+        if (!is.null(ofsted_card)) {
+          return(
+            shiny::tags$div(
+              class = "timeline-event-card timeline-ofsted-card",
+              shiny::tags$div(
+                style = "display: flex; align-items: center; gap: 10px; margin-bottom: 6px;",
+                shiny::tags$span(
+                  style = "font-size: 15px; font-weight: 500; color: #505a5f;",
+                  format(as.Date(row$record_date), "%d %B %Y")
+                ),
+                shiny::tags$span(
+                  style = paste0(
+                    "display: inline-block; padding: 2px 8px; border-radius: 3px; ",
+                    "font-size: 12px; font-weight: 700; text-transform: uppercase; ",
+                    tag_css
+                  ),
+                  row$type
+                ),
+                shiny::tags$span(
+                  style = "border: 1px solid #1d70b8; background: #f0f4f9; color: #1d70b8; padding: 2px 8px; font-size: 12px; font-weight: 600; border-radius: 2px;",
+                  glue::glue("URN: {row$urn}")
+                )
+              ),
+              ofsted_card
+            )
+          )
+        }
+      }
+
+      # ------------------------------------------------------------------------
+      # 2. Standard Activity Card (Warning Notices, RISE, dAO, Sig Change, Fallbacks)
+      # ------------------------------------------------------------------------
       report_url <- if (
         !is.na(row$uri) && nzchar(trimws(as.character(row$uri)))
       ) {
         trimws(as.character(row$uri))
-      } else if (
-        norm_type %in%
-          c("inspection", "ofstedinspection", "ofsted shj", "ofsted sj") &&
-          has_urn
-      ) {
+      } else if (is_inspection_type && has_urn) {
         glue::glue("https://reports.ofsted.gov.uk/provider/21/{row$urn}")
       } else {
         NULL
       }
 
-      # Safe title fallback
       item_title <- if (
         "title" %in%
           names(row) &&
@@ -247,13 +446,13 @@ render_timeline_items <- function(cards) {
       ) {
         as.character(row$category)
       } else {
-        row$type
+        as.character(row$type)
       }
 
       shiny::tags$div(
         class = "timeline-event-card",
 
-        # 1. Top Meta Header
+        # Header metadata
         shiny::tags$div(
           style = "display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;",
           shiny::tags$span(
@@ -305,24 +504,21 @@ render_timeline_items <- function(cards) {
           }
         ),
 
-        # 2. Outer Container Box with colored left-accent border
+        # Container Box
         shiny::tags$div(
           style = paste0(
             "border: 1px solid #b1b4b6; border-left: 6px solid ",
             border_c,
-            "; ",
-            "border-radius: 4px; padding: 16px; background-color: #ffffff;"
+            "; border-radius: 4px; padding: 16px; background-color: #ffffff;"
           ),
 
-          # Item Title / Headline
           shiny::tags$div(
             style = "font-size: 16px; font-weight: 600; margin-bottom: 12px;",
             item_title
           ),
 
-          # View Document Link
           shiny::tags$div(
-            style = "margin-bottom: 12px;",
+            style = "margin-bottom: 4px;",
             if (!is.null(report_url)) {
               shiny::tags$a(
                 class = "govuk-link",
@@ -338,27 +534,7 @@ render_timeline_items <- function(cards) {
                 "No external document reference"
               )
             }
-          ),
-
-          # 3. Scorecard Box (Modern Inspection / Ofsted SHJ / Ofsted SJ)
-          if (has_urn) {
-            if (norm_type %in% c("inspection", "ofstedinspection")) {
-              render_ofsted_inspection_card(
-                urn = row$urn,
-                publication_date = row$record_date
-              )
-            } else if (norm_type == "ofsted shj") {
-              render_ofsted_shj_card(
-                urn = row$urn,
-                publication_date = row$record_date
-              )
-            } else if (norm_type == "ofsted sj") {
-              render_ofsted_sj_card(
-                urn = row$urn,
-                publication_date = row$record_date
-              )
-            }
-          }
+          )
         )
       )
     })
