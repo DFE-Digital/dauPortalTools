@@ -1,6 +1,13 @@
 # ==============================================================================
 # R/fct-ofsted.R
-# UI card components for Ofsted inspections across modern, SHJ, and SJ eras
+# UI card components and data fetchers for Ofsted inspections across:
+#   1. Modern Report Card Framework (ofstedinspection)
+#   2. Pre-09/25 Graded Sub-Judgements (ofsted shj)
+#   3. Single Headline Published Judgements (ofsted sj)
+# ==============================================================================
+
+# ==============================================================================
+# 1. Internal Style & Tile Helpers
 # ==============================================================================
 
 #' Internal Helper: Style Judgment Badges (Modern Framework)
@@ -120,6 +127,135 @@
   )
 }
 
+#' Helper to standardise dates for SQL parameterized filtering
+#' @noRd
+.clean_ofsted_date_str <- function(d) {
+  if (is.null(d) || length(d) == 0 || is.na(d[1])) {
+    return(NULL)
+  }
+  tryCatch(
+    {
+      format(as.Date(d[1]), "%Y-%m-%d")
+    },
+    error = function(e) NULL
+  )
+}
+
+
+# ==============================================================================
+# 2. Database Fetcher Helpers (Fallback & Direct Queries)
+# ==============================================================================
+
+if (!exists("db_get_latest_ofsted_inspection", mode = "function")) {
+  #' Fetch Modern Ofsted Inspection Row
+  #' @noRd
+  db_get_latest_ofsted_inspection <- function(urn, publication_date = NULL) {
+    conn <- sql_manager("dit")
+    on.exit(
+      tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
+      add = TRUE
+    )
+
+    clean_date <- .clean_ofsted_date_str(publication_date)
+
+    date_clause <- if (!is.null(clean_date)) {
+      glue::glue_sql(
+        "AND (CAST([publication_date] AS DATE) = CAST({clean_date} AS DATE) OR CAST([inspection_date] AS DATE) = CAST({clean_date} AS DATE))",
+        .con = conn
+      )
+    } else {
+      DBI::SQL("")
+    }
+
+    sql <- glue::glue_sql(
+      "
+      SELECT TOP 1 *
+      FROM [Data_Insight_Team].[01_SSSR].[ofsted_weekly_graded]
+      WHERE [urn] = {as.integer(urn)}
+        {date_clause}
+      ORDER BY [publication_date] DESC
+      ",
+      .con = conn
+    )
+    DBI::dbGetQuery(conn, sql)
+  }
+}
+
+if (!exists("db_get_ofsted_shj_inspection", mode = "function")) {
+  #' Fetch Pre-0925 Graded Ofsted Inspection Row
+  #' @noRd
+  db_get_ofsted_shj_inspection <- function(urn, published_date = NULL) {
+    conn <- sql_manager("dit")
+    on.exit(
+      tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
+      add = TRUE
+    )
+
+    clean_date <- .clean_ofsted_date_str(published_date)
+
+    date_clause <- if (!is.null(clean_date)) {
+      glue::glue_sql(
+        "AND (CAST([published_date] AS DATE) = CAST({clean_date} AS DATE) OR CAST([inspection_date] AS DATE) = CAST({clean_date} AS DATE))",
+        .con = conn
+      )
+    } else {
+      DBI::SQL("")
+    }
+
+    sql <- glue::glue_sql(
+      "
+      SELECT TOP 1 *
+      FROM [Data_Insight_Team].[01_AIDT].[ofsted_weekly_graded_pre0925]
+      WHERE [urn] = {as.integer(urn)}
+        {date_clause}
+      ORDER BY [published_date] DESC
+      ",
+      .con = conn
+    )
+    DBI::dbGetQuery(conn, sql)
+  }
+}
+
+if (!exists("db_get_ofsted_sj_inspection", mode = "function")) {
+  #' Fetch Single Headline Published Ofsted Inspection Row
+  #' @noRd
+  db_get_ofsted_sj_inspection <- function(urn, published_date = NULL) {
+    conn <- sql_manager("dit")
+    on.exit(
+      tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
+      add = TRUE
+    )
+
+    clean_date <- .clean_ofsted_date_str(published_date)
+
+    date_clause <- if (!is.null(clean_date)) {
+      glue::glue_sql(
+        "AND (CAST([published_date] AS DATE) = CAST({clean_date} AS DATE) OR CAST([inspection_date] AS DATE) = CAST({clean_date} AS DATE))",
+        .con = conn
+      )
+    } else {
+      DBI::SQL("")
+    }
+
+    sql <- glue::glue_sql(
+      "
+      SELECT TOP 1 *
+      FROM [Data_Insight_Team].[01_AIDT].[ofsted_weekly_published]
+      WHERE [urn] = {as.integer(urn)}
+        {date_clause}
+      ORDER BY [published_date] DESC
+      ",
+      .con = conn
+    )
+    DBI::dbGetQuery(conn, sql)
+  }
+}
+
+
+# ==============================================================================
+# 3. Scorecard UI Card Components
+# ==============================================================================
+
 #' Render Standard Ofsted Inspection Card by URN (Modern Framework)
 #'
 #' @description
@@ -146,19 +282,45 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
 
   row <- df_ofsted[1, ]
 
-  has_safeguarding <- "safeguarding_standards" %in%
-    names(row) &&
-    !is.na(row$safeguarding_standards) &&
-    nzchar(trimws(row$safeguarding_standards))
-  sg_val <- if (has_safeguarding) trimws(row$safeguarding_standards) else ""
-  sg_is_not_met <- grepl("not met", tolower(sg_val))
-  sg_bg <- if (sg_is_not_met) "#d4351c" else "#005a30"
+  # Safeguarding evaluation
+  sg_field <- if ("safeguarding_standards" %in% names(row)) {
+    row$safeguarding_standards
+  } else if ("safeguarding_effective" %in% names(row)) {
+    row$safeguarding_effective
+  } else {
+    NA_character_
+  }
 
-  has_coc <- "coc" %in%
-    names(row) &&
-    !is.na(row$coc) &&
-    nzchar(trimws(row$coc)) &&
-    !grepl("^none$|^no category", tolower(trimws(row$coc)))
+  has_safeguarding <- !is.na(sg_field) && nzchar(trimws(as.character(sg_field)))
+  sg_val <- if (has_safeguarding) trimws(as.character(sg_field)) else ""
+  sg_is_not_met <- grepl("not met|no", tolower(sg_val))
+  sg_bg <- if (sg_is_not_met) "#d4351c" else "#00703c"
+
+  # Category of Concern evaluation
+  coc_field <- if ("coc" %in% names(row)) {
+    row$coc
+  } else if ("category_of_concern" %in% names(row)) {
+    row$category_of_concern
+  } else {
+    NA_character_
+  }
+
+  has_coc <- !is.na(coc_field) &&
+    nzchar(trimws(as.character(coc_field))) &&
+    !grepl("^none$|^no category", tolower(trimws(as.character(coc_field))))
+
+  # Inspection Date display resolution
+  insp_date <- if (
+    "inspection_date" %in% names(row) && !is.na(row$inspection_date)
+  ) {
+    row$inspection_date
+  } else if (
+    "publication_date" %in% names(row) && !is.na(row$publication_date)
+  ) {
+    row$publication_date
+  } else {
+    NA
+  }
 
   shiny::tags$div(
     style = paste(
@@ -183,12 +345,12 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
       ),
       shiny::tags$div(
         style = "font-size: 14px; color: #505a5f;",
-        if (!is.na(row$inspection_date)) {
+        if (!is.na(insp_date)) {
           shiny::tagList(
             "Inspection Date: ",
             shiny::tags$strong(
               style = "color: #0b0c0c;",
-              format(as.Date(row$inspection_date), "%d %B %Y")
+              format(as.Date(insp_date), "%d %B %Y")
             )
           )
         }
@@ -207,7 +369,7 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
               "font-weight: 700;",
               "letter-spacing: 0.3px;"
             ),
-            glue::glue("Category of Concern: {row$coc}")
+            glue::glue("Category of Concern: {coc_field}")
           )
         },
         if (has_safeguarding) {
@@ -225,7 +387,7 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
       )
     ),
 
-    # 2-Column Scorecard Grid
+    # 2-Column Scorecard Grid (Modern 6 Judgement Areas)
     shiny::tags$div(
       style = "display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px;",
       .ofsted_metric_tile("Inclusion", row$inclusion),
@@ -247,7 +409,7 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
   )
 }
 
-#' Render Ofsted Single Headline Judgement (SHJ) Card
+#' Render Ofsted Single Headline Judgement (SHJ) Card (Pre-09/25 Graded Format)
 #'
 #' @param urn Numeric or character scalar. Unique Reference Number.
 #' @param publication_date Optional Date or character scalar.
@@ -274,9 +436,10 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
     !is.null(row$safeguarding_effective) &&
     !is.na(row$safeguarding_effective) &&
     nzchar(trimws(as.character(row$safeguarding_effective)))
+
   sg_val <- if (has_sg) trimws(as.character(row$safeguarding_effective)) else ""
   sg_is_not_met <- grepl("no|not", tolower(sg_val))
-  sg_bg <- if (sg_is_not_met) "#d4351c" else "#005a30"
+  sg_bg <- if (sg_is_not_met) "#d4351c" else "#00703c"
 
   # Category of Concern evaluation
   has_coc <- "category_of_concern" %in%
@@ -288,6 +451,17 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
       "^none$|^no category",
       tolower(trimws(as.character(row$category_of_concern)))
     )
+
+  # Inspection Date
+  insp_date <- if (
+    "inspection_date" %in% names(row) && !is.na(row$inspection_date)
+  ) {
+    row$inspection_date
+  } else if ("published_date" %in% names(row) && !is.na(row$published_date)) {
+    row$published_date
+  } else {
+    NA
+  }
 
   shiny::tags$div(
     style = paste(
@@ -312,12 +486,12 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
       ),
       shiny::tags$div(
         style = "font-size: 14px; color: #505a5f;",
-        if (!is.na(row$inspection_date)) {
+        if (!is.na(insp_date)) {
           shiny::tagList(
             "Inspection Date: ",
             shiny::tags$strong(
               style = "color: #0b0c0c;",
-              format(as.Date(row$inspection_date), "%d %B %Y")
+              format(as.Date(insp_date), "%d %B %Y")
             )
           )
         }
@@ -404,9 +578,10 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
     !is.null(row$safeguarding_effective) &&
     !is.na(row$safeguarding_effective) &&
     nzchar(trimws(as.character(row$safeguarding_effective)))
+
   sg_val <- if (has_sg) trimws(as.character(row$safeguarding_effective)) else ""
   sg_is_not_met <- grepl("no|not", tolower(sg_val))
-  sg_bg <- if (sg_is_not_met) "#d4351c" else "#005a30"
+  sg_bg <- if (sg_is_not_met) "#d4351c" else "#00703c"
 
   # Category of Concern evaluation
   has_coc <- "category_of_concern" %in%
@@ -418,6 +593,28 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
       "^none$|^no category",
       tolower(trimws(as.character(row$category_of_concern)))
     )
+
+  # Inspection Date
+  insp_date <- if (
+    "inspection_date" %in% names(row) && !is.na(row$inspection_date)
+  ) {
+    row$inspection_date
+  } else if ("published_date" %in% names(row) && !is.na(row$published_date)) {
+    row$published_date
+  } else {
+    NA
+  }
+
+  # Resolving Leadership & Management field name differences
+  leadership_val <- if (
+    "effectiveness_of_leadership_and_management" %in% names(row)
+  ) {
+    row$effectiveness_of_leadership_and_management
+  } else if ("leadership_and_management" %in% names(row)) {
+    row$leadership_and_management
+  } else {
+    NA_character_
+  }
 
   shiny::tags$div(
     style = paste(
@@ -442,12 +639,12 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
       ),
       shiny::tags$div(
         style = "font-size: 14px; color: #505a5f;",
-        if (!is.na(row$inspection_date)) {
+        if (!is.na(insp_date)) {
           shiny::tagList(
             "Inspection Date: ",
             shiny::tags$strong(
               style = "color: #0b0c0c;",
-              format(as.Date(row$inspection_date), "%d %B %Y")
+              format(as.Date(insp_date), "%d %B %Y")
             )
           )
         }
@@ -504,7 +701,7 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
       ),
       .ofsted_metric_tile(
         "Leadership & Management",
-        row$effectiveness_of_leadership_and_management,
+        leadership_val,
         is_four_point = TRUE
       )
     )
