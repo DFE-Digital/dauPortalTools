@@ -1,11 +1,16 @@
-#' Fetch School Timeline Records
-#'
-#' @param urn Numeric or character. School URN.
-#' @return Data frame of timeline records.
-#' @export
-db_get_school_timeline <- function(urn) {
+# ==============================================================================
+# Database Access: Entity Timelines ([01_SSSR].[aggregate_records])
+# ==============================================================================
+
+#' Internal Query Helper for Aggregate Timeline Records
+#' @noRd
+#' Internal Query Helper for Aggregate Timeline Records
+#' @noRd
+.db_fetch_aggregate_timeline <- function(filter_col, filter_val, log_label) {
   start_time <- Sys.time()
-  log_event(glue::glue("Fetching timeline records for URN: {urn}"))
+  log_event(glue::glue(
+    "Fetching timeline records for {log_label}: {filter_val}"
+  ))
 
   conn <- sql_manager("dit")
   on.exit(
@@ -15,11 +20,26 @@ db_get_school_timeline <- function(urn) {
 
   sql_agg <- glue::glue_sql(
     "
-    SELECT [urn], [category], [status], [lead], [record_date],
-           [uri], [type], [trust_ref], [region], [la], [diocese]
-    FROM [Data_Insight_Team].[01_AIDT].[aggregate_records]
-    WHERE [urn] = {urn}
-    ORDER BY [record_date] DESC
+    SELECT 
+        ar.[urn],
+        ar.[title],
+        ar.[status],
+        ar.[lead],
+        u.[username] AS [lead_name],
+        ar.[record_date],
+        ar.[end_date],
+        ar.[uri],
+        ar.[type],
+        ar.[trust_ref],
+        ar.[region],
+        ar.[la],
+        ar.[diocese],
+        ar.[quality_issue_count]
+    FROM [Data_Insight_Team].[01_SSSR].[aggregate_records] ar
+    LEFT JOIN [Data_Insight_Team].[01_SSSR].[users] u
+        ON ar.[lead] = u.[user_id]
+    WHERE ar.{`filter_col`} = {filter_val}
+    ORDER BY ar.[record_date] DESC
     ",
     .con = conn
   )
@@ -28,7 +48,7 @@ db_get_school_timeline <- function(urn) {
     DBI::dbGetQuery(conn, sql_agg),
     error = function(e) {
       log_event(glue::glue(
-        "Error fetching aggregate_records for URN {urn}: {e$message}"
+        "Error fetching aggregate_records for {log_label} {filter_val}: {e$message}"
       ))
       data.frame()
     }
@@ -38,18 +58,36 @@ db_get_school_timeline <- function(urn) {
     return(data.frame())
   }
 
-  df_agg$lead <- gsub("(?i)ofsed", "Ofsted", df_agg$lead, perl = TRUE)
-  df_agg$category <- gsub("(?i)ofsed", "Ofsted", df_agg$category, perl = TRUE)
   df_agg$record_date <- as.Date(
     as.POSIXct(df_agg$record_date, tz = "UTC"),
     tz = "Europe/London"
   )
 
+  if ("end_date" %in% names(df_agg) && !all(is.na(df_agg$end_date))) {
+    df_agg$end_date <- as.Date(
+      as.POSIXct(df_agg$end_date, tz = "UTC"),
+      tz = "Europe/London"
+    )
+  }
+
   log_event(glue::glue(
-    "Completed db_get_school_timeline for URN: {urn} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
+    "Completed timeline query for {log_label}: {filter_val} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
   ))
 
   df_agg
+}
+
+#' Fetch School Timeline Records
+#'
+#' @param urn Numeric or character. School URN.
+#' @return Data frame of timeline records.
+#' @export
+db_get_school_timeline <- function(urn) {
+  .db_fetch_aggregate_timeline(
+    filter_col = "urn",
+    filter_val = as.integer(urn),
+    log_label = "URN"
+  )
 }
 
 #' Fetch Trust Timeline Records
@@ -58,52 +96,11 @@ db_get_school_timeline <- function(urn) {
 #' @return Data frame of timeline records.
 #' @export
 db_get_trust_timeline <- function(trust_ref) {
-  start_time <- Sys.time()
-  log_event(glue::glue("Fetching timeline records for Trust: {trust_ref}"))
-
-  conn <- sql_manager("dit")
-  on.exit(
-    tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
-    add = TRUE
+  .db_fetch_aggregate_timeline(
+    filter_col = "trust_ref",
+    filter_val = as.character(trust_ref),
+    log_label = "Trust"
   )
-
-  sql_agg <- glue::glue_sql(
-    "
-    SELECT [urn], [category], [status], [lead], [record_date],
-           [uri], [type], [trust_ref], [region], [la], [diocese]
-    FROM [Data_Insight_Team].[01_AIDT].[aggregate_records]
-    WHERE [trust_ref] = {trust_ref}
-    ORDER BY [record_date] DESC
-    ",
-    .con = conn
-  )
-
-  df_agg <- tryCatch(
-    DBI::dbGetQuery(conn, sql_agg),
-    error = function(e) {
-      log_event(glue::glue(
-        "Error fetching aggregate_records for Trust {trust_ref}: {e$message}"
-      ))
-      data.frame()
-    }
-  )
-
-  if (nrow(df_agg) == 0) {
-    return(data.frame())
-  }
-
-  df_agg$lead <- gsub("(?i)ofsed", "Ofsted", df_agg$lead, perl = TRUE)
-  df_agg$category <- gsub("(?i)ofsed", "Ofsted", df_agg$category, perl = TRUE)
-  df_agg$record_date <- as.Date(
-    as.POSIXct(df_agg$record_date, tz = "UTC"),
-    tz = "Europe/London"
-  )
-
-  log_event(glue::glue(
-    "Completed db_get_trust_timeline for Trust: {trust_ref} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
-  ))
-
-  df_agg
 }
 
 #' Fetch Diocese Timeline Records
@@ -112,102 +109,22 @@ db_get_trust_timeline <- function(trust_ref) {
 #' @return Data frame of timeline records for all schools in the specified diocese.
 #' @export
 db_get_diocese_timeline <- function(diocese) {
-  start_time <- Sys.time()
-  log_event(glue::glue("Fetching timeline records for Diocese: {diocese}"))
-
-  conn <- sql_manager("dit")
-  on.exit(
-    tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
-    add = TRUE
+  .db_fetch_aggregate_timeline(
+    filter_col = "diocese",
+    filter_val = as.character(diocese),
+    log_label = "Diocese"
   )
-
-  sql_agg <- glue::glue_sql(
-    "
-    SELECT [urn], [category], [status], [lead], [record_date],
-           [uri], [type], [trust_ref], [region], [la], [diocese]
-    FROM [Data_Insight_Team].[01_AIDT].[aggregate_records]
-    WHERE [diocese] = {diocese}
-    ORDER BY [record_date] ASC
-    ",
-    .con = conn
-  )
-
-  df_agg <- tryCatch(
-    DBI::dbGetQuery(conn, sql_agg),
-    error = function(e) {
-      log_event(glue::glue(
-        "Error fetching aggregate_records for Diocese {diocese}: {e$message}"
-      ))
-      data.frame()
-    }
-  )
-
-  if (nrow(df_agg) == 0) {
-    return(data.frame())
-  }
-
-  df_agg$lead <- gsub("(?i)ofsed", "Ofsted", df_agg$lead, perl = TRUE)
-  df_agg$category <- gsub("(?i)ofsed", "Ofsted", df_agg$category, perl = TRUE)
-  df_agg$record_date <- as.Date(
-    as.POSIXct(df_agg$record_date, tz = "UTC"),
-    tz = "Europe/London"
-  )
-
-  log_event(glue::glue(
-    "Completed db_get_diocese_timeline for Diocese: {diocese} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
-  ))
-  df_agg
 }
 
 #' Fetch Local Authority Timeline Records
 #'
-#' @param la Character scalar. Local Authority name (e.g., 'Camden').
+#' @param la Character scalar. Local Authority name or code (e.g., 'Camden').
 #' @return Data frame of timeline records for all schools in the specified LA.
 #' @export
 db_get_la_timeline <- function(la) {
-  start_time <- Sys.time()
-  log_event(glue::glue("Fetching timeline records for Local Authority: {la}"))
-
-  conn <- sql_manager("dit")
-  on.exit(
-    tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
-    add = TRUE
+  .db_fetch_aggregate_timeline(
+    filter_col = "la",
+    filter_val = as.character(la),
+    log_label = "Local Authority"
   )
-
-  sql_agg <- glue::glue_sql(
-    "
-    SELECT [urn], [category], [status], [lead], [record_date],
-           [uri], [type], [trust_ref], [region], [la], [diocese]
-    FROM [Data_Insight_Team].[01_AIDT].[aggregate_records]
-    WHERE [la] = {la}
-    ORDER BY [record_date] ASC
-    ",
-    .con = conn
-  )
-
-  df_agg <- tryCatch(
-    DBI::dbGetQuery(conn, sql_agg),
-    error = function(e) {
-      log_event(glue::glue(
-        "Error fetching aggregate_records for LA {la}: {e$message}"
-      ))
-      data.frame()
-    }
-  )
-
-  if (nrow(df_agg) == 0) {
-    return(data.frame())
-  }
-
-  df_agg$lead <- gsub("(?i)ofsed", "Ofsted", df_agg$lead, perl = TRUE)
-  df_agg$category <- gsub("(?i)ofsed", "Ofsted", df_agg$category, perl = TRUE)
-  df_agg$record_date <- as.Date(
-    as.POSIXct(df_agg$record_date, tz = "UTC"),
-    tz = "Europe/London"
-  )
-
-  log_event(glue::glue(
-    "Completed db_get_la_timeline for LA: {la} in {round(difftime(Sys.time(), start_time, units = 'secs'), 2)}s"
-  ))
-  df_agg
 }

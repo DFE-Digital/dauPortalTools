@@ -14,12 +14,6 @@
 #'
 #' @return A data frame containing ordered timeline records (latest to oldest).
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' get_timeline_data(type = "School", id = 100384)
-#' get_timeline_data(type = "Trust", id = "TR01234")
-#' }
 get_timeline_data <- function(type, id) {
   if (
     missing(type) || is.null(type) || !is.character(type) || length(type) != 1
@@ -68,28 +62,43 @@ build_timeline_cards <- function(df) {
     return(data.frame())
   }
 
-  # Defensively check whether school_name was linked or present
   has_school_name <- "school_name" %in% names(df)
+
+  # Accommodate title fallback if legacy queries still supply category
+  if (!"title" %in% names(df) && "category" %in% names(df)) {
+    df$title <- df$category
+  }
 
   df |>
     dplyr::mutate(
       display_title = if (has_school_name) {
         dplyr::case_when(
           !is.na(.data$school_name) & .data$school_name != "" ~ glue::glue(
-            "{.data$school_name} - {.data$category}"
+            "{.data$school_name} - {dplyr::coalesce(.data$title, .data$type)}"
           ),
-          TRUE ~ as.character(.data$category)
+          TRUE ~ dplyr::coalesce(
+            as.character(.data$title),
+            as.character(.data$type)
+          )
         )
       } else {
-        as.character(.data$category)
+        dplyr::coalesce(as.character(.data$title), as.character(.data$type))
       },
       badge_colour = dplyr::case_when(
-        tolower(trimws(.data$type)) == "rise universal hubs" ~ "teal",
+        tolower(trimws(.data$type)) %in%
+          c("rise universal hubs", "universal rise hubs") ~ "teal",
         tolower(trimws(.data$type)) == "significant change" ~ "blue",
         tolower(trimws(.data$type)) == "dao" ~ "purple",
         tolower(trimws(.data$type)) == "warning notice" ~ "red",
-        tolower(trimws(.data$type)) == "inspection" ~ "orange",
-        tolower(trimws(.data$type)) == "rise universal event" ~ "green",
+        tolower(trimws(.data$type)) %in%
+          c(
+            "inspection",
+            "ofstedinspection",
+            "ofsted shj",
+            "ofsted sj"
+          ) ~ "orange",
+        tolower(trimws(.data$type)) %in%
+          c("rise universal event", "universal rise event") ~ "green",
         tolower(trimws(.data$type)) %in%
           c("targeted rise", "rise targeted") ~ "plum",
         TRUE ~ "grey"
@@ -99,10 +108,6 @@ build_timeline_cards <- function(df) {
 }
 
 #' Export Timeline Data to CSV
-#'
-#' @description
-#' Cleans, sorts, and writes timeline records directly to a CSV file.
-#' Drops UI-internal rendering fields and sorts chronologically from latest to oldest.
 #'
 #' @param df Data frame returned by \code{get_timeline_data} or \code{build_timeline_cards}.
 #' @param file Target path string where the CSV should be saved.
@@ -123,7 +128,6 @@ export_timeline_data <- function(df, file) {
   }
 
   utils::write.csv(export_df, file = file, row.names = FALSE, na = "")
-
   invisible(file)
 }
 
@@ -212,23 +216,44 @@ render_timeline_items <- function(cards) {
       tag_css <- get_tag_style(badge_col)
       border_c <- get_border_colour(badge_col)
 
-      # Determine URL (prioritize uri, fallback to Ofsted reports portal if inspection-related)
+      # Determine URL (prioritize uri, fallback to Ofsted portal if inspection-related)
       report_url <- if (
         !is.na(row$uri) && nzchar(trimws(as.character(row$uri)))
       ) {
         trimws(as.character(row$uri))
       } else if (
-        norm_type %in% c("inspection", "ofsted shj", "ofsted sj") && has_urn
+        norm_type %in%
+          c("inspection", "ofstedinspection", "ofsted shj", "ofsted sj") &&
+          has_urn
       ) {
         glue::glue("https://reports.ofsted.gov.uk/provider/21/{row$urn}")
       } else {
         NULL
       }
 
+      # Safe title fallback
+      item_title <- if (
+        "title" %in%
+          names(row) &&
+          !is.na(row$title) &&
+          nzchar(as.character(row$title))
+      ) {
+        as.character(row$title)
+      } else if (
+        "category" %in%
+          names(row) &&
+          !is.na(row$category) &&
+          nzchar(as.character(row$category))
+      ) {
+        as.character(row$category)
+      } else {
+        row$type
+      }
+
       shiny::tags$div(
         class = "timeline-event-card",
 
-        # 1. Top Meta Header: [Date] [Colored Type Tag] [URN] [Lead] [Status][cite: 1, 2, 3]
+        # 1. Top Meta Header
         shiny::tags$div(
           style = "display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;",
           shiny::tags$span(
@@ -256,9 +281,19 @@ render_timeline_items <- function(cards) {
           },
 
           if (!is.na(row$lead) && nzchar(trimws(as.character(row$lead)))) {
+            lead_label <- if (
+              "lead_name" %in%
+                names(row) &&
+                !is.na(row$lead_name) &&
+                nzchar(row$lead_name)
+            ) {
+              row$lead_name
+            } else {
+              glue::glue("Lead #{row$lead}")
+            }
             shiny::tags$span(
               style = "border: 1px solid #b1b4b6; background: #ffffff; color: #0b0c0c; padding: 2px 8px; font-size: 13px; border-radius: 2px;",
-              row$lead
+              lead_label
             )
           },
 
@@ -279,15 +314,10 @@ render_timeline_items <- function(cards) {
             "border-radius: 4px; padding: 16px; background-color: #ffffff;"
           ),
 
-          # Category
+          # Item Title / Headline
           shiny::tags$div(
-            style = "font-size: 16px; margin-bottom: 12px;",
-            shiny::tags$strong("Category: "),
-            if (!is.na(row$category) && nzchar(as.character(row$category))) {
-              row$category
-            } else {
-              row$type
-            }
+            style = "font-size: 16px; font-weight: 600; margin-bottom: 12px;",
+            item_title
           ),
 
           # View Document Link
@@ -312,7 +342,7 @@ render_timeline_items <- function(cards) {
 
           # 3. Scorecard Box (Modern Inspection / Ofsted SHJ / Ofsted SJ)
           if (has_urn) {
-            if (norm_type == "inspection") {
+            if (norm_type %in% c("inspection", "ofstedinspection")) {
               render_ofsted_inspection_card(
                 urn = row$urn,
                 publication_date = row$record_date
