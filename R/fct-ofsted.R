@@ -1,6 +1,13 @@
 # ==============================================================================
 # R/fct-ofsted.R
-# UI card components for Ofsted inspections across modern, SHJ, and SJ eras
+# UI card components and data fetchers for Ofsted inspections:
+#   1. Modern Report Card Framework (ofstedinspection) -> [01_SSSR].[ofsted_weekly_graded]
+#   2. Single Headline Judgements (ofsted shj)         -> [01_AIDT].[ofsted_weekly_published]
+#   3. 4 Sub-Judgements (ofsted sj)                    -> [01_AIDT].[ofsted_weekly_graded_pre0925]
+# ==============================================================================
+
+# ==============================================================================
+# 1. Internal Style & Tile Helpers
 # ==============================================================================
 
 #' Internal Helper: Style Judgment Badges (Modern Framework)
@@ -121,7 +128,7 @@
 }
 
 # ==============================================================================
-# Database Fetchers with Date Tolerances
+# 2. Database Fetchers
 # ==============================================================================
 
 #' Fetch Modern Graded Inspection Data
@@ -157,7 +164,6 @@ db_get_latest_ofsted_inspection <- function(urn, publication_date = NULL) {
 
   res <- DBI::dbGetQuery(conn, query)
 
-  # Fallback: If date-specific query yielded nothing, get latest for URN
   if (nrow(res) == 0 && nzchar(date_filter)) {
     fallback_query <- sprintf(
       "SELECT TOP 1 * 
@@ -172,9 +178,9 @@ db_get_latest_ofsted_inspection <- function(urn, publication_date = NULL) {
   res
 }
 
-#' Fetch Pre-0925 Graded Ofsted Inspection Data (SHJ)
+#' Fetch Single Headline Judgement Ofsted Data (SHJ) -> [01_AIDT].[ofsted_weekly_published]
 #' @noRd
-db_get_ofsted_shj_inspection <- function(urn, published_date = NULL) {
+db_get_ofsted_shj_inspection <- function(urn, publication_date = NULL) {
   conn <- sql_manager("dit")
   on.exit(
     tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
@@ -183,56 +189,9 @@ db_get_ofsted_shj_inspection <- function(urn, published_date = NULL) {
 
   date_filter <- ""
   if (
-    !is.null(published_date) && nzchar(trimws(as.character(published_date)))
+    !is.null(publication_date) && nzchar(trimws(as.character(publication_date)))
   ) {
-    clean_d <- format(as.Date(published_date), "%Y-%m-%d")
-    date_filter <- sprintf(
-      "AND (CAST([published_date] AS DATE) = '%s' OR CAST([inspection_date] AS DATE) = '%s')",
-      clean_d,
-      clean_d
-    )
-  }
-
-  query <- sprintf(
-    "SELECT TOP 1 * 
-     FROM [Data_Insight_Team].[01_AIDT].[ofsted_weekly_graded_pre0925]
-     WHERE [urn] = %d
-     %s
-     ORDER BY [published_date] DESC;",
-    as.integer(urn),
-    date_filter
-  )
-
-  res <- DBI::dbGetQuery(conn, query)
-
-  if (nrow(res) == 0 && nzchar(date_filter)) {
-    fallback_query <- sprintf(
-      "SELECT TOP 1 * 
-       FROM [Data_Insight_Team].[01_AIDT].[ofsted_weekly_graded_pre0925]
-       WHERE [urn] = %d
-       ORDER BY [published_date] DESC;",
-      as.integer(urn)
-    )
-    res <- DBI::dbGetQuery(conn, fallback_query)
-  }
-
-  res
-}
-
-#' Fetch Single Headline Judgement Ofsted Data (SJ)
-#' @noRd
-db_get_ofsted_sj_inspection <- function(urn, published_date = NULL) {
-  conn <- sql_manager("dit")
-  on.exit(
-    tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
-    add = TRUE
-  )
-
-  date_filter <- ""
-  if (
-    !is.null(published_date) && nzchar(trimws(as.character(published_date)))
-  ) {
-    clean_d <- format(as.Date(published_date), "%Y-%m-%d")
+    clean_d <- format(as.Date(publication_date), "%Y-%m-%d")
     date_filter <- sprintf(
       "AND (CAST([published_date] AS DATE) = '%s' OR CAST([inspection_date] AS DATE) = '%s')",
       clean_d,
@@ -266,16 +225,59 @@ db_get_ofsted_sj_inspection <- function(urn, published_date = NULL) {
   res
 }
 
+#' Fetch 4 Sub-Judgements Ofsted Data (SJ) -> [01_AIDT].[ofsted_weekly_graded_pre0925]
+#' @noRd
+db_get_ofsted_sj_inspection <- function(urn, publication_date = NULL) {
+  conn <- sql_manager("dit")
+  on.exit(
+    tryCatch(DBI::dbDisconnect(conn), error = function(e) NULL),
+    add = TRUE
+  )
+
+  date_filter <- ""
+  if (
+    !is.null(publication_date) && nzchar(trimws(as.character(publication_date)))
+  ) {
+    clean_d <- format(as.Date(publication_date), "%Y-%m-%d")
+    date_filter <- sprintf(
+      "AND (CAST([published_date] AS DATE) = '%s' OR CAST([inspection_date] AS DATE) = '%s')",
+      clean_d,
+      clean_d
+    )
+  }
+
+  query <- sprintf(
+    "SELECT TOP 1 * 
+     FROM [Data_Insight_Team].[01_AIDT].[ofsted_weekly_graded_pre0925]
+     WHERE [urn] = %d
+     %s
+     ORDER BY [published_date] DESC;",
+    as.integer(urn),
+    date_filter
+  )
+
+  res <- DBI::dbGetQuery(conn, query)
+
+  if (nrow(res) == 0 && nzchar(date_filter)) {
+    fallback_query <- sprintf(
+      "SELECT TOP 1 * 
+       FROM [Data_Insight_Team].[01_AIDT].[ofsted_weekly_graded_pre0925]
+       WHERE [urn] = %d
+       ORDER BY [published_date] DESC;",
+      as.integer(urn)
+    )
+    res <- DBI::dbGetQuery(conn, fallback_query)
+  }
+
+  res
+}
+
 # ==============================================================================
-# UI Card Components
+# 3. UI Card Components
 # ==============================================================================
 
 #' Render Standard Ofsted Inspection Card by URN (Modern Framework)
 #'
-#' @param urn Numeric or character scalar. Unique Reference Number of the school.
-#' @param publication_date Optional Date or character scalar.
-#'
-#' @return Shiny HTML tag element, or NULL if no inspection judgements exist.
 #' @export
 render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
   if (missing(urn) || is.null(urn) || is.na(urn)) {
@@ -292,7 +294,6 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
 
   row <- df_ofsted[1, ]
 
-  # Safeguarding evaluation
   sg_field <- if ("safeguarding_standards" %in% names(row)) {
     row$safeguarding_standards
   } else if ("safeguarding_effective" %in% names(row)) {
@@ -306,7 +307,6 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
   sg_is_not_met <- grepl("not met|no", tolower(sg_val))
   sg_bg <- if (sg_is_not_met) "#d4351c" else "#00703c"
 
-  # Category of Concern evaluation
   coc_field <- if ("coc" %in% names(row)) {
     row$coc
   } else if ("category_of_concern" %in% names(row)) {
@@ -419,11 +419,8 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
 }
 
 #' Render Ofsted Single Headline Judgement (SHJ) Card
+#' Sources from [01_AIDT].[ofsted_weekly_published]
 #'
-#' @param urn Numeric or character scalar. Unique Reference Number.
-#' @param publication_date Optional Date or character scalar.
-#'
-#' @return Shiny HTML tag element.
 #' @export
 render_ofsted_shj_card <- function(urn, publication_date = NULL) {
   if (missing(urn) || is.null(urn) || is.na(urn)) {
@@ -432,7 +429,7 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
 
   df <- db_get_ofsted_shj_inspection(
     urn = urn,
-    published_date = publication_date
+    publication_date = publication_date
   )
   if (is.null(df) || nrow(df) == 0) {
     return(NULL)
@@ -469,6 +466,13 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
     row$published_date
   } else {
     NA
+  }
+
+  # Overall Effectiveness lookup
+  overall_eff <- if ("overall_effectiveness" %in% names(row)) {
+    row$overall_effectiveness
+  } else {
+    NA_character_
   }
 
   shiny::tags$div(
@@ -553,18 +557,15 @@ render_ofsted_shj_card <- function(urn, publication_date = NULL) {
           style = "font-size: 15px; font-weight: 600; color: #0b0c0c;",
           "Overall Effectiveness"
         ),
-        shiny::tags$div(.ofsted_4point_badge(row$overall_effectiveness))
+        shiny::tags$div(.ofsted_4point_badge(overall_eff))
       )
     )
   )
 }
 
-#' Render Ofsted Sub-Judgements (SJ) Card (Pre-09/25 Interim Format)
+#' Render Ofsted Sub-Judgements (SJ) Card
+#' Sources from [01_AIDT].[ofsted_weekly_graded_pre0925]
 #'
-#' @param urn Numeric or character scalar. Unique Reference Number.
-#' @param publication_date Optional Date or character scalar.
-#'
-#' @return Shiny HTML tag element.
 #' @export
 render_ofsted_sj_card <- function(urn, publication_date = NULL) {
   if (missing(urn) || is.null(urn) || is.na(urn)) {
@@ -573,7 +574,7 @@ render_ofsted_sj_card <- function(urn, publication_date = NULL) {
 
   df <- db_get_ofsted_sj_inspection(
     urn = urn,
-    published_date = publication_date
+    publication_date = publication_date
   )
   if (is.null(df) || nrow(df) == 0) {
     return(NULL)
