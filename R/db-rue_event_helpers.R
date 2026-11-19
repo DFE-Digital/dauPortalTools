@@ -384,7 +384,7 @@ db_ru_get_event_sub_varieties <- function(ruevt_id = NULL) {
     query <- glue_sql(
       paste(
         base_query,
-        "WHERE [ruevt_id] = {as.integer(ruevt_id)} ORDER BY [ruesv_name] ASC;"
+        "WHERE [ruevt_id] IN (0,{as.integer(ruevt_id)}) ORDER BY [ruesv_name] ASC;"
       ),
       .con = conn
     )
