@@ -15,6 +15,5 @@ export_timeline_data(df, file)
 The file path invisibly.
 }
 \description{
-Cleans, sorts, and writes timeline records directly to a CSV file.
-Drops UI-internal rendering fields and sorts chronologically from latest to oldest.
+Export Timeline Data to CSV
 }

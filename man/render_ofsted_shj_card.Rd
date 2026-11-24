@@ -2,18 +2,12 @@
 % Please edit documentation in R/fct-ofsted.R
 \name{render_ofsted_shj_card}
 \alias{render_ofsted_shj_card}
-\title{Render Ofsted Single Headline Judgement (SHJ) Card}
+\title{Render Ofsted Single Headline Judgement (SHJ) Card
+Sources from \link{01_AIDT}.\link{ofsted_weekly_published}}
 \usage{
 render_ofsted_shj_card(urn, publication_date = NULL)
 }
-\arguments{
-\item{urn}{Numeric or character scalar. Unique Reference Number.}
-
-\item{publication_date}{Optional Date or character scalar.}
-}
-\value{
-Shiny HTML tag element.
-}
 \description{
 Render Ofsted Single Headline Judgement (SHJ) Card
+Sources from \link{01_AIDT}.\link{ofsted_weekly_published}
 }

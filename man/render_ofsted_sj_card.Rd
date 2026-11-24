@@ -2,18 +2,12 @@
 % Please edit documentation in R/fct-ofsted.R
 \name{render_ofsted_sj_card}
 \alias{render_ofsted_sj_card}
-\title{Render Ofsted Sub-Judgements (SJ) Card (Pre-09/25 Interim Format)}
+\title{Render Ofsted Sub-Judgements (SJ) Card
+Sources from \link{01_AIDT}.\link{ofsted_weekly_graded_pre0925}}
 \usage{
 render_ofsted_sj_card(urn, publication_date = NULL)
 }
-\arguments{
-\item{urn}{Numeric or character scalar. Unique Reference Number.}
-
-\item{publication_date}{Optional Date or character scalar.}
-}
-\value{
-Shiny HTML tag element.
-}
 \description{
-Render Ofsted Sub-Judgements (SJ) Card (Pre-09/25 Interim Format)
+Render Ofsted Sub-Judgements (SJ) Card
+Sources from \link{01_AIDT}.\link{ofsted_weekly_graded_pre0925}
 }

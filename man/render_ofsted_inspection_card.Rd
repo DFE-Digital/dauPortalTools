@@ -6,15 +6,6 @@
 \usage{
 render_ofsted_inspection_card(urn, publication_date = NULL)
 }
-\arguments{
-\item{urn}{Numeric or character scalar. Unique Reference Number of the school.}
-
-\item{publication_date}{Optional Date or character scalar.}
-}
-\value{
-Shiny HTML tag element, or NULL if no inspection judgements exist.
-}
 \description{
-Independent UI component querying and displaying the 2-column scorecard
-format with date header, Safeguarding pill, and Category of Concern alerts.
+Render Standard Ofsted Inspection Card by URN (Modern Framework)
 }

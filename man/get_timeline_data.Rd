@@ -18,9 +18,3 @@ A data frame containing ordered timeline records (latest to oldest).
 Evaluates the entity type, queries the corresponding database function,
 and enforces sorting from latest to oldest (top to bottom).
 }
-\examples{
-\dontrun{
-get_timeline_data(type = "School", id = 100384)
-get_timeline_data(type = "Trust", id = "TR01234")
-}
-}

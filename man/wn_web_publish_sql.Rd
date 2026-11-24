@@ -2,16 +2,19 @@
 % Please edit documentation in R/utils-wn_webscrape.R
 \name{wn_web_publish_sql}
 \alias{wn_web_publish_sql}
-\title{Sync Scraped Dataframe into SQL Table}
+\title{Sync Scraped Dataframe into \link{01_SSSR}.\link{wn_online_notices}}
 \usage{
-wn_web_publish_sql(post_scrape)
+wn_web_publish_sql(post_scrape, con)
 }
 \arguments{
-\item{post_scrape}{Dataframe. Output dataset stemming from \code{wn_scrape_all_pages}.}
+\item{post_scrape}{Dataframe. Output from \code{wn_scrape_all_pages()}.}
+
+\item{con}{DBI database connection to \code{Data_Insight_Team}.}
 }
 \value{
-A character message tracking execution operations.
+A character message summarizing updates and inserts.
 }
 \description{
-Processes an extracted dataframe against existing records to trigger updates or additions.
+Matches existing rows by \code{notice_url} and updates \code{last_scraped_at}
+without overwriting cleaned URNs or school names. Inserts new URLs.
 }

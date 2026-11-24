@@ -2,11 +2,14 @@
 % Please edit documentation in R/utils-wn_webscrape.R
 \name{wn_web_notice_link}
 \alias{wn_web_notice_link}
-\title{Reconcile Unlinked Staging Notices against Master Data}
+\title{Reconcile Unlinked \link{01_SSSR}.\link{wn_online_notices} Against \link{01_SSSR}.\link{wn_records}}
 \usage{
-wn_web_notice_link()
+wn_web_notice_link(con)
+}
+\arguments{
+\item{con}{DBI database connection to \code{Data_Insight_Team}.}
 }
 \description{
-Pulls unlinked staging table items and maps them against the master notices
-matrix using optimized vector evaluations, writing the paired IDs back.
+Links unallocated online notices by URN (preferring active Created/Issued/Published
+records), logs Published Date (wn_date_id = 4), and flips Created/Issued to Published (5).
 }
