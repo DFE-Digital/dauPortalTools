@@ -7,7 +7,7 @@
 db_ow_get_record <- function(urn, publication_date = NULL) {
   log_event("Starting db_dao_get_latest_extract", debug = TRUE)
   on.exit(log_event("Finished db_dao_get_latest_extract"), add = TRUE)
-  conn <- sql_manager(conn_name)
+  conn <- sql_manager("dit")
   on.exit(try(DBI::dbDisconnect(conn), silent = TRUE), add = TRUE)
 
   urn_val <- as.numeric(as.character(urn))
