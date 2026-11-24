@@ -139,7 +139,7 @@ render_ofsted_inspection_card <- function(urn, publication_date = NULL) {
     return(NULL)
   }
 
-  df_ofsted <- db_get_latest_ofsted_inspection(
+  df_ofsted <- db_ow_get_record(
     urn = urn,
     publication_date = publication_date
   )

@@ -16,30 +16,30 @@ db_ow_get_record <- function(urn, publication_date = NULL) {
     glue::glue_sql(
       "
       SELECT TOP (1)
-             [urn], [school_name], [inspection_date], [inclusion],
-             [curriculum_and_teaching], [achievement], [attendance_and_behaviour],
+             [urn], [school_name], [inspection_date], [publication_date], [first_publication_date], 
+			 [inclusion], [curriculum_and_teaching], [achievement], [attendance_and_behaviour],
              [personal_development_and_wellbeing], [leadership_and_governance],
-             [safeguarding_standards], [ay], [extract_date], [date_created],
-             [coc], [publication_date]
+             [safeguarding_standards],[coc], [extract_date],
+			  [created_by],[created_on],[updated_by],[updated_on]
       FROM [Data_Insight_Team].[01_SSSR].[ofsted_weekly_graded]
       WHERE [urn] = {urn_val}
-      ORDER BY [publication_date] DESC, [inspection_date] DESC
-      ",
+      ORDER BY [first_publication_date] DESC, [inspection_date] DESC
+            ",
       .con = conn
     )
   } else {
     glue::glue_sql(
       "
       SELECT TOP (1)
-             [urn], [school_name], [inspection_date], [inclusion],
-             [curriculum_and_teaching], [achievement], [attendance_and_behaviour],
+             [urn], [school_name], [inspection_date], [publication_date], [first_publication_date], 
+			 [inclusion], [curriculum_and_teaching], [achievement], [attendance_and_behaviour],
              [personal_development_and_wellbeing], [leadership_and_governance],
-             [safeguarding_standards], [ay], [extract_date], [date_created],
-             [coc], [publication_date]
+             [safeguarding_standards],[coc], [extract_date],
+			  [created_by],[created_on],[updated_by],[updated_on]
       FROM [Data_Insight_Team].[01_SSSR].[ofsted_weekly_graded]
       WHERE [urn] = {urn_val}
-        AND ABS(DATEDIFF(day, [publication_date], {as.character(publication_date)})) <= 2
-      ORDER BY ABS(DATEDIFF(day, [publication_date], {as.character(publication_date)})) ASC
+        AND ABS(DATEDIFF(day, [first_publication_date], {as.character(publication_date)})) <= 2
+      ORDER BY ABS(DATEDIFF(day, [first_publication_date], {as.character(publication_date)})) ASC
       ",
       .con = conn
     )
@@ -49,7 +49,7 @@ db_ow_get_record <- function(urn, publication_date = NULL) {
     DBI::dbGetQuery(conn, sql),
     error = function(e) {
       log_event(glue::glue(
-        "Error in db_get_latest_ofsted_inspection for URN {urn}: {e$message}"
+        "Error in db_ow_get_record for URN {urn}: {e$message}"
       ))
       data.frame()
     }
