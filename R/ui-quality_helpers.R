@@ -117,7 +117,7 @@ quality_render_live <- function(
       ql.date_created AS 'Date Identified',
       ql.last_checked AS 'Last Reviewed'              
       FROM {schema_01a}.[quality_list] ql
-      LEFT JOIN {schema_01a}.[app_list] al
+      LEFT JOIN {db_schema_01sr}.[app_list] al
             ON ql.app_id = al.app_id
       LEFT JOIN {schema_01a}.[quality_check] qc 
             ON qc.quality_check_id = ql.error_id
@@ -272,7 +272,7 @@ quality_render_tests <- function(app_id = NULL) {
         qcl_latest.new_issues,
         qcl_latest.closed_issues
     FROM {schema_01a}.[quality_check] AS qc
-    LEFT JOIN {schema_01a}.[app_list] AS al ON al.app_id = qc.app_id
+    LEFT JOIN {schema_01a}.[db_schema_01sr] AS al ON al.app_id = qc.app_id
     OUTER APPLY (
         SELECT TOP (1)
             qcl.quality_check_log_id,
