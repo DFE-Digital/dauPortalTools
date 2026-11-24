@@ -11,9 +11,8 @@ db_get_all_apps <- function() {
   query <- glue::glue_sql(
     "SELECT 
         [app_id], [app_name], [app_url], [app_active], 
-        [version], [team], [division], [update_cycle], 
-        [linking_table], [linking_column]
-     FROM {utils_resolve_schema('db_schema_01aidt')}.[app_list]
+        [version], [team], [update_cycle]
+     FROM {utils_resolve_schema('db_schema_01sr')}.[app_list]
      ORDER BY [app_name];",
     .con = conn
   )
@@ -38,21 +37,20 @@ db_save_app <- function(
 
   if (is.null(app_id) || is.na(app_id) || identical(as.character(app_id), "")) {
     query <- glue::glue_sql(
-      "INSERT INTO {utils_resolve_schema('db_schema_01aidt')}.[app_list]
-         ([app_name], [app_url], [app_active], [version], [team], [division], [update_cycle], [created_by], [created_date])
+      "INSERT INTO {utils_resolve_schema('db_schema_01sr')}.[app_list]
+         ([app_name], [app_url], [app_active], [version], [team], [update_cycle], [created_by], [created_date])
        VALUES 
-         ({app_name}, {app_url}, {as.integer(app_active)}, {version}, {team}, {division}, {update_cycle}, {as.integer(user_id)}, SYSUTCDATETIME());",
+         ({app_name}, {app_url}, {as.integer(app_active)}, {version}, {team}, {update_cycle}, {as.integer(user_id)}, SYSUTCDATETIME());",
       .con = conn
     )
   } else {
     query <- glue::glue_sql(
-      "UPDATE {utils_resolve_schema('db_schema_01aidt')}.[app_list]
+      "UPDATE {utils_resolve_schema('db_schema_01sr')}.[app_list]
        SET [app_name] = {app_name},
            [app_url] = {app_url},
            [app_active] = {as.integer(app_active)},
            [version] = {version},
            [team] = {team},
-           [division] = {division},
            [update_cycle] = {update_cycle},
            [modified_by] = {as.integer(user_id)},
            [modified_date] = SYSUTCDATETIME()
@@ -136,7 +134,7 @@ db_get_portal_messages <- function(app_id = NULL) {
         COALESCE(a.[app_name], 'Global / All Apps') AS [app_name],
         u.[username] AS [posted_by]
      FROM {utils_resolve_schema('db_schema_01sr')}.[portal_messages] m
-     LEFT JOIN {utils_resolve_schema('db_schema_01aidt')}.[app_list] a ON m.[app_id] = a.[app_id]
+     LEFT JOIN {utils_resolve_schema('db_schema_01sr')}.[app_list] a ON m.[app_id] = a.[app_id]
      LEFT JOIN {utils_resolve_schema('db_schema_01sr')}.[users] u ON m.[user_id] = u.[user_id]
      {clause}
      ORDER BY m.[created_on] DESC;",
