@@ -212,3 +212,120 @@ Unified Access Security Logs: Comprehensive system review sheets used to audit u
 Usage Performance Dashboards: Clickstream analytics metrics reporting active user volume trends.
 
 Access Matrix Control Blocks: Administrative control panels used to update, add, or soft-delete assignments dynamically without altering code.
+
+---
+
+## Platform Catalogue, Messaging & Governance Schema (`[01_SSSR]`)
+
+In addition to core identity, RBAC, telemetry, and audit tables (`users`, `user_identity_aliases`, `roles_config`, `permissions_config`, `role_permissions`, `user_role_assignments`, `apps_config`, `environments_config`, `app_analytics`, `audit_logs`), `[01_SSSR]` hosts shared service messaging and data-governance metadata tables used across SLIC and DAU portals:
+
+### Catalogue & Messaging ERD
+
+```mermaid
+erDiagram
+    users ||--o{ portal_messages : "authored by (user_id)"
+    apps_config ||--o{ portal_messages : "scoped to (app_id)"
+
+    app_list ||--o{ app_maintainers : "maintained by (app_id)"
+    users ||--o{ app_maintainers : "maintains (user_id)"
+
+    data_type ||--o{ data_table : "classifies (data_type_fk)"
+    data_table ||--o{ data_table_owners : "owned by (data_id)"
+    users ||--o{ data_table_owners : "owns (user_id)"
+
+    app_list ||--o{ app_data_links : "consumes (app_id)"
+    data_table ||--o{ app_data_links : "linked via (data_id)"
+
+    portal_messages {
+        INT message_id PK
+        DATETIME2 message_date
+        NVARCHAR message_text
+        INT app_id FK
+        TINYINT priority
+        DATETIME2 created_on
+        BIT is_active
+        INT user_id FK
+    }
+
+    app_list {
+        INT app_id PK
+        NVARCHAR app_name
+        VARCHAR app_description
+        VARCHAR app_url
+        BIT app_active
+        NVARCHAR version
+        NVARCHAR team
+        NVARCHAR update_cycle
+        DATETIME2 created_date
+        INT created_by
+        DATETIME2 modified_date
+        INT modified_by
+        DATE reviewed_date
+        INT reviewed_by
+        NVARCHAR app_guidance
+    }
+
+    app_maintainers {
+        INT id PK
+        INT app_id FK
+        INT user_id FK
+        BIT is_primary
+        DATETIME2 created_date
+        INT created_by
+    }
+
+    data_type {
+        INT type_id PK
+        NVARCHAR type_name
+        NVARCHAR type_description
+        BIT is_active
+        VARCHAR type_colour
+    }
+
+    data_table {
+        INT data_id PK
+        INT data_type_fk FK
+        NVARCHAR data_name
+        NVARCHAR data_table
+        NVARCHAR data_pk
+        VARCHAR platform
+        VARCHAR source_scope
+        NVARCHAR data_description
+        BIT is_active
+    }
+
+    data_table_owners {
+        INT owner_link_id PK
+        INT data_id FK
+        INT user_id FK
+        BIT is_primary
+    }
+
+    app_data_links {
+        INT link_id PK
+        INT app_id FK
+        INT data_id FK
+        VARCHAR access_mode
+        BIT is_active
+    }
+```
+
+### Table Reference
+
+* **`[01_SSSR].[portal_messages]`**: Service announcements and operational banners queried via `db_get_portal_messages()`. Supports global (`app_id = 1`) and app-specific scoping, priority ordering (`1` = urgent/alert, `2` = standard), and soft deletion (`is_active`).
+* **`[01_SSSR].[app_list]`**: Metadata catalogue of DAU applications (`version`, `team`, `update_cycle`, `reviewed_date`, `app_guidance`) surfaced in SLIC (`dau-sssr-finally`) and portal `About` pages.
+* **`[01_SSSR].[app_maintainers]`**: Maps primary and secondary technical maintainers (`user_id`, `is_primary`) to entries in `app_list`.
+* **`[01_SSSR].[data_type]`**: Lookup defining dataset classifications (`type_name`, `type_colour` hex badge).
+* **`[01_SSSR].[data_table]`**: Central data asset register recording physical SQL Server or Databricks tables (`platform` in `'SQL'`, `'DataBricks'`), governance tier (`source_scope` in `'DAU'`, `'Internal'`, `'External'`), primary key column (`data_pk`), and descriptions.
+* **`[01_SSSR].[data_table_owners]`**: Maps canonical `users` to owned `data_table` records (`is_primary`).
+* **`[01_SSSR].[app_data_links]`**: Many-to-many lineage bridge mapping `app_list` applications to `data_table` assets with explicit `access_mode` (`'READ'`, `'WRITE'`, `'READ_WRITE'`).
+
+### R Function Mapping (`dauPortalTools`)
+
+| Domain | R Source File(s) | Key Functions | Target Tables |
+| :--- | :--- | :--- | :--- |
+| **Identity & Session** | `R/db-user.R`, `R/utils-user_auth.R` | `utils_get_user()`, `utils_record_login()`, `db_update_user_last_login()` | `users`, `user_identity_aliases` |
+| **RBAC & Permissions** | `R/db-user_roles.R`, `R/utils-permissions.R` | `utils_get_user_roles()`, `assign_user_role()`, `revoke_user_role()`, `user_has_permission()` | `roles_config`, `permissions_config`, `role_permissions`, `user_role_assignments` |
+| **Telemetry & Audit** | `R/db-analytics_helpers.R`, `R/db-audit_helpers.R` | `log_page_view()`, `log_user_action()`, `log_transaction()`, `db_write_audit_log()` | `app_analytics`, `audit_logs`, `apps_config`, `environments_config` |
+| **Portal Banners** | `R/db-message_helpers.R` | `db_get_portal_messages()`, `db_add_portal_message()`, `db_edit_portal_message()`, `db_deactivate_portal_message()` | `portal_messages` |
+| **App & Data Catalogue** | `R/db-apps.R`, `R/db-admin_helpers.R` | `db_get_all_apps()`, `db_save_app()`, `db_get_app_maintainers()`, `db_add_app_maintainer()` | `app_list`, `app_maintainers`, `data_type`, `data_table`, `data_table_owners`, `app_data_links` |
