@@ -179,123 +179,189 @@ wn_scrape_all_pages <- function(notice_urls) {
   return(scraped_df)
 }
 
-#' Sync Scraped Dataframe into SQL Table
+#' Sync Scraped Dataframe into [01_SSSR].[wn_online_notices]
 #'
-#' Processes an extracted dataframe against existing records to trigger updates or additions.
+#' Matches existing rows by `notice_url` and updates `last_scraped_at`
+#' without overwriting cleaned URNs or school names. Inserts new URLs.
 #'
-#' @param post_scrape Dataframe. Output dataset stemming from `wn_scrape_all_pages`.
-#' @return A character message tracking execution operations.
+#' @param post_scrape Dataframe. Output from `wn_scrape_all_pages()`.
+#' @param con DBI database connection to `Data_Insight_Team`.
+#' @return A character message summarizing updates and inserts.
 #' @export
-wn_web_publish_sql <- function(post_scrape) {
+wn_web_publish_sql <- function(post_scrape, con) {
   if (is.null(post_scrape) || nrow(post_scrape) == 0) {
     return("No incoming data found to commit to DB.")
   }
 
-  # Fetch data in memory to completely avoid loop queries
-  existing_posts <- db_get_scraped_posts()
-  existing_links <- existing_posts$school_link
+  existing_posts <- DBI::dbGetQuery(
+    con,
+    "SELECT wn_online_notice_id, wn_id, urn, school_name, notice_url, published_date
+     FROM [Data_Insight_Team].[01_SSSR].[wn_online_notices]"
+  )
 
-  new_count <- 0
-  update_count <- 0
+  existing_links <- stringr::str_trim(existing_posts$notice_url)
+  now_str <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+
+  new_count <- 0L
+  update_count <- 0L
 
   for (i in seq_len(nrow(post_scrape))) {
-    current_row <- post_scrape[i, ]
-    link_exists <- current_row$school_link %in% existing_links
+    row <- post_scrape[i, ]
+    url_clean <- stringr::str_trim(row$school_link)
+    if (is.na(url_clean) || url_clean == "") {
+      next
+    }
 
-    if (link_exists) {
-      matched_meta <- existing_posts[
-        existing_posts$school_link == current_row$school_link,
-      ][1, ]
+    if (url_clean %in% existing_links) {
+      matched <- existing_posts[existing_links == url_clean, ][1, ]
 
-      update_payload <- list(
-        urn = current_row$urn,
-        twn_id = matched_meta$twn_id,
-        school_name = current_row$school_name,
-        la = current_row$la,
-        region = current_row$region,
-        reason = current_row$reason,
-        last_scraped_post = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-        first_scraped_post = matched_meta$first_scraped_post,
-        region_link = current_row$region_link,
-        school_link = current_row$school_link,
-        published_date = current_row$published_date
+      # Preserve existing published_date if already populated
+      pub_val <- if (!is.na(matched$published_date)) {
+        as.character(matched$published_date)
+      } else if (!is.na(row$published_date)) {
+        as.character(row$published_date)
+      } else {
+        NA_character_
+      }
+
+      DBI::dbExecute(
+        con,
+        "UPDATE [Data_Insight_Team].[01_SSSR].[wn_online_notices]
+         SET last_scraped_at = ?,
+             published_date  = COALESCE(published_date, ?)
+         WHERE wn_online_notice_id = ?",
+        params = list(now_str, pub_val, matched$wn_online_notice_id)
       )
-
-      db_update_scraped_post(
-        post_twn_id = matched_meta$post_twn_id,
-        update_data = update_payload
-      )
-      update_count <- update_count + 1
+      update_count <- update_count + 1L
     } else {
-      insert_payload <- as.list(current_row)
-      db_insert_scraped_post(post_data = insert_payload)
-      new_count <- new_count + 1
+      pub_val <- if (!is.na(row$published_date)) {
+        as.character(row$published_date)
+      } else {
+        as.character(as.Date(now_str))
+      }
+
+      DBI::dbExecute(
+        con,
+        "INSERT INTO [Data_Insight_Team].[01_SSSR].[wn_online_notices]
+         (wn_id, urn, school_name, local_authority, region, notice_reason,
+          published_date, first_scraped_at, last_scraped_at, region_url, notice_url)
+         VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params = list(
+          row$urn,
+          row$school_name,
+          row$la,
+          row$region,
+          row$reason,
+          pub_val,
+          now_str,
+          now_str,
+          row$region_link,
+          url_clean
+        )
+      )
+      new_count <- new_count + 1L
     }
   }
 
-  return(paste0(
+  paste0(
     "Sync completed! Updates executed: ",
     update_count,
     " | Inserts executed: ",
     new_count
-  ))
+  )
 }
 
 
-#' Reconcile Unlinked Staging Notices against Master Data
+#' Reconcile Unlinked [01_SSSR].[wn_online_notices] Against [01_SSSR].[wn_records]
 #'
-#' Pulls unlinked staging table items and maps them against the master notices
-#' matrix using optimized vector evaluations, writing the paired IDs back.
+#' Links unallocated online notices by URN (preferring active Created/Issued/Published
+#' records), logs Published Date (wn_date_id = 4), and flips Created/Issued to Published (5).
 #'
+#' @param con DBI database connection to `Data_Insight_Team`.
 #' @export
-wn_web_notice_link <- function() {
-  log_event("Starting wn_web_notice_link matching execution")
+wn_web_notice_link <- function(con) {
+  log_event("Starting wn_web_notice_link matching execution against [01_SSSR]")
 
-  # 1. Fetch tables as complete data sets into R environment memory
-  # Filter for records that need an ID pairing
-  online_notices <- db_get_scraped_posts() |> dplyr::filter(is.na(twn_id))
-  all_notices <- db_get_all_notices()
+  unlinked <- DBI::dbGetQuery(
+    con,
+    "SELECT wn_online_notice_id, urn, published_date, first_scraped_at
+     FROM [Data_Insight_Team].[01_SSSR].[wn_online_notices]
+     WHERE wn_id IS NULL AND urn IS NOT NULL"
+  )
 
-  if (nrow(online_notices) == 0) {
-    cat("No unmatched URNs discovered in staging.\n")
+  if (nrow(unlinked) == 0) {
+    cat("No unmatched URNs discovered in [01_SSSR].[wn_online_notices].\n")
     return(invisible(NULL))
   }
 
-  # Normalize notice reason strings to match your database lookup codes
-  online_notices <- online_notices |>
-    dplyr::mutate(
-      lookup_type = dplyr::case_when(
-        reason == "Inadequate Ofsted Judgement" ~ "1",
-        stringr::str_detect(stringr::str_to_lower(reason), "necessary") ~ "2",
-        TRUE ~ "99"
+  master_records <- DBI::dbGetQuery(
+    con,
+    "SELECT wn_id, urn, wn_status_id, first_published_date
+     FROM [Data_Insight_Team].[01_SSSR].[wn_records]"
+  )
+
+  linked_count <- 0L
+
+  for (i in seq_len(nrow(unlinked))) {
+    target_urn <- unlinked$urn[i]
+    online_id <- unlinked$wn_online_notice_id[i]
+
+    candidates <- master_records |>
+      dplyr::filter(urn == target_urn) |>
+      dplyr::arrange(
+        dplyr::if_else(wn_status_id %in% c(1L, 4L, 5L), 0L, 1L),
+        dplyr::desc(first_published_date),
+        dplyr::desc(wn_id)
       )
-    )
 
-  update_count <- 0
-
-  # 2. Vectorized loop evaluation to bind keys together
-  for (i in seq_len(nrow(online_notices))) {
-    match <- all_notices |>
-      dplyr::filter(
-        urn == online_notices$urn[i],
-        type_of_notice_id == online_notices$lookup_type[i]
+    if (nrow(candidates) > 0) {
+      target_wn_id <- candidates$wn_id[1]
+      target_status <- candidates$wn_status_id[1]
+      pub_date <- as.character(
+        dplyr::coalesce(
+          unlinked$published_date[i],
+          as.Date(unlinked$first_scraped_at[i])
+        )
       )
 
-    # If a match is found in our master dataset, link it!
-    if (nrow(match) > 0) {
-      target_twn_id <- match$twn_id[1]
-      target_post_id <- online_notices$post_twn_id[i]
-
-      # Execute single-purpose database rewrite to inject the linked master ID
-      db_link_post_to_master(
-        post_twn_id = target_post_id,
-        twn_id = target_twn_id
+      # 1. Link online notice to wn_records
+      DBI::dbExecute(
+        con,
+        "UPDATE [Data_Insight_Team].[01_SSSR].[wn_online_notices]
+         SET wn_id = ?
+         WHERE wn_online_notice_id = ?",
+        params = list(target_wn_id, online_id)
       )
-      update_count <- update_count + 1
+
+      # 2. Insert Published Date (wn_date_id = 4) if missing
+      DBI::dbExecute(
+        con,
+        "INSERT INTO [Data_Insight_Team].[01_SSSR].[wn_date_tracking]
+         (wn_id, wn_date_id, wn_date, wn_date_notes, created_by, created_on)
+         SELECT ?, 4, CAST(? AS date), N'Auto-linked by GOV.UK scraper', 2, GETDATE()
+         WHERE NOT EXISTS (
+           SELECT 1 FROM [Data_Insight_Team].[01_SSSR].[wn_date_tracking]
+           WHERE wn_id = ? AND wn_date_id = 4
+         )",
+        params = list(target_wn_id, pub_date, target_wn_id)
+      )
+
+      # 3. Flip Created (1) or Issued (4) -> Published (5)
+      if (target_status %in% c(1L, 4L)) {
+        DBI::dbExecute(
+          con,
+          "UPDATE [Data_Insight_Team].[01_SSSR].[wn_records]
+           SET wn_status_id = 5, updated_on = GETDATE()
+           WHERE wn_id = ?",
+          params = list(target_wn_id)
+        )
+      }
+
+      linked_count <- linked_count + 1L
     }
   }
 
   print(data.frame(
-    Message = paste("Successfully linked", update_count, "notices.")
+    Message = paste("Successfully linked", linked_count, "notices.")
   ))
 }
