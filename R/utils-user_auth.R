@@ -226,13 +226,13 @@ utils_record_login <- function(user = "Guest") {
 
   target_user_id <- utils_resolve_user(user)
 
-  db_insert_app_analytics(
+  db_analytics_insert(
     user_id = target_user_id,
-    app_id = utils_get_app_id(),
-    env_id = utils_resolve_env_id(),
     page_name = "Home page",
     action_type = "Load",
-    action_sub_type = "Initial Load"
+    action_sub_type = "Initial Load",
+    app_id = utils_get_app_id(),
+    env_id = utils_resolve_env_id()
   )
 
   target_user_id

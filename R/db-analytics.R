@@ -303,7 +303,7 @@ db_analytics_insert <- function(
   ) {
     as.character(action_sub_type)
   } else {
-    DBI::SQL("NULL")
+    NA_character_
   }
 
   schema <- utils_resolve_schema("db_schema_01sr")
